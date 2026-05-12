@@ -177,6 +177,23 @@ class FraudEvaluationControllerIntegrationTest {
 			.andExpect(jsonPath("$[0].decision", is("REVIEW")));
 	}
 
+	@Test
+	void shouldExposeOpenApiDocument() throws Exception {
+		mockMvc.perform(get("/v3/api-docs"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.info.title", is("Fraud Rule Engine API")))
+			.andExpect(jsonPath("$.paths['/api/fraud-evaluations']").exists())
+			.andExpect(jsonPath("$.paths['/api/fraud-evaluations'].post.summary", is("Evaluate a transaction for fraud")))
+			.andExpect(jsonPath("$.paths['/api/fraud-evaluations/{evaluationId}'].get.summary", is("Retrieve a fraud evaluation by id")));
+	}
+
+	@Test
+	void shouldExposeSwaggerUiEntryPoint() throws Exception {
+		mockMvc.perform(get("/swagger-ui.html"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(header().string("Location", containsString("/swagger-ui/index.html")));
+	}
+
 	private void assertThatStoredEvaluationCountIs(int expectedCount) {
 		org.assertj.core.api.Assertions.assertThat(fraudEvaluationJpaRepository.count()).isEqualTo(expectedCount);
 	}
