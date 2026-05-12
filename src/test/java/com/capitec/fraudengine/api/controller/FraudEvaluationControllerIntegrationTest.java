@@ -1,0 +1,230 @@
+package com.capitec.fraudengine.api.controller;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.capitec.fraudengine.TestcontainersConfiguration;
+import com.capitec.fraudengine.api.dto.FraudEvaluationRequestDto;
+import com.capitec.fraudengine.api.dto.LocationDto;
+import com.capitec.fraudengine.domain.model.FraudEvaluation;
+import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
+import com.capitec.fraudengine.domain.model.TransactionEvent;
+import com.capitec.fraudengine.domain.model.TransactionLocation;
+import com.capitec.fraudengine.domain.model.enums.FraudDecision;
+import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
+import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
+import com.capitec.fraudengine.domain.model.enums.TransactionChannel;
+import com.capitec.fraudengine.domain.model.enums.TransactionType;
+import com.capitec.fraudengine.infrastructure.persistence.mapper.FraudEvaluationPersistenceMapper;
+import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationJpaRepository;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
+class FraudEvaluationControllerIntegrationTest {
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Autowired
+	private FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
+
+	@Autowired
+	private FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper;
+
+	@BeforeEach
+	void setUp() {
+		fraudEvaluationJpaRepository.deleteAll();
+	}
+
+	@Test
+	void shouldCreateFraudEvaluationViaPostEndpoint() throws Exception {
+		FraudEvaluationRequestDto request = new FraudEvaluationRequestDto(
+			"txn-post-001",
+			"account-post-001",
+			"customer-post-001",
+			new BigDecimal("26000.00"),
+			"ZAR",
+			"merchant-123",
+			"RETAIL",
+			"PURCHASE",
+			"ONLINE",
+			OffsetDateTime.parse("2026-05-12T10:00:00+02:00"),
+			new LocationDto("ZA", "Cape Town"),
+			"post-integration-test"
+		);
+
+		mockMvc.perform(post("/api/fraud-evaluations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isCreated())
+			.andExpect(header().string("Location", containsString("/api/fraud-evaluations/")))
+			.andExpect(jsonPath("$.transactionId", is("txn-post-001")))
+			.andExpect(jsonPath("$.decision", is("BLOCK")))
+			.andExpect(jsonPath("$.decisionScore", is(100)))
+			.andExpect(jsonPath("$.traceSummary", containsString("HIGH_AMOUNT")))
+			.andExpect(jsonPath("$.ruleResults", hasSize(4)));
+
+		assertThatStoredEvaluationCountIs(1);
+	}
+
+	@Test
+	void shouldRetrieveStoredFraudEvaluationById() throws Exception {
+		UUID evaluationId = UUID.randomUUID();
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				evaluationId,
+				"txn-get-001",
+				"account-get-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T11:00:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T11:01:00+02:00"),
+				List.of(ruleResult("RISKY_MERCHANT_CATEGORY", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", evaluationId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.evaluationId", is(evaluationId.toString())))
+			.andExpect(jsonPath("$.transactionId", is("txn-get-001")))
+			.andExpect(jsonPath("$.decision", is("REVIEW")))
+			.andExpect(jsonPath("$.decisionScore", is(40)))
+			.andExpect(jsonPath("$.ruleResults", hasSize(1)))
+			.andExpect(jsonPath("$.ruleResults[0].ruleCode", is("RISKY_MERCHANT_CATEGORY")));
+	}
+
+	@Test
+	void shouldReturnNotFoundForUnknownEvaluationId() throws Exception {
+		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID()))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status", is(404)))
+			.andExpect(jsonPath("$.message", containsString("Fraud evaluation not found")));
+	}
+
+	@Test
+	void shouldReturnFilteredEvaluationSummaries() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-list-001",
+				"account-list-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T09:55:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T10:00:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-list-002",
+				"account-list-001",
+				FraudDecision.BLOCK,
+				100,
+				OffsetDateTime.parse("2026-05-12T10:55:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T11:00:00+02:00"),
+				List.of(ruleResult("HIGH_AMOUNT", true, RuleSeverity.BLOCK, 100))
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-list-003",
+				"other-account",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T09:55:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T10:00:00+02:00"),
+				List.of(ruleResult("RISKY_MERCHANT_CATEGORY", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("decision", "REVIEW")
+				.param("accountId", "account-list-001")
+				.param("from", "2026-05-12T09:59:00+02:00")
+				.param("to", "2026-05-12T10:01:00+02:00"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$", hasSize(1)))
+			.andExpect(jsonPath("$[0].transactionId", is("txn-list-001")))
+			.andExpect(jsonPath("$[0].accountId", is("account-list-001")))
+			.andExpect(jsonPath("$[0].decision", is("REVIEW")));
+	}
+
+	private void assertThatStoredEvaluationCountIs(int expectedCount) {
+		org.assertj.core.api.Assertions.assertThat(fraudEvaluationJpaRepository.count()).isEqualTo(expectedCount);
+	}
+
+	private FraudEvaluation fraudEvaluation(
+		UUID evaluationId,
+		String transactionId,
+		String accountId,
+		FraudDecision decision,
+		int decisionScore,
+		OffsetDateTime eventTimestamp,
+		OffsetDateTime evaluatedAt,
+		List<RuleEvaluationResult> ruleResults
+	) {
+		TransactionEvent transactionEvent = new TransactionEvent(
+			transactionId,
+			accountId,
+			"customer-" + accountId,
+			new BigDecimal("1500.00"),
+			"ZAR",
+			"merchant-123",
+			MerchantCategory.RETAIL,
+			TransactionType.PURCHASE,
+			TransactionChannel.ONLINE,
+			eventTimestamp,
+			new TransactionLocation("ZA", "Cape Town"),
+			"api-integration-test"
+		);
+
+		return new FraudEvaluation(
+			evaluationId,
+			transactionEvent,
+			decision,
+			decisionScore,
+			evaluatedAt,
+			"API integration test trace",
+			ruleResults
+		);
+	}
+
+	private RuleEvaluationResult ruleResult(String ruleCode, boolean triggered, RuleSeverity severity, int scoreContribution) {
+		return new RuleEvaluationResult(
+			ruleCode,
+			ruleCode + " Rule",
+			triggered,
+			severity,
+			scoreContribution,
+			"Reason for " + ruleCode
+		);
+	}
+}

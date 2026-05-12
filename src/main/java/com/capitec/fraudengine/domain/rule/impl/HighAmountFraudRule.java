@@ -2,6 +2,8 @@ package com.capitec.fraudengine.domain.rule.impl;
 
 import java.math.BigDecimal;
 
+import org.springframework.stereotype.Component;
+
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
@@ -10,6 +12,7 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 /**
  * Flags transactions that cross the agreed Phase 1 amount thresholds.
  */
+@Component
 public class HighAmountFraudRule extends AbstractFraudRule {
 
 	private static final BigDecimal REVIEW_THRESHOLD = new BigDecimal("10000.00");

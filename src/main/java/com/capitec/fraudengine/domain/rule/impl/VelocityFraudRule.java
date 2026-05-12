@@ -3,6 +3,8 @@ package com.capitec.fraudengine.domain.rule.impl;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
+import org.springframework.stereotype.Component;
+
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.TransactionEvent;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
@@ -12,6 +14,7 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 /**
  * Flags accounts that have too many recent transactions within the configured time window.
  */
+@Component
 public class VelocityFraudRule extends AbstractFraudRule {
 
 	private static final int VELOCITY_LIMIT = 3;

@@ -2,6 +2,8 @@ package com.capitec.fraudengine.domain.rule.impl;
 
 import java.time.LocalTime;
 
+import org.springframework.stereotype.Component;
+
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
@@ -10,6 +12,7 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 /**
  * Flags transactions occurring during the configured suspicious overnight window.
  */
+@Component
 public class UnusualTimeFraudRule extends AbstractFraudRule {
 
 	private static final LocalTime WINDOW_START = LocalTime.MIDNIGHT;

@@ -2,6 +2,8 @@ package com.capitec.fraudengine.domain.rule.impl;
 
 import java.util.Set;
 
+import org.springframework.stereotype.Component;
+
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
@@ -11,6 +13,7 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 /**
  * Flags transactions that occur in categories treated as higher-risk for the initial slice.
  */
+@Component
 public class RiskyMerchantCategoryFraudRule extends AbstractFraudRule {
 
 	private static final Set<MerchantCategory> FLAGGED_CATEGORIES = Set.of(
