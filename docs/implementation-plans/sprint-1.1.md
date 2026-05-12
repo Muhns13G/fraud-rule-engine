@@ -59,3 +59,4 @@ Defer non-critical scope explicitly.
 ## Notes
 - Use this sprint plan as the anchor for subsequent sprint/task plans.
 - Future implementation plans can keep all tasks for a sprint in one sprint document, using the `Sprint X.Y.Z` convention.
+- Sprint close-out should produce a completion report and update RAG docs where necessary.

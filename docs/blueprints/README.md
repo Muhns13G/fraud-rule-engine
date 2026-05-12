@@ -23,3 +23,8 @@ This directory holds forward-looking project planning for `fraud-rule-engine`.
   - `04-domain-glossary.md`
   - `05-architecture-current-vs-target.md`
 - `../implementation-plans/`: sprint-oriented implementation plans using the `Sprint X.Y.Z` convention.
+- `../completion-reports/`: end-of-sprint reports capturing work completed, decisions made, deviations, lessons learned, technical debt, future considerations, and affected files.
+
+## Sprint Close-Out Rule
+- Every sprint should end with a completion report in `../completion-reports/`.
+- Every sprint close-out should also review whether the numbered RAG docs need updates.

@@ -47,19 +47,40 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 
 ## First Request Shape
 - Model the first input as a categorized card or account transaction event, not a generic catch-all envelope.
-- Recommended fields for the first version:
-  - `transactionId`
-  - `accountId`
-  - `customerId`
-  - `amount`
-  - `currency`
-  - `merchantId`
-  - `merchantCategory`
-  - `transactionType`
-  - `channel`
-  - `eventTimestamp`
-  - `location`
+- Locked request fields for the first API version:
+  - `transactionId`: required string
+  - `accountId`: required string
+  - `customerId`: required string
+  - `amount`: required decimal
+  - `currency`: required string, ISO-style uppercase code such as `ZAR`
+  - `merchantId`: required string
+  - `merchantCategory`: required string or enum-backed string
+  - `transactionType`: required string or enum-backed string
+  - `channel`: required string or enum-backed string
+  - `eventTimestamp`: required offset datetime
+  - `location`: optional structured object with:
+    - `countryCode`
+    - `city`
+  - `reference`: optional string
 - Keep the payload intentionally compact. The goal is enough signal for realistic rule evaluation, not a complete banking event taxonomy.
+
+## First Response Shape
+- The first evaluation response should return:
+  - `evaluationId`
+  - `transactionId`
+  - `decision`
+  - `decisionScore`
+  - `evaluatedAt`
+  - `ruleResults`
+  - `traceSummary`
+- Each `ruleResult` should return:
+  - `ruleCode`
+  - `ruleName`
+  - `triggered`
+  - `severity`
+  - `scoreContribution`
+  - `reason`
+- The list endpoint can use a lighter summary projection, but the single-item retrieval should include the full rule hit trail.
 
 ## Proposed Package Shape
 - `api`: request/response contracts, controllers, exception mapping
@@ -85,6 +106,16 @@ Build a Spring Boot service that processes categorized transaction events, evalu
   - risky merchant category rule
   - unusual time rule
 - Defer `location anomaly` unless the first vertical slice is already stable and there is time for a clearly explainable heuristic.
+- Starter thresholds for Phase 1:
+  - high amount:
+    - trigger `REVIEW` signal at `>= 10000.00 ZAR`
+    - trigger `BLOCK` signal at `>= 25000.00 ZAR`
+  - velocity:
+    - trigger when `>= 3` transactions occur for the same `accountId` within `5 minutes`
+  - risky merchant category:
+    - start with a small flagged set such as `GAMBLING`, `CRYPTO`, `MONEY_TRANSFER`
+  - unusual time:
+    - trigger when the local transaction time falls between `00:00` and `04:00`
 - Each rule should contribute:
   - a stable rule code
   - a human-readable reason
@@ -97,7 +128,16 @@ Build a Spring Boot service that processes categorized transaction events, evalu
   - `BLOCK` for clearly unacceptable conditions
   - `REVIEW` for suspicious but non-terminal combinations
   - `ALLOW` when no material risk indicators are hit
-- If scoring is introduced, keep it simple and deterministic so the final decision can still be explained rule-by-rule.
+- For Phase 1, use both:
+  - an outward business decision of `ALLOW`, `REVIEW`, or `BLOCK`
+  - a simple internal numeric score for aggregation and traceability
+- Suggested starting score model:
+  - `REVIEW`-level rule hit: `40` points
+  - `BLOCK`-level rule hit: `100` points
+- Suggested decision thresholds:
+  - `ALLOW`: no triggered rules
+  - `REVIEW`: total score from `1` to `99`
+  - `BLOCK`: any blocking rule hit or total score `>= 100`
 
 ## Persistence Model
 - Persist the transaction event separately from the evaluation result only if that separation makes querying clearer; for the take-home, a direct evaluation aggregate is acceptable.
@@ -111,7 +151,7 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 
 ## Suggested Execution Flow
 1. Validate and normalize inbound request payloads.
-2. Load recent transaction context needed for velocity checks.
+2. Load recent transaction context needed for velocity checks and other history-based heuristics.
 3. Evaluate rules in a deterministic order.
 4. Aggregate rule results into a final fraud decision.
 5. Persist the request, rule hits, and final decision for auditability.

@@ -8,6 +8,7 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Define the first API contract for one categorized transaction event.
 - Implement a code-defined rule engine with 3-4 explicit fraud rules.
 - Support `ALLOW`, `REVIEW`, and `BLOCK` decisions with traceable reasons.
+- Add Flyway and create the first PostgreSQL schema.
 - Persist the evaluation header and per-rule results in PostgreSQL.
 - Add `POST /api/fraud-evaluations`, `GET /api/fraud-evaluations/{id}`, and a filtered list endpoint.
 - Replace default security behavior with an intentional local-development configuration.
@@ -15,7 +16,6 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Add focused unit tests for rule evaluation outside the Spring context.
 
 ## Phase 2: Persistence And Auditability
-- Add Flyway and create the first PostgreSQL schema.
 - Persist evaluation requests, decisions, and rule hit details with query-friendly indexing.
 - Introduce JPA entities and repository adapters without leaking persistence types into the domain layer.
 - Add integration tests that prove persistence and decision history behavior.
@@ -71,6 +71,4 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Phase 1 retrieval filters are limited to `decision`, `accountId`, and time range.
 
 ## Remaining Design Decisions
-- What exact threshold values should the first rule set use so they feel realistic without requiring hidden banking data?
-- What exact request and response payload details should be exposed in the first API version?
-- Should internal scoring be numeric, categorical, or both while keeping the outward decision model simple?
+- Whether internal scoring should be numeric only, categorical only, or both while keeping the outward decision model simple
