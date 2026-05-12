@@ -64,7 +64,7 @@ public class FraudEvaluationService {
 
 		FraudDecisionPolicyResult decision = fraudDecisionPolicy.evaluate(ruleResults);
 
-		return new FraudEvaluation(
+		FraudEvaluation evaluation = new FraudEvaluation(
 			UUID.randomUUID(),
 			transactionEvent,
 			decision.decision(),
