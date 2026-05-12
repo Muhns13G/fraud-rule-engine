@@ -1,20 +1,25 @@
 # Development Roadmap
 
 ## Planning Principle
-Move from a working vertical slice to a configurable rules platform. Do not introduce dynamic rule authoring before the service can reliably evaluate, persist, and explain a small static rule set.
+Move from a working take-home vertical slice to a configurable rules platform. Do not introduce dynamic rule authoring before the service can reliably accept categorized transaction events, evaluate a small static rule set, persist decisions, and expose retrieval APIs.
 
-## Phase 1: Foundation Slice
+## Phase 1: Take-Home Vertical Slice
 - Add a real package structure under `api`, `application`, `domain`, and `infrastructure`.
-- Define the first API contract for fraud evaluation.
-- Implement a minimal in-memory rule engine with 2-3 explicit rules.
+- Define the first API contract for one categorized transaction event.
+- Implement a code-defined rule engine with 3-4 explicit fraud rules.
+- Support `ALLOW`, `REVIEW`, and `BLOCK` decisions with traceable reasons.
+- Persist the evaluation header and per-rule results in PostgreSQL.
+- Add `POST /api/fraud-evaluations`, `GET /api/fraud-evaluations/{id}`, and a filtered list endpoint.
 - Replace default security behavior with an intentional local-development configuration.
+- Add a runnable `Dockerfile` and a real `README`.
 - Add focused unit tests for rule evaluation outside the Spring context.
 
 ## Phase 2: Persistence And Auditability
-- Add migration tooling and create the first PostgreSQL schema.
-- Persist evaluation requests, decisions, and rule hit details.
+- Add Flyway and create the first PostgreSQL schema.
+- Persist evaluation requests, decisions, and rule hit details with query-friendly indexing.
 - Introduce JPA entities and repository adapters without leaking persistence types into the domain layer.
 - Add integration tests that prove persistence and decision history behavior.
+- Add richer audit fields and retention-minded timestamps.
 
 ## Phase 3: Rule Management
 - Model rule identity, status, versioning, and activation lifecycle.
@@ -23,7 +28,7 @@ Move from a working vertical slice to a configurable rules platform. Do not intr
 - Add validation to prevent invalid or ambiguous rule configurations.
 
 ## Phase 4: Security And Operations
-- Replace generated-password defaults with explicit authentication and authorization strategy.
+- Replace generated-password defaults with explicit authentication and authorization strategy suitable for a banking-flavored API.
 - Add actuator exposure policy, structured logging, and domain metrics such as evaluation counts and rule hit rates.
 - Define error handling, correlation IDs, and audit event boundaries.
 - Add environment-specific configuration patterns for local, test, and production.
@@ -39,14 +44,26 @@ Move from a working vertical slice to a configurable rules platform. Do not intr
 
 ## First Concrete Deliverables
 - `POST /api/fraud-evaluations` endpoint
-- request and response DTOs
+- `GET /api/fraud-evaluations/{id}` endpoint
+- filtered list endpoint for review use cases
+- request and response DTOs for categorized transaction events
 - domain rule evaluator abstraction
-- one persisted decision history table
+- one persisted fraud evaluation aggregate with child rule results
 - explicit security config for local development and test
-- first migration set
+- first Flyway migration set
+- runnable `Dockerfile`
+- production-grade `README`
 
-## Open Design Decisions
-- What is the first evaluation input shape: card transaction, account event, login risk, or a generic event envelope?
-- Should the first decision model be binary (`ALLOW` / `BLOCK`) or tiered (`ALLOW` / `REVIEW` / `BLOCK`)?
-- Will rule thresholds and parameters live in code, configuration, or database tables in the first release?
-- What audit detail is required for the take-home outcome versus a production-ready bank integration?
+## Locked-In Decisions
+- The take-home brief is implemented as a categorized transaction fraud evaluation service, not a generic event platform.
+- The first input model is a transaction event, not a broad multi-domain envelope.
+- The first decision model is tiered: `ALLOW`, `REVIEW`, `BLOCK`.
+- The first rule set is code-defined and deterministic.
+- Build tool stays Maven.
+- Persistence stays PostgreSQL-backed for both local development and tests.
+
+## Remaining Design Decisions
+- What exact threshold values should the first rule set use so they feel realistic without requiring hidden banking data?
+- Should location anomaly be part of Phase 1, or should the first slice stay with amount, merchant category, and velocity only?
+- How much authentication is enough for the take-home: intentionally permissive local setup only, or a lightweight API key/basic auth story as well?
+- What retrieval filters are essential for the take-home versus nice-to-have?

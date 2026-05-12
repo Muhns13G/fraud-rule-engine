@@ -1,7 +1,15 @@
 # Project Blueprint
 
 ## Purpose
-Build a Spring Boot service that evaluates fraud rules against transaction or event inputs and returns a decision that upstream systems can act on.
+Build a Spring Boot service that processes categorized transaction events, evaluates fraud rules per transaction, stores the resulting decision trail, and exposes retrieval APIs for review.
+
+## Submission Boundary
+- This is a Capitec take-home, not an internal long-lived platform build.
+- The submission must look production-grade and interview-defensible.
+- Non-code deliverables are part of the product:
+  - runnable `Dockerfile`
+  - real `README` with build, run, and test instructions
+  - architecture decisions that can be explained clearly in interview discussion
 
 ## Verified Current State
 - The repo is a single-module Spring Boot `4.0.6` application on Java `25`.
@@ -19,31 +27,90 @@ Build a Spring Boot service that evaluates fraud rules against transaction or ev
   - tests use Testcontainers Postgres through `TestcontainersConfiguration`
 - No domain model, controllers, services, repositories, migrations, or business rules are implemented yet.
 
-## Target System
-- Expose an HTTP API for fraud assessment requests.
-- Evaluate one or more rules against a normalized request model.
-- Persist rules, rule versions, and decision/audit history in PostgreSQL.
-- Return deterministic decision results with traceable reasons.
-- Support future expansion from hard-coded rule execution to configurable rule management.
+## Brief-Aligned Target System
+- Accept categorized transaction events over HTTP.
+- Evaluate a deterministic set of fraud rules against each transaction.
+- Persist the inbound event, rule hits, aggregate decision, and explanation trail in PostgreSQL.
+- Expose retrieval APIs for individual fraud evaluations and filtered review queries.
+- Be structured so the initial code-defined rules can later evolve into governed rule management.
+
+## First Vertical Slice
+- `POST /api/fraud-evaluations`
+  - accepts one categorized transaction event
+  - evaluates the active static rule set
+  - persists the decision record and rule hit details
+  - returns the decision plus traceable reasons
+- `GET /api/fraud-evaluations/{evaluationId}`
+  - returns the persisted evaluation, rule hits, and final decision
+- `GET /api/fraud-evaluations`
+  - supports simple review filters such as `decision`, `accountId`, and time range
+
+## First Request Shape
+- Model the first input as a categorized card or account transaction event, not a generic catch-all envelope.
+- Recommended fields for the first version:
+  - `transactionId`
+  - `accountId`
+  - `customerId`
+  - `amount`
+  - `currency`
+  - `merchantId`
+  - `merchantCategory`
+  - `transactionType`
+  - `channel`
+  - `eventTimestamp`
+  - `location`
+- Keep the payload intentionally compact. The goal is enough signal for realistic rule evaluation, not a complete banking event taxonomy.
 
 ## Proposed Package Shape
 - `api`: request/response contracts, controllers, exception mapping
-- `application`: use cases such as evaluate transaction, list rules, activate rule version
-- `domain`: rule definitions, evaluation result, risk signals, decision policies
+- `application`: use cases such as evaluate transaction and retrieve evaluation history
+- `domain`: transaction event model, rule definitions, evaluation result, risk signals, decision policies
 - `infrastructure.persistence`: JPA entities, repositories, database adapters
 - `infrastructure.security`: security configuration and auth integration
 - `infrastructure.observability`: metrics, health, audit, structured logging
 
 ## Core Domain Concepts To Introduce
-- `FraudEvaluationRequest`: the normalized input for a transaction or fraud event
-- `FraudDecision`: allow, review, block, or similar explicit outcome
+- `TransactionEvent`: the normalized categorized transaction payload
+- `FraudDecision`: `ALLOW`, `REVIEW`, or `BLOCK`
 - `FraudRule`: a rule definition with business intent, status, and version
-- `RuleEvaluationResult`: pass/fail outcome plus evidence or score contribution
+- `RuleEvaluationResult`: hit or miss outcome plus evidence and score contribution
+- `FraudEvaluation`: the persisted outcome for one transaction event
 - `DecisionTrace`: machine-readable explanation of why the final decision was produced
+
+## First Rule Set
+- Start with code-defined rules, not database-authored rules.
+- The first release should implement 3-4 explicit rules that are easy to explain and test:
+  - high-amount threshold rule
+  - rapid-repeat transaction velocity rule for the same account or customer
+  - risky merchant category rule
+  - location anomaly rule when a transaction appears inconsistent with recent history
+- Each rule should contribute:
+  - a stable rule code
+  - a human-readable reason
+  - a severity or score contribution
+  - supporting evidence fields needed for audit and debugging
+
+## First Decision Policy
+- Use a tiered outcome model: `ALLOW`, `REVIEW`, `BLOCK`.
+- Prefer a transparent policy over clever scoring:
+  - `BLOCK` for clearly unacceptable conditions
+  - `REVIEW` for suspicious but non-terminal combinations
+  - `ALLOW` when no material risk indicators are hit
+- If scoring is introduced, keep it simple and deterministic so the final decision can still be explained rule-by-rule.
+
+## Persistence Model
+- Persist the transaction event separately from the evaluation result only if that separation makes querying clearer; for the take-home, a direct evaluation aggregate is acceptable.
+- Minimum persisted records:
+  - fraud evaluation header
+  - normalized transaction fields used for decisioning
+  - final decision and score
+  - per-rule hit details
+  - audit timestamps
+- Design the schema so one evaluation can have many rule results.
 
 ## Suggested Execution Flow
 1. Validate and normalize inbound request payloads.
-2. Load the active rule set for the relevant context.
+2. Load recent transaction context needed for velocity and anomaly checks.
 3. Evaluate rules in a deterministic order.
 4. Aggregate rule results into a final fraud decision.
 5. Persist the request, rule hits, and final decision for auditability.
@@ -53,12 +120,17 @@ Build a Spring Boot service that evaluates fraud rules against transaction or ev
 - Keep the rule engine deterministic and explainable; avoid hidden heuristics in early versions.
 - Separate domain rule evaluation from HTTP and JPA concerns so rules stay testable without Spring context.
 - Treat Swagger/OpenAPI as a contract aid, not the source of truth; DTOs and tests should define behavior.
-- Use Flyway or Liquibase before adding real persistence logic so schema history is explicit from the start.
-- Decide early whether rules are code-defined, database-defined, or hybrid; that choice will shape the service boundaries.
+- Use Flyway before adding real persistence logic so schema history is explicit from the start.
+- Stay on Maven for this repo; it matches the generated project and keeps the submission easier to understand in a conservative enterprise setting.
+- Default security behavior must be replaced with an intentional local and test setup before the API is presented as complete.
+- Pin image versions before final submission; `postgres:latest` is acceptable scaffolding, not a final production-grade choice.
 
 ## Immediate Gaps
-- No API contract exists yet.
+- No API contract exists yet for the brief's categorized transaction event flow.
 - No database schema or migration tooling exists yet.
+- No fraud rules or decision aggregation policy are implemented yet.
+- No retrieval API exists yet for stored fraud evaluations.
 - No authentication or authorization policy has been configured beyond Spring Security defaults.
 - No observability conventions exist yet for logs, metrics, or audit events.
+- No Dockerfile or README exists yet, even though both are required deliverables.
 - No focused unit or integration test structure exists beyond context startup.
