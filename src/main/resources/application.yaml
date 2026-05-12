@@ -1,3 +1,6 @@
 spring:
   application:
     name: fraud-rule-engine
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
