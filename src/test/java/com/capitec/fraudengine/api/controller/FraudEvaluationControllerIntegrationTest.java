@@ -23,10 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.capitec.fraudengine.TestcontainersConfiguration;
-import com.capitec.fraudengine.api.dto.FraudEvaluationRequestDto;
-import com.capitec.fraudengine.api.dto.LocationDto;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.TransactionEvent;
@@ -48,9 +45,6 @@ class FraudEvaluationControllerIntegrationTest {
 	private MockMvc mockMvc;
 
 	@Autowired
-	private ObjectMapper objectMapper;
-
-	@Autowired
 	private FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
 
 	@Autowired
@@ -63,24 +57,27 @@ class FraudEvaluationControllerIntegrationTest {
 
 	@Test
 	void shouldCreateFraudEvaluationViaPostEndpoint() throws Exception {
-		FraudEvaluationRequestDto request = new FraudEvaluationRequestDto(
-			"txn-post-001",
-			"account-post-001",
-			"customer-post-001",
-			new BigDecimal("26000.00"),
-			"ZAR",
-			"merchant-123",
-			"RETAIL",
-			"PURCHASE",
-			"ONLINE",
-			OffsetDateTime.parse("2026-05-12T10:00:00+02:00"),
-			new LocationDto("ZA", "Cape Town"),
-			"post-integration-test"
-		);
-
 		mockMvc.perform(post("/api/fraud-evaluations")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+				.content("""
+					{
+					  "transactionId": "txn-post-001",
+					  "accountId": "account-post-001",
+					  "customerId": "customer-post-001",
+					  "amount": 26000.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-123",
+					  "merchantCategory": "RETAIL",
+					  "transactionType": "PURCHASE",
+					  "channel": "ONLINE",
+					  "eventTimestamp": "2026-05-12T10:00:00+02:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "post-integration-test"
+					}
+					"""))
 			.andExpect(status().isCreated())
 			.andExpect(header().string("Location", containsString("/api/fraud-evaluations/")))
 			.andExpect(jsonPath("$.transactionId", is("txn-post-001")))

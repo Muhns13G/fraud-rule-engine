@@ -24,11 +24,12 @@ import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.model.enums.TransactionChannel;
 import com.capitec.fraudengine.domain.model.enums.TransactionType;
+import com.capitec.fraudengine.infrastructure.config.FlywayConfiguration;
 import com.capitec.fraudengine.infrastructure.persistence.entity.FraudEvaluationEntity;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.FraudEvaluationPersistenceMapper;
 
 @DataJpaTest
-@Import({ TestcontainersConfiguration.class, FraudEvaluationPersistenceMapper.class })
+@Import({ TestcontainersConfiguration.class, FraudEvaluationPersistenceMapper.class, FlywayConfiguration.class })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class FraudEvaluationJpaRepositoryIntegrationTest {
 
