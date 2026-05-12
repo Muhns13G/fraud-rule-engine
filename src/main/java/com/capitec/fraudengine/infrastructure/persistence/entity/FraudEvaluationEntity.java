@@ -21,6 +21,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+/**
+ * Persistence entity for the fraud evaluation header and normalized transaction snapshot.
+ */
 @Entity
 @Table(name = "fraud_evaluations")
 public class FraudEvaluationEntity {

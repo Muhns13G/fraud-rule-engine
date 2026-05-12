@@ -11,9 +11,18 @@ import com.capitec.fraudengine.domain.model.TransactionLocation;
 import com.capitec.fraudengine.infrastructure.persistence.entity.FraudEvaluationEntity;
 import com.capitec.fraudengine.infrastructure.persistence.entity.FraudRuleResultEntity;
 
+/**
+ * Maps between framework-light fraud evaluation domain records and JPA entities.
+ */
 @Component
 public class FraudEvaluationPersistenceMapper {
 
+	/**
+	 * Maps a domain fraud evaluation into its persistence representation.
+	 *
+	 * @param domain domain aggregate to persist
+	 * @return JPA entity graph ready for persistence
+	 */
 	public FraudEvaluationEntity toEntity(FraudEvaluation domain) {
 		FraudEvaluationEntity entity = new FraudEvaluationEntity();
 		TransactionEvent transactionEvent = domain.transactionEvent();
@@ -44,6 +53,12 @@ public class FraudEvaluationPersistenceMapper {
 		return entity;
 	}
 
+	/**
+	 * Maps a persisted evaluation entity graph back into the domain model.
+	 *
+	 * @param entity persisted evaluation entity
+	 * @return domain aggregate
+	 */
 	public FraudEvaluation toDomain(FraudEvaluationEntity entity) {
 		TransactionLocation location = null;
 		if (entity.getLocationCountryCode() != null || entity.getLocationCity() != null) {

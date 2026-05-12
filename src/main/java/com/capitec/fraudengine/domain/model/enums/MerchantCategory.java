@@ -1,5 +1,8 @@
 package com.capitec.fraudengine.domain.model.enums;
 
+/**
+ * Normalized merchant category values used by the initial fraud rules.
+ */
 public enum MerchantCategory {
 	GROCERY,
 	RETAIL,

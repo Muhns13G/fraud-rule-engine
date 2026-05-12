@@ -10,6 +10,22 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Request contract for evaluating a single categorized transaction event.
+ *
+ * @param transactionId caller-supplied transaction identifier
+ * @param accountId account associated with the transaction
+ * @param customerId customer associated with the account
+ * @param amount transaction amount in the supplied currency
+ * @param currency ISO-style uppercase currency code
+ * @param merchantId merchant identifier from the source system
+ * @param merchantCategory merchant category value for rule evaluation
+ * @param transactionType transaction type value for rule evaluation
+ * @param channel transaction channel value for rule evaluation
+ * @param eventTimestamp point in time when the transaction occurred
+ * @param location optional location details
+ * @param reference optional caller reference for traceability
+ */
 public record FraudEvaluationRequestDto(
 	@NotBlank
 	@Size(max = 100)

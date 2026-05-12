@@ -3,6 +3,9 @@ package com.capitec.fraudengine.domain.rule;
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 
+/**
+ * Base support for fraud rules that share standard metadata and result creation.
+ */
 public abstract class AbstractFraudRule implements FraudRule {
 
 	private final String ruleCode;

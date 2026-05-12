@@ -16,6 +16,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Persistence entity for an individual rule result linked to a fraud evaluation.
+ */
 @Entity
 @Table(name = "fraud_rule_results")
 public class FraudRuleResultEntity {

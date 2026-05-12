@@ -5,6 +5,9 @@ import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 
+/**
+ * Placeholder rule for evaluating suspicious transaction frequency.
+ */
 public class VelocityFraudRule extends AbstractFraudRule {
 
 	public VelocityFraudRule() {

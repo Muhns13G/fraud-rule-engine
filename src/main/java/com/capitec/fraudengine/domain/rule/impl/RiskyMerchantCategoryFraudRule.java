@@ -5,6 +5,9 @@ import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 
+/**
+ * Placeholder rule for evaluating transactions in flagged merchant categories.
+ */
 public class RiskyMerchantCategoryFraudRule extends AbstractFraudRule {
 
 	public RiskyMerchantCategoryFraudRule() {
