@@ -1,5 +1,6 @@
 package com.capitec.fraudengine.application.service;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,8 @@ import com.capitec.fraudengine.domain.policy.FraudDecisionPolicy;
 import com.capitec.fraudengine.domain.policy.FraudDecisionPolicyResult;
 import com.capitec.fraudengine.domain.rule.FraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
+import com.capitec.fraudengine.infrastructure.persistence.mapper.FraudEvaluationPersistenceMapper;
+import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationJpaRepository;
 
 /**
  * Application service that orchestrates rule execution and decision aggregation for one request.
@@ -22,29 +25,37 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 @Service
 public class FraudEvaluationService {
 
+	private static final Duration VELOCITY_WINDOW = Duration.ofMinutes(5);
+
 	private final List<FraudRule> fraudRules;
 	private final FraudDecisionPolicy fraudDecisionPolicy;
 	private final FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper;
+	private final FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper;
+	private final FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
 
 	public FraudEvaluationService(
 		List<FraudRule> fraudRules,
 		FraudDecisionPolicy fraudDecisionPolicy,
-		FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper
+		FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper,
+		FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper,
+		FraudEvaluationJpaRepository fraudEvaluationJpaRepository
 	) {
 		this.fraudRules = fraudRules;
 		this.fraudDecisionPolicy = fraudDecisionPolicy;
 		this.fraudEvaluationApplicationMapper = fraudEvaluationApplicationMapper;
+		this.fraudEvaluationPersistenceMapper = fraudEvaluationPersistenceMapper;
+		this.fraudEvaluationJpaRepository = fraudEvaluationJpaRepository;
 	}
 
 	/**
-	 * Evaluates a request using the supplied recent transaction history.
+	 * Evaluates a request, loads recent persisted transaction history, and saves the aggregated result.
 	 *
 	 * @param request request DTO to evaluate
-	 * @param recentTransactions recent transaction history available to history-based rules
-	 * @return aggregated fraud evaluation result
+	 * @return persisted fraud evaluation result
 	 */
-	public FraudEvaluation evaluate(FraudEvaluationRequestDto request, List<TransactionEvent> recentTransactions) {
+	public FraudEvaluation evaluate(FraudEvaluationRequestDto request) {
 		TransactionEvent transactionEvent = fraudEvaluationApplicationMapper.toDomain(request);
+		List<TransactionEvent> recentTransactions = loadRecentTransactions(transactionEvent);
 		FraudRuleContext context = new FraudRuleContext(transactionEvent, recentTransactions);
 
 		List<RuleEvaluationResult> ruleResults = fraudRules.stream()
@@ -62,5 +73,22 @@ public class FraudEvaluationService {
 			decision.traceSummary(),
 			ruleResults
 		);
+
+		return fraudEvaluationPersistenceMapper.toDomain(
+			fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(evaluation))
+		);
+	}
+
+	private List<TransactionEvent> loadRecentTransactions(TransactionEvent transactionEvent) {
+		OffsetDateTime windowStart = transactionEvent.eventTimestamp().minus(VELOCITY_WINDOW);
+
+		return fraudEvaluationJpaRepository.findByAccountIdAndEventTimestampBetween(
+			transactionEvent.accountId(),
+			windowStart,
+			transactionEvent.eventTimestamp()
+		).stream()
+			.map(fraudEvaluationPersistenceMapper::toDomain)
+			.map(FraudEvaluation::transactionEvent)
+			.toList();
 	}
 }
