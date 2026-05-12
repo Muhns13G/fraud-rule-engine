@@ -83,7 +83,8 @@ Build a Spring Boot service that processes categorized transaction events, evalu
   - high-amount threshold rule
   - rapid-repeat transaction velocity rule for the same account or customer
   - risky merchant category rule
-  - location anomaly rule when a transaction appears inconsistent with recent history
+  - unusual time rule
+- Defer `location anomaly` unless the first vertical slice is already stable and there is time for a clearly explainable heuristic.
 - Each rule should contribute:
   - a stable rule code
   - a human-readable reason
@@ -110,7 +111,7 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 
 ## Suggested Execution Flow
 1. Validate and normalize inbound request payloads.
-2. Load recent transaction context needed for velocity and anomaly checks.
+2. Load recent transaction context needed for velocity checks.
 3. Evaluate rules in a deterministic order.
 4. Aggregate rule results into a final fraud decision.
 5. Persist the request, rule hits, and final decision for auditability.
@@ -123,7 +124,15 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - Use Flyway before adding real persistence logic so schema history is explicit from the start.
 - Stay on Maven for this repo; it matches the generated project and keeps the submission easier to understand in a conservative enterprise setting.
 - Default security behavior must be replaced with an intentional local and test setup before the API is presented as complete.
+- For the take-home, prefer no real auth in local development; document that choice explicitly and describe likely production hardening paths in the README.
 - Pin image versions before final submission; `postgres:latest` is acceptable scaffolding, not a final production-grade choice.
+
+## Phase 1 Query Scope
+- Retrieval filters for the first release are intentionally narrow:
+  - `decision`
+  - `accountId`
+  - time range
+- Defer additional filters such as `customerId`, `transactionId`, `merchantCategory`, `channel`, or rule-hit lookups until the core evaluation slice is stable.
 
 ## Immediate Gaps
 - No API contract exists yet for the brief's categorized transaction event flow.

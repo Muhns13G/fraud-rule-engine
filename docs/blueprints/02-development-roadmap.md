@@ -59,11 +59,18 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - The first input model is a transaction event, not a broad multi-domain envelope.
 - The first decision model is tiered: `ALLOW`, `REVIEW`, `BLOCK`.
 - The first rule set is code-defined and deterministic.
+- Phase 1 rules are:
+  - high amount
+  - velocity
+  - risky merchant category
+  - unusual time
+- `location anomaly` is deferred unless the first vertical slice is already stable.
 - Build tool stays Maven.
 - Persistence stays PostgreSQL-backed for both local development and tests.
+- Local development uses intentionally permissive security for Phase 1 and documents the missing production auth story explicitly.
+- Phase 1 retrieval filters are limited to `decision`, `accountId`, and time range.
 
 ## Remaining Design Decisions
 - What exact threshold values should the first rule set use so they feel realistic without requiring hidden banking data?
-- Should location anomaly be part of Phase 1, or should the first slice stay with amount, merchant category, and velocity only?
-- How much authentication is enough for the take-home: intentionally permissive local setup only, or a lightweight API key/basic auth story as well?
-- What retrieval filters are essential for the take-home versus nice-to-have?
+- What exact request and response payload details should be exposed in the first API version?
+- Should internal scoring be numeric, categorical, or both while keeping the outward decision model simple?
