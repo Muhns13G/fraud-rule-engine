@@ -132,6 +132,8 @@ Then run the app:
 
 The local Compose service is pinned to `postgres:18.3`.
 
+For PostgreSQL `18+`, the Compose volume is mounted at `/var/lib/postgresql` rather than `/var/lib/postgresql/data` to match the image's major-version-aware data layout.
+
 ## Running Tests
 
 All tests require Docker because integration tests and the context test use Testcontainers.

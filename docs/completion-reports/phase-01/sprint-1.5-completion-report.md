@@ -125,6 +125,7 @@ Sprint `1.5` hardened the Phase 1 fraud-evaluation slice into a submission-quali
 - Local `./mvnw clean install` completed successfully on May 12, 2026 during the early hardening phase.
 - Local `./mvnw test` completed successfully on May 13, 2026 after the full Sprint `1.5` work, with `32` passing tests.
 - Local `docker build -t fraud-rule-engine:local .` completed successfully during Sprint `1.5.4`.
+- The final chosen PostgreSQL pin remains `18.3`; a brief fallback to `17.9` during later local-run troubleshooting was not kept once the PostgreSQL `18+` Compose volume layout was corrected.
 - Sandbox `./mvnw test` failures during the sprint were caused by Docker access restrictions and were not treated as authoritative sprint-close evidence.
 
 ## Close-Out
