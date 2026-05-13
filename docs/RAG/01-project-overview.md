@@ -25,6 +25,7 @@
 - Persistence posture: evaluation rows retain business completion time plus row-level audit timestamps
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
+  - retrieval now supports a modest review-oriented filter set plus explicit summary sorting
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`

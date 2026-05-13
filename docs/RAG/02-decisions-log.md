@@ -20,10 +20,13 @@
   - risky merchant categories start with `GAMBLING`, `CRYPTO`, `MONEY_TRANSFER`
 - `location anomaly` is deferred unless the first vertical slice is already stable.
 - Local development will not implement real auth for Phase 1; this choice must be stated clearly in the README.
-- Phase 1 retrieval filters are limited to:
+- The current review retrieval surface supports:
   - `decision`
   - `accountId`
+  - `customerId`
+  - `transactionId`
   - time range
+  - explicit summary sorting with `NEWEST_FIRST` and `OLDEST_FIRST`
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

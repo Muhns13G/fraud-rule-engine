@@ -149,7 +149,7 @@ public class FraudEvaluationController {
 	@GetMapping
 	@Operation(
 		summary = "List fraud evaluations",
-		description = "Returns persisted fraud evaluations using the current review filters: decision, accountId, customerId, transactionId, and evaluatedAt time range."
+		description = "Returns persisted fraud evaluations using the current review filters: decision, accountId, customerId, transactionId, evaluatedAt time range, and explicit summary sorting."
 	)
 	@ApiResponses({
 		@ApiResponse(

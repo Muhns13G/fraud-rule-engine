@@ -46,7 +46,8 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - `GET /api/fraud-evaluations/{evaluationId}`
   - returns the persisted evaluation, rule hits, and final decision
 - `GET /api/fraud-evaluations`
-  - supports simple review filters such as `decision`, `accountId`, and time range
+  - supports review filters such as `decision`, `accountId`, `customerId`, `transactionId`, and time range
+  - supports explicit summary sorting for reviewer-friendly list ordering
 
 ## First Request Shape
 - Model the first input as a categorized card or account transaction event, not a generic catch-all envelope.
@@ -174,8 +175,11 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - Retrieval filters for the first release are intentionally narrow:
   - `decision`
   - `accountId`
+  - `customerId`
+  - `transactionId`
   - time range
-- Defer additional filters such as `customerId`, `transactionId`, `merchantCategory`, `channel`, or rule-hit lookups until the core evaluation slice is stable.
+- List retrieval also supports deliberate summary sorting rather than ad hoc ordering.
+- Defer additional filters such as `merchantCategory`, `channel`, or rule-hit lookups until the core evaluation slice is stable.
 
 ## Immediate Gaps
 - No dynamic rule management or rule version lifecycle exists yet.

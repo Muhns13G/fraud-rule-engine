@@ -38,12 +38,15 @@ Implemented decision model:
 - `REVIEW`
 - `BLOCK`
 
-Phase 1 retrieval filters:
+Current retrieval filters:
 
 - `decision`
 - `accountId`
+- `customerId`
+- `transactionId`
 - `from`
 - `to`
+- `sort`
 
 ## Architecture Summary
 
@@ -244,14 +247,22 @@ Supported filters:
 
 - `decision`
 - `accountId`
+- `customerId`
+- `transactionId`
 - `from`
 - `to`
+- `sort`
 
 Example:
 
 ```bash
-curl "http://localhost:8080/api/fraud-evaluations?decision=REVIEW&accountId=account-001&from=2026-05-12T09:00:00%2B02:00&to=2026-05-12T12:00:00%2B02:00"
+curl "http://localhost:8080/api/fraud-evaluations?decision=REVIEW&accountId=account-001&customerId=customer-001&from=2026-05-12T09:00:00%2B02:00&to=2026-05-12T12:00:00%2B02:00&sort=NEWEST_FIRST"
 ```
+
+Supported sort values:
+
+- `NEWEST_FIRST` (default)
+- `OLDEST_FIRST`
 
 ## Data Model
 
@@ -296,7 +307,7 @@ Production hardening would likely include:
 - rules are code-defined, not database-authored
 - no dynamic rule management or rule version administration yet
 - `location anomaly` is intentionally deferred
-- retrieval filters are intentionally narrow for Phase 1
+- retrieval remains intentionally bounded and is not intended to become a generic reporting surface
 - no CI pipeline exists yet
 - security is intentionally open for local/reviewer use
 - SpringDoc remains enabled by default for the current slice

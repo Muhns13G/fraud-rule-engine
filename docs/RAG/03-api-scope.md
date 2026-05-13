@@ -37,12 +37,19 @@ Return filtered fraud evaluations for review workflows.
 ## Phase 1 Query Filters
 - `decision`
 - `accountId`
+- `customerId`
+- `transactionId`
 - `from`
 - `to`
+- `sort`
+
+Supported sort values:
+- `NEWEST_FIRST`
+- `OLDEST_FIRST`
 
 ## Not In Phase 1 By Default
 - bulk ingestion
 - asynchronous processing
 - admin rule-management endpoints
 - customer-facing APIs
-- advanced search filters such as `customerId`, `transactionId`, `merchantCategory`, or rule-hit lookup
+- broader search filters such as `merchantCategory`, `channel`, or rule-hit lookup

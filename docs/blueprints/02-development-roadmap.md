@@ -39,7 +39,7 @@ Move from a working take-home vertical slice to a configurable rules platform. D
   - unit tests for rule logic
   - repository integration tests
   - API tests for request/response behavior
-- Pin infrastructure image versions instead of using `postgres:latest`.
+- Keep infrastructure image versions explicitly pinned and reviewer-reproducible.
 - Revisit performance characteristics for high-throughput decision evaluation.
 
 ## First Concrete Deliverables
@@ -68,7 +68,7 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Build tool stays Maven.
 - Persistence stays PostgreSQL-backed for both local development and tests.
 - Local development uses intentionally permissive security for Phase 1 and documents the missing production auth story explicitly.
-- Phase 1 retrieval filters are limited to `decision`, `accountId`, and time range.
+- The current retrieval surface supports `decision`, `accountId`, `customerId`, `transactionId`, time range, and explicit summary sorting.
 
 ## Remaining Design Decisions
 - Whether internal scoring should be numeric only, categorical only, or both while keeping the outward decision model simple
