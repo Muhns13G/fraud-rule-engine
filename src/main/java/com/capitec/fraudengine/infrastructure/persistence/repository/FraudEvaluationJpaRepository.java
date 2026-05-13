@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.capitec.fraudengine.domain.model.enums.FraudDecision;
 import com.capitec.fraudengine.infrastructure.persistence.entity.FraudEvaluationEntity;
@@ -12,7 +13,8 @@ import com.capitec.fraudengine.infrastructure.persistence.entity.FraudEvaluation
 /**
  * Spring Data repository for persisted fraud evaluations.
  */
-public interface FraudEvaluationJpaRepository extends JpaRepository<FraudEvaluationEntity, UUID> {
+public interface FraudEvaluationJpaRepository
+	extends JpaRepository<FraudEvaluationEntity, UUID>, JpaSpecificationExecutor<FraudEvaluationEntity> {
 
 	/**
 	 * Finds evaluations by final decision.

@@ -15,6 +15,7 @@ import com.capitec.fraudengine.domain.model.FraudEvaluation;
 import com.capitec.fraudengine.domain.model.enums.FraudDecision;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.FraudEvaluationPersistenceMapper;
 import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationJpaRepository;
+import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationSpecifications;
 
 /**
  * Application service that loads persisted fraud evaluations and maps them into API-facing response shapes.
@@ -82,102 +83,10 @@ public class FraudEvaluationRetrievalService {
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
-		if (transactionId != null) {
-			return fraudEvaluationJpaRepository.findByTransactionId(transactionId).stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.filter(evaluation -> matchesFilters(evaluation, decision, accountId, customerId, from, to))
-				.toList();
-		}
-
-		if (customerId != null) {
-			return fraudEvaluationJpaRepository.findByCustomerId(customerId).stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.filter(evaluation -> matchesFilters(evaluation, decision, accountId, customerId, from, to))
-				.toList();
-		}
-
-		if (decision != null && accountId != null && from != null && to != null) {
-			return fraudEvaluationJpaRepository.findByDecisionAndAccountIdAndEvaluatedAtBetween(decision, accountId, from, to)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		if (decision != null && accountId != null) {
-			return fraudEvaluationJpaRepository.findByDecisionAndAccountId(decision, accountId)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		if (decision != null && from != null && to != null) {
-			return fraudEvaluationJpaRepository.findByDecisionAndEvaluatedAtBetween(decision, from, to)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		if (accountId != null && from != null && to != null) {
-			return fraudEvaluationJpaRepository.findByAccountIdAndEvaluatedAtBetween(accountId, from, to)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		if (decision != null) {
-			return fraudEvaluationJpaRepository.findByDecision(decision)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		if (accountId != null) {
-			return fraudEvaluationJpaRepository.findByAccountId(accountId)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		if (from != null && to != null) {
-			return fraudEvaluationJpaRepository.findByEvaluatedAtBetween(from, to)
-				.stream()
-				.map(fraudEvaluationPersistenceMapper::toDomain)
-				.toList();
-		}
-
-		return fraudEvaluationJpaRepository.findAll().stream()
+		return fraudEvaluationJpaRepository.findAll(
+			FraudEvaluationSpecifications.withReviewFilters(decision, accountId, customerId, transactionId, from, to)
+		).stream()
 			.map(fraudEvaluationPersistenceMapper::toDomain)
 			.toList();
-	}
-
-	private boolean matchesFilters(
-		FraudEvaluation evaluation,
-		FraudDecision decision,
-		String accountId,
-		String customerId,
-		OffsetDateTime from,
-		OffsetDateTime to
-	) {
-		if (decision != null && evaluation.decision() != decision) {
-			return false;
-		}
-
-		if (accountId != null && !accountId.equals(evaluation.transactionEvent().accountId())) {
-			return false;
-		}
-
-		if (customerId != null && !customerId.equals(evaluation.transactionEvent().customerId())) {
-			return false;
-		}
-
-		if (from != null && evaluation.evaluatedAt().isBefore(from)) {
-			return false;
-		}
-
-		if (to != null && evaluation.evaluatedAt().isAfter(to)) {
-			return false;
-		}
-
-		return true;
 	}
 }
