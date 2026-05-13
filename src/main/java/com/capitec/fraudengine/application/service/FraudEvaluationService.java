@@ -5,6 +5,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,19 +37,22 @@ public class FraudEvaluationService {
 	private final FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper;
 	private final FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper;
 	private final FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
+	private final MeterRegistry meterRegistry;
 
 	public FraudEvaluationService(
 		List<FraudRule> fraudRules,
 		FraudDecisionPolicy fraudDecisionPolicy,
 		FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper,
 		FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper,
-		FraudEvaluationJpaRepository fraudEvaluationJpaRepository
+		FraudEvaluationJpaRepository fraudEvaluationJpaRepository,
+		MeterRegistry meterRegistry
 	) {
 		this.fraudRules = fraudRules;
 		this.fraudDecisionPolicy = fraudDecisionPolicy;
 		this.fraudEvaluationApplicationMapper = fraudEvaluationApplicationMapper;
 		this.fraudEvaluationPersistenceMapper = fraudEvaluationPersistenceMapper;
 		this.fraudEvaluationJpaRepository = fraudEvaluationJpaRepository;
+		this.meterRegistry = meterRegistry;
 	}
 
 	/**
@@ -57,56 +62,67 @@ public class FraudEvaluationService {
 	 * @return persisted fraud evaluation result
 	 */
 	public FraudEvaluation evaluate(FraudEvaluationRequestDto request) {
-		TransactionEvent transactionEvent = fraudEvaluationApplicationMapper.toDomain(request);
-		LOGGER.info(
-			"fraud_evaluation_started transactionId={} accountId={} customerId={} channel={} merchantCategory={} eventTimestamp={}",
-			transactionEvent.transactionId(),
-			transactionEvent.accountId(),
-			transactionEvent.customerId(),
-			transactionEvent.channel(),
-			transactionEvent.merchantCategory(),
-			transactionEvent.eventTimestamp()
-		);
+		Timer.Sample timerSample = Timer.start(meterRegistry);
+		try {
+			TransactionEvent transactionEvent = fraudEvaluationApplicationMapper.toDomain(request);
+			LOGGER.info(
+				"fraud_evaluation_started transactionId={} accountId={} customerId={} channel={} merchantCategory={} eventTimestamp={}",
+				transactionEvent.transactionId(),
+				transactionEvent.accountId(),
+				transactionEvent.customerId(),
+				transactionEvent.channel(),
+				transactionEvent.merchantCategory(),
+				transactionEvent.eventTimestamp()
+			);
 
-		List<TransactionEvent> recentTransactions = loadRecentTransactions(transactionEvent);
-		FraudRuleContext context = new FraudRuleContext(transactionEvent, recentTransactions);
+			List<TransactionEvent> recentTransactions = loadRecentTransactions(transactionEvent);
+			FraudRuleContext context = new FraudRuleContext(transactionEvent, recentTransactions);
 
-		List<RuleEvaluationResult> ruleResults = fraudRules.stream()
-			.map(rule -> rule.evaluate(context))
-			.toList();
+			List<RuleEvaluationResult> ruleResults = fraudRules.stream()
+				.map(rule -> rule.evaluate(context))
+				.toList();
 
-		FraudDecisionPolicyResult decision = fraudDecisionPolicy.evaluate(ruleResults);
+			FraudDecisionPolicyResult decision = fraudDecisionPolicy.evaluate(ruleResults);
 
-		FraudEvaluation evaluation = new FraudEvaluation(
-			UUID.randomUUID(),
-			transactionEvent,
-			decision.decision(),
-			decision.decisionScore(),
-			OffsetDateTime.now(),
-			decision.traceSummary(),
-			ruleResults
-		);
+			FraudEvaluation evaluation = new FraudEvaluation(
+				UUID.randomUUID(),
+				transactionEvent,
+				decision.decision(),
+				decision.decisionScore(),
+				OffsetDateTime.now(),
+				decision.traceSummary(),
+				ruleResults
+			);
 
-		FraudEvaluation persistedEvaluation = fraudEvaluationPersistenceMapper.toDomain(
-			fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(evaluation))
-		);
+			FraudEvaluation persistedEvaluation = fraudEvaluationPersistenceMapper.toDomain(
+				fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(evaluation))
+			);
 
-		long triggeredRuleCount = ruleResults.stream()
-			.filter(RuleEvaluationResult::triggered)
-			.count();
+			long triggeredRuleCount = ruleResults.stream()
+				.filter(RuleEvaluationResult::triggered)
+				.count();
 
-		LOGGER.info(
-			"fraud_evaluation_completed evaluationId={} transactionId={} accountId={} decision={} decisionScore={} triggeredRuleCount={} evaluatedAt={}",
-			persistedEvaluation.evaluationId(),
-			transactionEvent.transactionId(),
-			transactionEvent.accountId(),
-			persistedEvaluation.decision(),
-			persistedEvaluation.decisionScore(),
-			triggeredRuleCount,
-			persistedEvaluation.evaluatedAt()
-		);
+			LOGGER.info(
+				"fraud_evaluation_completed evaluationId={} transactionId={} accountId={} decision={} decisionScore={} triggeredRuleCount={} evaluatedAt={}",
+				persistedEvaluation.evaluationId(),
+				transactionEvent.transactionId(),
+				transactionEvent.accountId(),
+				persistedEvaluation.decision(),
+				persistedEvaluation.decisionScore(),
+				triggeredRuleCount,
+				persistedEvaluation.evaluatedAt()
+			);
 
-		return persistedEvaluation;
+			recordEvaluationMetrics(persistedEvaluation);
+			return persistedEvaluation;
+		}
+		finally {
+			timerSample.stop(
+				Timer.builder("fraud.evaluation.duration")
+					.description("End-to-end duration of one fraud evaluation request.")
+					.register(meterRegistry)
+			);
+		}
 	}
 
 	private List<TransactionEvent> loadRecentTransactions(TransactionEvent transactionEvent) {
@@ -131,5 +147,25 @@ public class FraudEvaluationService {
 		);
 
 		return recentTransactions;
+	}
+
+	private void recordEvaluationMetrics(FraudEvaluation evaluation) {
+		meterRegistry.counter("fraud.evaluation.completed.total").increment();
+
+		meterRegistry.counter(
+			"fraud.evaluation.decision.count",
+			"decision",
+			evaluation.decision().name()
+		).increment();
+
+		evaluation.ruleResults().stream()
+			.filter(RuleEvaluationResult::triggered)
+			.forEach(ruleResult -> meterRegistry.counter(
+				"fraud.evaluation.rule.triggered.count",
+				"ruleCode",
+				ruleResult.ruleCode(),
+				"severity",
+				ruleResult.severity().name()
+			).increment());
 	}
 }
