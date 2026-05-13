@@ -2,6 +2,7 @@ package com.capitec.fraudengine.infrastructure.config;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
@@ -23,6 +24,9 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
 
 	public static final String REQUEST_ID_HEADER = "X-Request-Id";
 	public static final String REQUEST_ID_MDC_KEY = "requestId";
+	private static final Pattern UUID_REQUEST_ID_PATTERN = Pattern.compile(
+		"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+	);
 
 	@Override
 	protected void doFilterInternal(
@@ -45,7 +49,10 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
 	private String resolveRequestId(HttpServletRequest request) {
 		String incomingRequestId = request.getHeader(REQUEST_ID_HEADER);
 		if (incomingRequestId != null && !incomingRequestId.isBlank()) {
-			return incomingRequestId.trim();
+			String candidateRequestId = incomingRequestId.trim();
+			if (UUID_REQUEST_ID_PATTERN.matcher(candidateRequestId).matches()) {
+				return candidateRequestId;
+			}
 		}
 
 		return UUID.randomUUID().toString();

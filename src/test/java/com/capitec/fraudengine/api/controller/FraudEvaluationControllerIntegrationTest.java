@@ -97,6 +97,7 @@ class FraudEvaluationControllerIntegrationTest {
 				evaluationId,
 				"txn-get-001",
 				"account-get-001",
+				"customer-get-001",
 				FraudDecision.REVIEW,
 				40,
 				OffsetDateTime.parse("2026-05-12T11:00:00+02:00"),

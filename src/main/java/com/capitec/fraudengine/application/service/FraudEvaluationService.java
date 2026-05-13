@@ -38,6 +38,7 @@ public class FraudEvaluationService {
 	private final FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper;
 	private final FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
 	private final MeterRegistry meterRegistry;
+	private final Timer evaluationDurationTimer;
 
 	public FraudEvaluationService(
 		List<FraudRule> fraudRules,
@@ -53,6 +54,9 @@ public class FraudEvaluationService {
 		this.fraudEvaluationPersistenceMapper = fraudEvaluationPersistenceMapper;
 		this.fraudEvaluationJpaRepository = fraudEvaluationJpaRepository;
 		this.meterRegistry = meterRegistry;
+		this.evaluationDurationTimer = Timer.builder("fraud.evaluation.duration")
+			.description("End-to-end duration of one fraud evaluation request.")
+			.register(meterRegistry);
 	}
 
 	/**
@@ -117,11 +121,7 @@ public class FraudEvaluationService {
 			return persistedEvaluation;
 		}
 		finally {
-			timerSample.stop(
-				Timer.builder("fraud.evaluation.duration")
-					.description("End-to-end duration of one fraud evaluation request.")
-					.register(meterRegistry)
-			);
+			timerSample.stop(evaluationDurationTimer);
 		}
 	}
 
