@@ -9,3 +9,14 @@ spring:
     locations: classpath:db/migration
   jpa:
     open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
