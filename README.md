@@ -263,6 +263,7 @@ The initial schema contains:
   - decision score
   - trace summary
   - evaluation timestamp
+  - persistence audit timestamps for row creation and last update
 - `fraud_rule_results`
   - one row per evaluated rule result
   - severity, score contribution, and reason

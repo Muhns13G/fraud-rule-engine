@@ -4,6 +4,7 @@
 - Single-module Spring Boot app
 - Phase 1 API, application, domain, persistence, security, and config layers are implemented
 - Flyway migration exists for the initial PostgreSQL schema
+- Persisted evaluation headers now carry row-level audit timestamps in addition to business evaluation timestamps
 - Testcontainers-backed integration tests and focused unit tests exist
 - Phase 1 local security is intentionally permissive for reviewer usability
 

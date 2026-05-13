@@ -22,6 +22,7 @@
 - Local development dependency: Docker
 - Testing dependency: Testcontainers PostgreSQL
 - Runtime persistence: Flyway-managed PostgreSQL schema with fraud evaluation and rule-result tables
+- Persistence posture: evaluation rows retain business completion time plus row-level audit timestamps
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
   - Swagger UI and OpenAPI spec are exposed for local review
