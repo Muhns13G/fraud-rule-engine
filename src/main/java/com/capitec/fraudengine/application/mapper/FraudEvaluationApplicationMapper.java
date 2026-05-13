@@ -9,6 +9,7 @@ import com.capitec.fraudengine.api.dto.FraudEvaluationResponseDto;
 import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryResponseDto;
 import com.capitec.fraudengine.api.dto.LocationDto;
 import com.capitec.fraudengine.api.dto.RuleResultResponseDto;
+import com.capitec.fraudengine.common.error.InvalidRequestValueException;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.TransactionEvent;
@@ -101,15 +102,30 @@ public class FraudEvaluationApplicationMapper {
 	}
 
 	private MerchantCategory toMerchantCategory(String value) {
-		return MerchantCategory.valueOf(normalizeEnumValue(value));
+		try {
+			return MerchantCategory.valueOf(normalizeEnumValue(value));
+		}
+		catch (IllegalArgumentException exception) {
+			throw new InvalidRequestValueException("Unsupported merchantCategory value '" + value + "'.");
+		}
 	}
 
 	private TransactionType toTransactionType(String value) {
-		return TransactionType.valueOf(normalizeEnumValue(value));
+		try {
+			return TransactionType.valueOf(normalizeEnumValue(value));
+		}
+		catch (IllegalArgumentException exception) {
+			throw new InvalidRequestValueException("Unsupported transactionType value '" + value + "'.");
+		}
 	}
 
 	private TransactionChannel toTransactionChannel(String value) {
-		return TransactionChannel.valueOf(normalizeEnumValue(value));
+		try {
+			return TransactionChannel.valueOf(normalizeEnumValue(value));
+		}
+		catch (IllegalArgumentException exception) {
+			throw new InvalidRequestValueException("Unsupported channel value '" + value + "'.");
+		}
 	}
 
 	private String normalizeEnumValue(String value) {

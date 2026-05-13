@@ -124,6 +124,35 @@ class FraudEvaluationControllerIntegrationTest {
 	}
 
 	@Test
+	void shouldReturnBadRequestForUnsupportedRequestBodyEnumValue() throws Exception {
+		mockMvc.perform(post("/api/fraud-evaluations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "transactionId": "txn-post-unsupported-001",
+					  "accountId": "account-post-unsupported-001",
+					  "customerId": "customer-post-unsupported-001",
+					  "amount": 500.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-123",
+					  "merchantCategory": "NOT_A_REAL_CATEGORY",
+					  "transactionType": "PURCHASE",
+					  "channel": "ONLINE",
+					  "eventTimestamp": "2026-05-12T10:00:00+02:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "post-integration-test-invalid-enum"
+					}
+					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status", is(400)))
+			.andExpect(jsonPath("$.message", is("Request payload contains an unsupported value.")))
+			.andExpect(jsonPath("$.details[0]", containsString("merchantCategory")));
+	}
+
+	@Test
 	void shouldReturnFilteredEvaluationSummaries() throws Exception {
 		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
 			fraudEvaluation(

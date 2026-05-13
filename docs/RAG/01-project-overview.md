@@ -21,6 +21,14 @@
 - Database: PostgreSQL
 - Local development dependency: Docker
 - Testing dependency: Testcontainers PostgreSQL
+- Runtime persistence: Flyway-managed PostgreSQL schema with fraud evaluation and rule-result tables
+- API status:
+  - Phase 1 evaluation and retrieval endpoints are implemented
+  - Swagger UI and OpenAPI spec are exposed for local review
+- Delivery artifacts now exist:
+  - runnable multi-stage `Dockerfile`
+  - reviewer-facing `README`
+  - unit and integration test coverage for the Phase 1 slice
 
 ## Phase 1 Locked Scope
 - API:

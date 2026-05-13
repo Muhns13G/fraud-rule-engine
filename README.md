@@ -296,7 +296,6 @@ Production hardening would likely include:
 - retrieval filters are intentionally narrow for Phase 1
 - no CI pipeline exists yet
 - security is intentionally open for local/reviewer use
-- `spring.jpa.open-in-view` is still on and should be revisited in final cleanup
 - SpringDoc remains enabled by default for the current slice
 
 ## Future Improvements

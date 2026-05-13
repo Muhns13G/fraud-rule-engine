@@ -13,8 +13,7 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 
 ## Verified Current State
 - The repo is a single-module Spring Boot `4.0.6` application on Java `25`.
-- The only production code today is the bootstrap class: `com.capitec.fraudengine.FraudRuleEngineApplication`.
-- The runtime stack already points toward a REST + persistence service:
+- The runtime stack for the implemented Phase 1 slice includes:
   - Spring Web MVC
   - Spring Data JPA
   - Spring Validation
@@ -25,7 +24,11 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - Local development and tests both assume Docker-backed Postgres:
   - `compose.yaml` provides `postgres`
   - tests use Testcontainers Postgres through `TestcontainersConfiguration`
-- No domain model, controllers, services, repositories, migrations, or business rules are implemented yet.
+- The Phase 1 vertical slice is implemented:
+  - domain model, rule set, and decision policy exist
+  - persistence uses Flyway-managed PostgreSQL tables
+  - controllers, services, repositories, and mappers are in place
+  - Dockerfile and README now exist as deliverables
 
 ## Brief-Aligned Target System
 - Accept categorized transaction events over HTTP.
@@ -175,11 +178,8 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - Defer additional filters such as `customerId`, `transactionId`, `merchantCategory`, `channel`, or rule-hit lookups until the core evaluation slice is stable.
 
 ## Immediate Gaps
-- No API contract exists yet for the brief's categorized transaction event flow.
-- No database schema or migration tooling exists yet.
-- No fraud rules or decision aggregation policy are implemented yet.
-- No retrieval API exists yet for stored fraud evaluations.
-- No authentication or authorization policy has been configured beyond Spring Security defaults.
-- No observability conventions exist yet for logs, metrics, or audit events.
-- No Dockerfile or README exists yet, even though both are required deliverables.
-- No focused unit or integration test structure exists beyond context startup.
+- No dynamic rule management or rule version lifecycle exists yet.
+- No authentication or authorization strategy exists beyond the intentionally open Phase 1 local/test posture.
+- No observability conventions exist yet for fraud-domain metrics, correlation, or audit events beyond persisted evaluation history.
+- No CI pipeline or deployment automation exists yet.
+- Additional retrieval filters and deferred heuristics such as `location anomaly` remain out of scope for Phase 1.

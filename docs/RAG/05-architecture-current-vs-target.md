@@ -2,9 +2,10 @@
 
 ## Current State
 - Single-module Spring Boot app
-- Only bootstrap production class exists
-- Testcontainers-backed Postgres smoke test exists
-- No business domain, API, persistence model, migrations, or rule engine yet
+- Phase 1 API, application, domain, persistence, security, and config layers are implemented
+- Flyway migration exists for the initial PostgreSQL schema
+- Testcontainers-backed integration tests and focused unit tests exist
+- Phase 1 local security is intentionally permissive for reviewer usability
 
 ## Target Phase 1 Shape
 - `api`

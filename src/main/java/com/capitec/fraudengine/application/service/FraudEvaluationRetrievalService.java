@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.capitec.fraudengine.api.dto.FraudEvaluationResponseDto;
 import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryResponseDto;
@@ -41,6 +42,7 @@ public class FraudEvaluationRetrievalService {
 	 * @param evaluationId persisted evaluation identifier
 	 * @return optional detailed response DTO
 	 */
+	@Transactional(readOnly = true)
 	public Optional<FraudEvaluationResponseDto> findById(UUID evaluationId) {
 		return fraudEvaluationJpaRepository.findById(evaluationId)
 			.map(fraudEvaluationPersistenceMapper::toDomain)
@@ -56,6 +58,7 @@ public class FraudEvaluationRetrievalService {
 	 * @param to optional time-range end
 	 * @return summary response DTOs
 	 */
+	@Transactional(readOnly = true)
 	public List<FraudEvaluationSummaryResponseDto> findSummaries(
 		FraudDecision decision,
 		String accountId,

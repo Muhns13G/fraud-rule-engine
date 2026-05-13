@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.capitec.fraudengine.common.error.InvalidRequestValueException;
+
 /**
  * Centralized exception handling for API validation and request failures.
  */
@@ -46,6 +48,17 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) {
 		String detail = "Invalid value '" + exception.getValue() + "' for parameter '" + exception.getName() + "'.";
 		return buildResponse(HttpStatus.BAD_REQUEST, "Request parameter could not be parsed.", List.of(detail));
+	}
+
+	/**
+	 * Handles invalid request-body values that fail enum or domain normalization.
+	 *
+	 * @param exception invalid request value exception
+	 * @return structured bad-request response
+	 */
+	@ExceptionHandler(InvalidRequestValueException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidRequestValue(InvalidRequestValueException exception) {
+		return buildResponse(HttpStatus.BAD_REQUEST, "Request payload contains an unsupported value.", List.of(exception.getMessage()));
 	}
 
 	/**
