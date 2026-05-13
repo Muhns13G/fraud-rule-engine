@@ -1,0 +1,323 @@
+# Fraud Rule Engine
+
+Spring Boot service for evaluating categorized transaction events against a deterministic Phase 1 fraud rule set, persisting the resulting decision trail, and exposing retrieval APIs for review.
+
+This project was built as a Capitec take-home submission. The goal of the current slice is not to model a full fraud platform, but to deliver a production-grade, explainable vertical slice that is easy to run, test, and discuss.
+
+## Tech Stack
+
+- Java 25
+- Spring Boot 4.0.6
+- Spring Web MVC
+- Spring Data JPA
+- PostgreSQL
+- Flyway
+- Spring Security
+- SpringDoc OpenAPI
+- Testcontainers
+- Maven Wrapper
+
+## Phase 1 Scope
+
+Implemented API surface:
+
+- `POST /api/fraud-evaluations`
+- `GET /api/fraud-evaluations/{evaluationId}`
+- `GET /api/fraud-evaluations`
+
+Implemented fraud rules:
+
+- high amount
+- velocity
+- risky merchant category
+- unusual time
+
+Implemented decision model:
+
+- `ALLOW`
+- `REVIEW`
+- `BLOCK`
+
+Phase 1 retrieval filters:
+
+- `decision`
+- `accountId`
+- `from`
+- `to`
+
+## Architecture Summary
+
+The service follows a layered structure to keep fraud logic separate from transport and persistence concerns:
+
+- `api`
+  - controllers, DTOs, and exception handling
+- `application`
+  - orchestration for evaluation and retrieval use cases
+- `domain`
+  - transaction model, fraud rules, and decision policy
+- `infrastructure.persistence`
+  - JPA entities, repositories, and persistence mappers
+- `infrastructure.security`
+  - Phase 1 local/test security configuration
+- `infrastructure.config`
+  - OpenAPI and Flyway bootstrap configuration
+
+Evaluation flow:
+
+1. validate and normalize the inbound transaction payload
+2. load recent transaction context for history-based checks
+3. evaluate the active rule set in deterministic order
+4. aggregate rule outcomes into a final fraud decision
+5. persist the evaluation header and per-rule results
+6. return the decision, score, and traceable rule trail
+
+## Fraud Rules
+
+Current thresholds and heuristics:
+
+- high amount
+  - `REVIEW` at `>= 10000.00 ZAR`
+  - `BLOCK` at `>= 25000.00 ZAR`
+- velocity
+  - `REVIEW` when `>= 3` transactions occur for the same `accountId` within `5 minutes`
+- risky merchant category
+  - flagged categories: `GAMBLING`, `CRYPTO`, `MONEY_TRANSFER`
+- unusual time
+  - `REVIEW` for transactions between `00:00` and `04:00`
+
+Score model:
+
+- review-level rule hit: `40`
+- block-level rule hit: `100`
+- final decision:
+  - `ALLOW` when no rules trigger
+  - `REVIEW` when score is `1-99`
+  - `BLOCK` when any blocking rule triggers or total score is `>= 100`
+
+## Running Locally
+
+### Prerequisites
+
+- Java 25
+- Docker Desktop or another running Docker engine
+
+### Option 1: Run with Spring Boot and Docker Compose
+
+This is the easiest local path. Spring Boot will use `compose.yaml` to start PostgreSQL automatically.
+
+```bash
+./mvnw spring-boot:run
+```
+
+Useful local URLs:
+
+- API base: `http://localhost:8080/api/fraud-evaluations`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI spec: `http://localhost:8080/v3/api-docs`
+- Actuator health: `http://localhost:8080/actuator/health`
+
+### Option 2: Run PostgreSQL yourself, then start the app
+
+Start the database:
+
+```bash
+docker compose up -d postgres
+```
+
+Then run the app:
+
+```bash
+./mvnw spring-boot:run
+```
+
+The local Compose service is pinned to `postgres:18.3`.
+
+## Running Tests
+
+All tests require Docker because integration tests and the context test use Testcontainers.
+
+Run the full suite:
+
+```bash
+./mvnw test
+```
+
+Build the jar without rerunning tests:
+
+```bash
+./mvnw -DskipTests package
+```
+
+Current automated coverage includes:
+
+- unit tests for all four fraud rules
+- unit tests for the decision aggregation policy
+- integration tests for the repository layer
+- integration tests for the API layer
+- application context startup test
+
+## Docker
+
+Build the application image:
+
+```bash
+docker build -t fraud-rule-engine:local .
+```
+
+Run the database service:
+
+```bash
+docker compose up -d postgres
+```
+
+The application `Dockerfile` is multi-stage and uses pinned Eclipse Temurin Java 25 images for both build and runtime.
+
+## API Summary
+
+### Create evaluation
+
+`POST /api/fraud-evaluations`
+
+Example request:
+
+```json
+{
+  "transactionId": "txn-001",
+  "accountId": "account-001",
+  "customerId": "customer-001",
+  "amount": 26000.00,
+  "currency": "ZAR",
+  "merchantId": "merchant-123",
+  "merchantCategory": "RETAIL",
+  "transactionType": "PURCHASE",
+  "channel": "ONLINE",
+  "eventTimestamp": "2026-05-12T10:00:00+02:00",
+  "location": {
+    "countryCode": "ZA",
+    "city": "Cape Town"
+  },
+  "reference": "sample-request"
+}
+```
+
+Example `curl`:
+
+```bash
+curl -X POST http://localhost:8080/api/fraud-evaluations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transactionId": "txn-001",
+    "accountId": "account-001",
+    "customerId": "customer-001",
+    "amount": 26000.00,
+    "currency": "ZAR",
+    "merchantId": "merchant-123",
+    "merchantCategory": "RETAIL",
+    "transactionType": "PURCHASE",
+    "channel": "ONLINE",
+    "eventTimestamp": "2026-05-12T10:00:00+02:00",
+    "location": {
+      "countryCode": "ZA",
+      "city": "Cape Town"
+    },
+    "reference": "sample-request"
+  }'
+```
+
+### Retrieve one evaluation
+
+`GET /api/fraud-evaluations/{evaluationId}`
+
+Example:
+
+```bash
+curl http://localhost:8080/api/fraud-evaluations/{evaluationId}
+```
+
+### List evaluation summaries
+
+`GET /api/fraud-evaluations`
+
+Supported filters:
+
+- `decision`
+- `accountId`
+- `from`
+- `to`
+
+Example:
+
+```bash
+curl "http://localhost:8080/api/fraud-evaluations?decision=REVIEW&accountId=account-001&from=2026-05-12T09:00:00%2B02:00&to=2026-05-12T12:00:00%2B02:00"
+```
+
+## Data Model
+
+The initial schema contains:
+
+- `fraud_evaluations`
+  - normalized transaction fields
+  - final decision
+  - decision score
+  - trace summary
+  - evaluation timestamp
+- `fraud_rule_results`
+  - one row per evaluated rule result
+  - severity, score contribution, and reason
+
+Flyway manages schema evolution from `src/main/resources/db/migration`.
+
+## Security Posture
+
+Phase 1 security is intentionally permissive for local development and reviewer usability.
+
+Currently allowed without authentication:
+
+- `/api/**`
+- `/swagger-ui.html`
+- `/swagger-ui/**`
+- `/v3/api-docs/**`
+- `/actuator/health`
+
+This is deliberate for the take-home and should not be treated as a production-ready security posture.
+
+Production hardening would likely include:
+
+- explicit authentication and authorization
+- environment-specific security policies
+- tighter actuator exposure
+- stronger API access controls
+
+## Known Simplifications
+
+- rules are code-defined, not database-authored
+- no dynamic rule management or rule version administration yet
+- `location anomaly` is intentionally deferred
+- retrieval filters are intentionally narrow for Phase 1
+- no CI pipeline exists yet
+- security is intentionally open for local/reviewer use
+- `spring.jpa.open-in-view` is still on and should be revisited in final cleanup
+- SpringDoc remains enabled by default for the current slice
+
+## Future Improvements
+
+- centralize fraud thresholds and history-window configuration
+- add profile-specific security
+- introduce richer observability and metrics
+- expand retrieval filters and audit support
+- add governed rule lifecycle management
+- revisit `location anomaly` once a clean heuristic and data strategy are agreed
+
+## Verification Snapshot
+
+Most recent local verification for the current Phase 1 slice:
+
+- `./mvnw test`
+  - passed
+  - `31` tests
+- `docker build -t fraud-rule-engine:local .`
+  - passed
+
+## Notes
+
+`HELP.md` is the generated Spring starter help file. This `README` is the primary reviewer-facing project document.
