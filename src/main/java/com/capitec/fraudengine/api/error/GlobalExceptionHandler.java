@@ -3,6 +3,8 @@ package com.capitec.fraudengine.api.error;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -19,6 +21,8 @@ import com.capitec.fraudengine.common.error.InvalidRequestValueException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
 	/**
 	 * Handles bean validation failures for request bodies.
 	 *
@@ -30,6 +34,12 @@ public class GlobalExceptionHandler {
 		List<String> details = exception.getBindingResult().getFieldErrors().stream()
 			.map(this::formatFieldError)
 			.toList();
+
+		LOGGER.warn(
+			"request_validation_failed fieldErrorCount={} details={}",
+			details.size(),
+			details
+		);
 
 		return buildResponse(
 			HttpStatus.BAD_REQUEST,
@@ -47,6 +57,12 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) {
 		String detail = "Invalid value '" + exception.getValue() + "' for parameter '" + exception.getName() + "'.";
+		LOGGER.warn(
+			"request_parameter_parse_failed parameter={} value={} requiredType={}",
+			exception.getName(),
+			exception.getValue(),
+			exception.getRequiredType() != null ? exception.getRequiredType().getSimpleName() : "unknown"
+		);
 		return buildResponse(HttpStatus.BAD_REQUEST, "Request parameter could not be parsed.", List.of(detail));
 	}
 
@@ -58,6 +74,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(InvalidRequestValueException.class)
 	public ResponseEntity<ApiErrorResponse> handleInvalidRequestValue(InvalidRequestValueException exception) {
+		LOGGER.warn("request_payload_value_rejected reason={}", exception.getMessage());
 		return buildResponse(HttpStatus.BAD_REQUEST, "Request payload contains an unsupported value.", List.of(exception.getMessage()));
 	}
 
@@ -69,6 +86,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(FraudEvaluationNotFoundException.class)
 	public ResponseEntity<ApiErrorResponse> handleFraudEvaluationNotFound(FraudEvaluationNotFoundException exception) {
+		LOGGER.info("fraud_evaluation_not_found message={}", exception.getMessage());
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
 	}
 
@@ -80,6 +98,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception) {
+		LOGGER.error("request_processing_failed errorType={} message={}", exception.getClass().getSimpleName(), exception.getMessage(), exception);
 		return buildResponse(
 			HttpStatus.INTERNAL_SERVER_ERROR,
 			"An unexpected error occurred while processing the request.",

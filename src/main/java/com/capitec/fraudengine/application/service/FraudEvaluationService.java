@@ -5,6 +5,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.capitec.fraudengine.api.dto.FraudEvaluationRequestDto;
@@ -26,6 +28,7 @@ import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvalua
 public class FraudEvaluationService {
 
 	private static final Duration VELOCITY_WINDOW = Duration.ofMinutes(5);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FraudEvaluationService.class);
 
 	private final List<FraudRule> fraudRules;
 	private final FraudDecisionPolicy fraudDecisionPolicy;
@@ -55,6 +58,16 @@ public class FraudEvaluationService {
 	 */
 	public FraudEvaluation evaluate(FraudEvaluationRequestDto request) {
 		TransactionEvent transactionEvent = fraudEvaluationApplicationMapper.toDomain(request);
+		LOGGER.info(
+			"fraud_evaluation_started transactionId={} accountId={} customerId={} channel={} merchantCategory={} eventTimestamp={}",
+			transactionEvent.transactionId(),
+			transactionEvent.accountId(),
+			transactionEvent.customerId(),
+			transactionEvent.channel(),
+			transactionEvent.merchantCategory(),
+			transactionEvent.eventTimestamp()
+		);
+
 		List<TransactionEvent> recentTransactions = loadRecentTransactions(transactionEvent);
 		FraudRuleContext context = new FraudRuleContext(transactionEvent, recentTransactions);
 
@@ -74,15 +87,32 @@ public class FraudEvaluationService {
 			ruleResults
 		);
 
-		return fraudEvaluationPersistenceMapper.toDomain(
+		FraudEvaluation persistedEvaluation = fraudEvaluationPersistenceMapper.toDomain(
 			fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(evaluation))
 		);
+
+		long triggeredRuleCount = ruleResults.stream()
+			.filter(RuleEvaluationResult::triggered)
+			.count();
+
+		LOGGER.info(
+			"fraud_evaluation_completed evaluationId={} transactionId={} accountId={} decision={} decisionScore={} triggeredRuleCount={} evaluatedAt={}",
+			persistedEvaluation.evaluationId(),
+			transactionEvent.transactionId(),
+			transactionEvent.accountId(),
+			persistedEvaluation.decision(),
+			persistedEvaluation.decisionScore(),
+			triggeredRuleCount,
+			persistedEvaluation.evaluatedAt()
+		);
+
+		return persistedEvaluation;
 	}
 
 	private List<TransactionEvent> loadRecentTransactions(TransactionEvent transactionEvent) {
 		OffsetDateTime windowStart = transactionEvent.eventTimestamp().minus(VELOCITY_WINDOW);
 
-		return fraudEvaluationJpaRepository.findByAccountIdAndEventTimestampBetween(
+		List<TransactionEvent> recentTransactions = fraudEvaluationJpaRepository.findByAccountIdAndEventTimestampBetween(
 			transactionEvent.accountId(),
 			windowStart,
 			transactionEvent.eventTimestamp()
@@ -90,5 +120,16 @@ public class FraudEvaluationService {
 			.map(fraudEvaluationPersistenceMapper::toDomain)
 			.map(FraudEvaluation::transactionEvent)
 			.toList();
+
+		LOGGER.debug(
+			"fraud_evaluation_history_loaded transactionId={} accountId={} windowStart={} windowEnd={} historyCount={}",
+			transactionEvent.transactionId(),
+			transactionEvent.accountId(),
+			windowStart,
+			transactionEvent.eventTimestamp(),
+			recentTransactions.size()
+		);
+
+		return recentTransactions;
 	}
 }

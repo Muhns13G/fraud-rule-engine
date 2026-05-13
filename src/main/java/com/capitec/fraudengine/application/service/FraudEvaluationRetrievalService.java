@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Sort;
@@ -23,6 +25,8 @@ import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvalua
  */
 @Service
 public class FraudEvaluationRetrievalService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(FraudEvaluationRetrievalService.class);
 
 	private final FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper;
 	private final FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper;
@@ -46,9 +50,17 @@ public class FraudEvaluationRetrievalService {
 	 */
 	@Transactional(readOnly = true)
 	public Optional<FraudEvaluationResponseDto> findById(UUID evaluationId) {
-		return fraudEvaluationJpaRepository.findById(evaluationId)
+		Optional<FraudEvaluationResponseDto> response = fraudEvaluationJpaRepository.findById(evaluationId)
 			.map(fraudEvaluationPersistenceMapper::toDomain)
 			.map(fraudEvaluationApplicationMapper::toResponse);
+
+		LOGGER.info(
+			"fraud_evaluation_lookup_by_id evaluationId={} found={}",
+			evaluationId,
+			response.isPresent()
+		);
+
+		return response;
 	}
 
 	/**
@@ -72,9 +84,31 @@ public class FraudEvaluationRetrievalService {
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
-		return findDomainEvaluations(decision, accountId, customerId, transactionId, sortOrder, from, to).stream()
+		List<FraudEvaluationSummaryResponseDto> responses = findDomainEvaluations(
+			decision,
+			accountId,
+			customerId,
+			transactionId,
+			sortOrder,
+			from,
+			to
+		).stream()
 			.map(fraudEvaluationApplicationMapper::toSummaryResponse)
 			.toList();
+
+		LOGGER.info(
+			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} fromPresent={} toPresent={} sort={} resultCount={}",
+			decision,
+			accountId != null,
+			customerId != null,
+			transactionId != null,
+			from != null,
+			to != null,
+			sortOrder,
+			responses.size()
+		);
+
+		return responses;
 	}
 
 	private List<FraudEvaluation> findDomainEvaluations(
