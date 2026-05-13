@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
 
 import com.capitec.fraudengine.api.dto.FraudEvaluationResponseDto;
 import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryResponseDto;
@@ -67,10 +68,11 @@ public class FraudEvaluationRetrievalService {
 		String accountId,
 		String customerId,
 		String transactionId,
+		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
-		return findDomainEvaluations(decision, accountId, customerId, transactionId, from, to).stream()
+		return findDomainEvaluations(decision, accountId, customerId, transactionId, sortOrder, from, to).stream()
 			.map(fraudEvaluationApplicationMapper::toSummaryResponse)
 			.toList();
 	}
@@ -80,13 +82,30 @@ public class FraudEvaluationRetrievalService {
 		String accountId,
 		String customerId,
 		String transactionId,
+		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
 		return fraudEvaluationJpaRepository.findAll(
-			FraudEvaluationSpecifications.withReviewFilters(decision, accountId, customerId, transactionId, from, to)
+			FraudEvaluationSpecifications.withReviewFilters(decision, accountId, customerId, transactionId, from, to),
+			toSort(sortOrder)
 		).stream()
 			.map(fraudEvaluationPersistenceMapper::toDomain)
 			.toList();
+	}
+
+	private Sort toSort(FraudEvaluationSummarySortOrder sortOrder) {
+		if (sortOrder == FraudEvaluationSummarySortOrder.OLDEST_FIRST) {
+			return Sort.by(
+				Sort.Order.asc("evaluatedAt"),
+				Sort.Order.asc("evaluationId")
+			);
+		}
+
+		return Sort.by(
+			Sort.Order.desc("evaluatedAt"),
+			Sort.Order.desc("decisionScore"),
+			Sort.Order.desc("evaluationId")
+		);
 	}
 }

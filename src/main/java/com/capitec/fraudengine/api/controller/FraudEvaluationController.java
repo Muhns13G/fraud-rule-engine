@@ -24,6 +24,7 @@ import com.capitec.fraudengine.api.error.FraudEvaluationNotFoundException;
 import com.capitec.fraudengine.application.mapper.FraudEvaluationApplicationMapper;
 import com.capitec.fraudengine.application.service.FraudEvaluationRetrievalService;
 import com.capitec.fraudengine.application.service.FraudEvaluationService;
+import com.capitec.fraudengine.application.service.FraudEvaluationSummarySortOrder;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
 import com.capitec.fraudengine.domain.model.enums.FraudDecision;
 
@@ -140,6 +141,7 @@ public class FraudEvaluationController {
 	 * @param accountId optional account filter
 	 * @param customerId optional customer filter
 	 * @param transactionId optional transaction filter
+	 * @param sort optional summary sort order
 	 * @param from optional time-range start
 	 * @param to optional time-range end
 	 * @return matching summary responses
@@ -175,6 +177,8 @@ public class FraudEvaluationController {
 		@RequestParam(required = false) String customerId,
 		@Parameter(description = "Optional transaction identifier filter.", example = "txn-123")
 		@RequestParam(required = false) String transactionId,
+		@Parameter(description = "Optional summary sort order. Defaults to newest evaluations first.", example = "NEWEST_FIRST")
+		@RequestParam(defaultValue = "NEWEST_FIRST") FraudEvaluationSummarySortOrder sort,
 		@Parameter(description = "Optional inclusive evaluated-at range start in ISO-8601 format.", example = "2026-05-12T09:00:00+02:00")
 		@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime from,
 		@Parameter(description = "Optional inclusive evaluated-at range end in ISO-8601 format.", example = "2026-05-12T12:00:00+02:00")
@@ -185,6 +189,7 @@ public class FraudEvaluationController {
 			accountId,
 			customerId,
 			transactionId,
+			sort,
 			from,
 			to
 		);
