@@ -66,6 +66,9 @@ class FraudEvaluationJpaRepositoryIntegrationTest {
 		assertThat(reloaded.getEvaluationId()).isEqualTo(evaluation.evaluationId());
 		assertThat(reloaded.getTransactionId()).isEqualTo("txn-001");
 		assertThat(reloaded.getDecision()).isEqualTo(FraudDecision.REVIEW);
+		assertThat(reloaded.getCreatedAt()).isNotNull();
+		assertThat(reloaded.getUpdatedAt()).isNotNull();
+		assertThat(reloaded.getUpdatedAt()).isEqualTo(reloaded.getCreatedAt());
 		assertThat(reloaded.getRuleResults())
 			.hasSize(1)
 			.first()
@@ -74,6 +77,35 @@ class FraudEvaluationJpaRepositoryIntegrationTest {
 				assertThat(ruleResult.isTriggered()).isTrue();
 				assertThat(ruleResult.getSeverity()).isEqualTo(RuleSeverity.REVIEW);
 			});
+	}
+
+	@Test
+	void shouldRefreshUpdatedAtWhenEvaluationChanges() throws InterruptedException {
+		FraudEvaluationEntity saved = fraudEvaluationJpaRepository.saveAndFlush(
+			fraudEvaluationPersistenceMapper.toEntity(
+				fraudEvaluation(
+					UUID.randomUUID(),
+					"txn-audit-001",
+					"account-audit",
+					FraudDecision.REVIEW,
+					40,
+					OffsetDateTime.parse("2026-05-12T10:00:00+02:00"),
+					OffsetDateTime.parse("2026-05-12T10:01:00+02:00"),
+					List.of(ruleResult("HIGH_AMOUNT", true, RuleSeverity.REVIEW, 40))
+				)
+			)
+		);
+
+		OffsetDateTime originalCreatedAt = saved.getCreatedAt();
+		OffsetDateTime originalUpdatedAt = saved.getUpdatedAt();
+
+		Thread.sleep(20);
+
+		saved.setTraceSummary("Updated trace summary for audit verification");
+		FraudEvaluationEntity updated = fraudEvaluationJpaRepository.saveAndFlush(saved);
+
+		assertThat(updated.getCreatedAt()).isEqualTo(originalCreatedAt);
+		assertThat(updated.getUpdatedAt()).isAfter(originalUpdatedAt);
 	}
 
 	@Test
