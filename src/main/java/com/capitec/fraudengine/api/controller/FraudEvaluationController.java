@@ -134,10 +134,12 @@ public class FraudEvaluationController {
 	}
 
 	/**
-	 * Retrieves persisted fraud evaluations using the Phase 1 filter set.
+	 * Retrieves persisted fraud evaluations using the current review filter set.
 	 *
 	 * @param decision optional decision filter
 	 * @param accountId optional account filter
+	 * @param customerId optional customer filter
+	 * @param transactionId optional transaction filter
 	 * @param from optional time-range start
 	 * @param to optional time-range end
 	 * @return matching summary responses
@@ -145,7 +147,7 @@ public class FraudEvaluationController {
 	@GetMapping
 	@Operation(
 		summary = "List fraud evaluations",
-		description = "Returns persisted fraud evaluations using the Phase 1 review filters: decision, accountId, and evaluatedAt time range."
+		description = "Returns persisted fraud evaluations using the current review filters: decision, accountId, customerId, transactionId, and evaluatedAt time range."
 	)
 	@ApiResponses({
 		@ApiResponse(
@@ -169,11 +171,22 @@ public class FraudEvaluationController {
 		@RequestParam(required = false) FraudDecision decision,
 		@Parameter(description = "Optional account identifier filter.", example = "account-123")
 		@RequestParam(required = false) String accountId,
+		@Parameter(description = "Optional customer identifier filter.", example = "customer-123")
+		@RequestParam(required = false) String customerId,
+		@Parameter(description = "Optional transaction identifier filter.", example = "txn-123")
+		@RequestParam(required = false) String transactionId,
 		@Parameter(description = "Optional inclusive evaluated-at range start in ISO-8601 format.", example = "2026-05-12T09:00:00+02:00")
 		@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime from,
 		@Parameter(description = "Optional inclusive evaluated-at range end in ISO-8601 format.", example = "2026-05-12T12:00:00+02:00")
 		@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime to
 	) {
-		return fraudEvaluationRetrievalService.findSummaries(decision, accountId, from, to);
+		return fraudEvaluationRetrievalService.findSummaries(
+			decision,
+			accountId,
+			customerId,
+			transactionId,
+			from,
+			to
+		);
 	}
 }

@@ -31,6 +31,22 @@ public interface FraudEvaluationJpaRepository extends JpaRepository<FraudEvaluat
 	List<FraudEvaluationEntity> findByAccountId(String accountId);
 
 	/**
+	 * Finds evaluations for a specific customer identifier.
+	 *
+	 * @param customerId customer identifier
+	 * @return matching evaluation entities
+	 */
+	List<FraudEvaluationEntity> findByCustomerId(String customerId);
+
+	/**
+	 * Finds evaluations for a specific transaction identifier.
+	 *
+	 * @param transactionId transaction identifier
+	 * @return matching evaluation entities
+	 */
+	List<FraudEvaluationEntity> findByTransactionId(String transactionId);
+
+	/**
 	 * Finds evaluations completed within a time range.
 	 *
 	 * @param from range start

@@ -50,10 +50,12 @@ public class FraudEvaluationRetrievalService {
 	}
 
 	/**
-	 * Loads persisted evaluations using the Phase 1 filter set and maps them into summary response DTOs.
+	 * Loads persisted evaluations using the current review filter set and maps them into summary response DTOs.
 	 *
 	 * @param decision optional decision filter
 	 * @param accountId optional account filter
+	 * @param customerId optional customer filter
+	 * @param transactionId optional transaction filter
 	 * @param from optional time-range start
 	 * @param to optional time-range end
 	 * @return summary response DTOs
@@ -62,10 +64,12 @@ public class FraudEvaluationRetrievalService {
 	public List<FraudEvaluationSummaryResponseDto> findSummaries(
 		FraudDecision decision,
 		String accountId,
+		String customerId,
+		String transactionId,
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
-		return findDomainEvaluations(decision, accountId, from, to).stream()
+		return findDomainEvaluations(decision, accountId, customerId, transactionId, from, to).stream()
 			.map(fraudEvaluationApplicationMapper::toSummaryResponse)
 			.toList();
 	}
@@ -73,9 +77,25 @@ public class FraudEvaluationRetrievalService {
 	private List<FraudEvaluation> findDomainEvaluations(
 		FraudDecision decision,
 		String accountId,
+		String customerId,
+		String transactionId,
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
+		if (transactionId != null) {
+			return fraudEvaluationJpaRepository.findByTransactionId(transactionId).stream()
+				.map(fraudEvaluationPersistenceMapper::toDomain)
+				.filter(evaluation -> matchesFilters(evaluation, decision, accountId, customerId, from, to))
+				.toList();
+		}
+
+		if (customerId != null) {
+			return fraudEvaluationJpaRepository.findByCustomerId(customerId).stream()
+				.map(fraudEvaluationPersistenceMapper::toDomain)
+				.filter(evaluation -> matchesFilters(evaluation, decision, accountId, customerId, from, to))
+				.toList();
+		}
+
 		if (decision != null && accountId != null && from != null && to != null) {
 			return fraudEvaluationJpaRepository.findByDecisionAndAccountIdAndEvaluatedAtBetween(decision, accountId, from, to)
 				.stream()
@@ -128,5 +148,36 @@ public class FraudEvaluationRetrievalService {
 		return fraudEvaluationJpaRepository.findAll().stream()
 			.map(fraudEvaluationPersistenceMapper::toDomain)
 			.toList();
+	}
+
+	private boolean matchesFilters(
+		FraudEvaluation evaluation,
+		FraudDecision decision,
+		String accountId,
+		String customerId,
+		OffsetDateTime from,
+		OffsetDateTime to
+	) {
+		if (decision != null && evaluation.decision() != decision) {
+			return false;
+		}
+
+		if (accountId != null && !accountId.equals(evaluation.transactionEvent().accountId())) {
+			return false;
+		}
+
+		if (customerId != null && !customerId.equals(evaluation.transactionEvent().customerId())) {
+			return false;
+		}
+
+		if (from != null && evaluation.evaluatedAt().isBefore(from)) {
+			return false;
+		}
+
+		if (to != null && evaluation.evaluatedAt().isAfter(to)) {
+			return false;
+		}
+
+		return true;
 	}
 }
