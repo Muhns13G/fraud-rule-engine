@@ -19,6 +19,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 /**
@@ -87,8 +89,28 @@ public class FraudEvaluationEntity {
 	@Column(name = "evaluated_at", nullable = false)
 	private OffsetDateTime evaluatedAt;
 
+	@Column(name = "created_at", nullable = false, updatable = false)
+	private OffsetDateTime createdAt;
+
+	@Column(name = "updated_at", nullable = false)
+	private OffsetDateTime updatedAt;
+
 	@OneToMany(mappedBy = "fraudEvaluation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<FraudRuleResultEntity> ruleResults = new ArrayList<>();
+
+	@PrePersist
+	void onCreate() {
+		OffsetDateTime now = OffsetDateTime.now();
+		if (createdAt == null) {
+			createdAt = now;
+		}
+		updatedAt = now;
+	}
+
+	@PreUpdate
+	void onUpdate() {
+		updatedAt = OffsetDateTime.now();
+	}
 
 	public UUID getEvaluationId() {
 		return evaluationId;
@@ -232,6 +254,14 @@ public class FraudEvaluationEntity {
 
 	public void setEvaluatedAt(OffsetDateTime evaluatedAt) {
 		this.evaluatedAt = evaluatedAt;
+	}
+
+	public OffsetDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public OffsetDateTime getUpdatedAt() {
+		return updatedAt;
 	}
 
 	public List<FraudRuleResultEntity> getRuleResults() {

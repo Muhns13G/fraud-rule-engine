@@ -26,7 +26,7 @@ Build a Spring Boot service that processes categorized transaction events, evalu
   - tests use Testcontainers Postgres through `TestcontainersConfiguration`
 - The Phase 1 vertical slice is implemented:
   - domain model, rule set, and decision policy exist
-  - persistence uses Flyway-managed PostgreSQL tables
+  - persistence uses Flyway-managed PostgreSQL tables with evaluation-header audit timestamps
   - controllers, services, repositories, and mappers are in place
   - Dockerfile and README now exist as deliverables
 
