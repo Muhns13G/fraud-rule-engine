@@ -6,6 +6,11 @@
 - Flyway migration exists for the initial PostgreSQL schema
 - Persisted evaluation headers now carry row-level audit timestamps in addition to business evaluation timestamps
 - Testcontainers-backed integration tests and focused unit tests exist
+- Lightweight observability conventions now exist:
+  - structured evaluation and retrieval logs
+  - request correlation via `X-Request-Id`
+  - evaluation metrics through Micrometer
+  - limited actuator exposure for local inspection
 - Phase 1 local security is intentionally permissive for reviewer usability
 
 ## Target Phase 1 Shape

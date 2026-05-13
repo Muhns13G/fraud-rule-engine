@@ -29,8 +29,9 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 
 ## Phase 4: Security And Operations
 - Replace generated-password defaults with explicit authentication and authorization strategy suitable for a banking-flavored API.
-- Add actuator exposure policy, structured logging, and domain metrics such as evaluation counts and rule hit rates.
-- Define error handling, correlation IDs, and audit event boundaries.
+- Extend the lightweight observability baseline with stronger operational policies and richer production-facing diagnostics.
+- Build on the existing actuator exposure policy, structured logging, domain metrics, and request correlation conventions.
+- Further define error handling, correlation boundaries, and audit event boundaries for production readiness.
 - Add environment-specific configuration patterns for local, test, and production.
 
 ## Phase 5: Production Hardening

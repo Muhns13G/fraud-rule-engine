@@ -118,6 +118,8 @@ Useful local URLs:
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI spec: `http://localhost:8080/v3/api-docs`
 - Actuator health: `http://localhost:8080/actuator/health`
+- Actuator info: `http://localhost:8080/actuator/info`
+- Actuator metrics: `http://localhost:8080/actuator/metrics`
 
 ### Option 2: Run PostgreSQL yourself, then start the app
 
@@ -281,6 +283,33 @@ The initial schema contains:
 
 Flyway manages schema evolution from `src/main/resources/db/migration`.
 
+## Observability
+
+Current local observability posture includes:
+
+- structured `key=value` service logs around:
+  - fraud evaluation start
+  - recent-history lookup
+  - fraud evaluation completion
+  - retrieval queries
+  - request-validation and request-parsing failures
+- lightweight request correlation via `X-Request-Id`
+  - inbound `X-Request-Id` values are reused when provided
+  - otherwise the service generates a UUID
+  - the request ID is echoed back in the response header
+  - the request ID is included in the console log pattern
+- Micrometer metrics for the evaluation path:
+  - `fraud.evaluation.completed.total`
+  - `fraud.evaluation.decision.count`
+  - `fraud.evaluation.rule.triggered.count`
+  - `fraud.evaluation.duration`
+- Actuator exposure limited to:
+  - `health`
+  - `info`
+  - `metrics`
+
+This is intentionally lightweight and optimized for local review, not production-scale observability infrastructure.
+
 ## Security Posture
 
 Phase 1 security is intentionally permissive for local development and reviewer usability.
@@ -292,6 +321,8 @@ Currently allowed without authentication:
 - `/swagger-ui/**`
 - `/v3/api-docs/**`
 - `/actuator/health`
+- `/actuator/info`
+- `/actuator/metrics`
 
 This is deliberate for the take-home and should not be treated as a production-ready security posture.
 
