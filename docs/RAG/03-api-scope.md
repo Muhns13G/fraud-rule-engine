@@ -34,6 +34,14 @@ Return one persisted fraud evaluation including the original normalized transact
 ### `GET /api/fraud-evaluations`
 Return filtered fraud evaluations for review workflows.
 
+## Phase 2.5 Admin Rule Governance Endpoints
+
+### `GET /api/admin/rules`
+Return governed rule metadata for admin visibility. Defaults to active rules with optional `activeOnly=false` for full visibility.
+
+### `GET /api/admin/rules/{ruleCode}/versions/{version}`
+Return one governed rule metadata entry by identity (`ruleCode + version`).
+
 ## Phase 1 Query Filters
 - `decision`
 - `accountId`
@@ -50,6 +58,6 @@ Supported sort values:
 ## Not In Phase 1 By Default
 - bulk ingestion
 - asynchronous processing
-- admin rule-management endpoints
+- rule activation or mutation endpoints (read visibility only currently)
 - customer-facing APIs
 - broader search filters such as `merchantCategory`, `channel`, or rule-hit lookup

@@ -70,6 +70,10 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Persistence stays PostgreSQL-backed for both local development and tests.
 - Security baseline now uses profile-aware behavior: `default` open for reviewer-local usability and `secure` with authenticated access controls.
 - The current retrieval surface supports `decision`, `accountId`, `customerId`, `transactionId`, time range, and explicit summary sorting.
+- A foundational rule-governance slice now exists with:
+  - persisted rule metadata (`ruleCode + version`)
+  - admin read visibility (`/api/admin/rules`)
+  - deterministic lifecycle/activation boundaries enforced by policy + DB constraints
 
 ## Remaining Design Decisions
 - Whether internal scoring should be numeric only, categorical only, or both while keeping the outward decision model simple

@@ -15,6 +15,10 @@
   - `default` profile remains permissive for reviewer usability
   - `secure` profile enforces HTTP Basic with env-backed in-memory credentials
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
+- Rule governance groundwork now exists:
+  - persisted metadata identity (`ruleCode + version`)
+  - admin read visibility endpoints for governed rule metadata
+  - deterministic lifecycle/activation boundary validation with DB constraints
 
 ## Target Phase 1 Shape
 - `api`

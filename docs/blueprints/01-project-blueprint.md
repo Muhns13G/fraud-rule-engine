@@ -182,9 +182,9 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - Defer additional filters such as `merchantCategory`, `channel`, or rule-hit lookups until the core evaluation slice is stable.
 
 ## Immediate Gaps
-- No dynamic rule management or rule version lifecycle exists yet.
-- No authentication or authorization strategy exists beyond the intentionally open Phase 1 local/test posture.
-- No observability conventions exist yet for fraud-domain metrics, correlation, or audit events beyond persisted evaluation history.
+- Rule governance has only a foundational read-first slice; runtime mutation and full lifecycle operations are still intentionally missing.
+- Authentication exists as a profile-aware baseline (`default` open, `secure` HTTP Basic), but authorization depth is still intentionally lightweight.
+- Observability is intentionally lightweight (structured logs, metrics, correlation), but not yet production-operationally deep.
 - No CI pipeline or deployment automation exists yet.
 - Additional retrieval filters and deferred heuristics such as `location anomaly` remain out of scope for Phase 1.
 

@@ -24,6 +24,8 @@ Implemented API surface:
 - `POST /api/fraud-evaluations`
 - `GET /api/fraud-evaluations/{evaluationId}`
 - `GET /api/fraud-evaluations`
+- `GET /api/admin/rules`
+- `GET /api/admin/rules/{ruleCode}/versions/{version}`
 
 Implemented fraud rules:
 
@@ -48,6 +50,12 @@ Current retrieval filters:
 - `to`
 - `sort`
 
+Rule governance visibility:
+
+- metadata is persisted per `ruleCode + version`
+- active-rule list defaults to `GET /api/admin/rules`
+- identity-level inspection is available at `GET /api/admin/rules/{ruleCode}/versions/{version}`
+
 ## Architecture Summary
 
 The service follows a layered structure to keep fraud logic separate from transport and persistence concerns:
@@ -60,6 +68,7 @@ The service follows a layered structure to keep fraud logic separate from transp
   - transaction model, fraud rules, and decision policy
 - `infrastructure.persistence`
   - JPA entities, repositories, and persistence mappers
+  - includes a dedicated rule-governance metadata table with lifecycle constraints
 - `infrastructure.security`
   - Phase 1 local/test security configuration
 - `infrastructure.config`
@@ -258,6 +267,27 @@ Example:
 
 ```bash
 curl http://localhost:8080/api/fraud-evaluations/{evaluationId}
+```
+
+### List governed rules (admin read)
+
+`GET /api/admin/rules`
+
+Examples:
+
+```bash
+curl http://localhost:8080/api/admin/rules
+curl http://localhost:8080/api/admin/rules?activeOnly=false
+```
+
+### Retrieve governed rule metadata by identity (admin read)
+
+`GET /api/admin/rules/{ruleCode}/versions/{version}`
+
+Example:
+
+```bash
+curl http://localhost:8080/api/admin/rules/HIGH_AMOUNT/versions/1.0.0
 ```
 
 ### List evaluation summaries

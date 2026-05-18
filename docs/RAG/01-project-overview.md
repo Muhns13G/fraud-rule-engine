@@ -27,6 +27,7 @@
 - Security posture: profile-aware baseline now exists (`default` open, `secure` HTTP Basic with env-backed credentials)
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
+  - admin rule-governance read visibility endpoints are now implemented
   - retrieval now supports a modest review-oriented filter set plus explicit summary sorting
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
