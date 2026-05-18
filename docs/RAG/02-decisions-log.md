@@ -43,6 +43,10 @@
   - introducing a dedicated `fraud_rule_governance_metadata` store
   - bootstrapping one metadata row per code-defined rule at startup
   - keeping runtime rule evaluation code-defined and deterministic
+- Sprint 2.5.3 exposes admin read visibility using:
+  - `GET /api/admin/rules` (defaults to active-only view)
+  - `GET /api/admin/rules/{ruleCode}/versions/{version}` for identity-level inspection
+  - threshold-read endpoint intentionally deferred to keep this increment governance-focused
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

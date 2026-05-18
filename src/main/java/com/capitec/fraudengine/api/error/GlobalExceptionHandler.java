@@ -91,6 +91,20 @@ public class GlobalExceptionHandler {
 	}
 
 	/**
+	 * Handles missing rule governance metadata identities.
+	 *
+	 * @param exception missing-resource exception
+	 * @return structured not-found response
+	 */
+	@ExceptionHandler(RuleGovernanceMetadataNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleRuleGovernanceMetadataNotFound(
+		RuleGovernanceMetadataNotFoundException exception
+	) {
+		LOGGER.info("rule_governance_metadata_not_found message={}", exception.getMessage());
+		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
+	}
+
+	/**
 	 * Handles unexpected uncaught exceptions at the API boundary.
 	 *
 	 * @param exception unexpected exception

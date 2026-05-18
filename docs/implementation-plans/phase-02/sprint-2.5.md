@@ -41,6 +41,10 @@ Add admin-facing read APIs for rule visibility.
 - list active rules
 - inspect rule metadata/version/status
 - optionally expose currently configured thresholds in a read-only way
+- chosen in this task:
+  - `GET /api/admin/rules` defaults to `activeOnly=true` for active-rule visibility
+  - `GET /api/admin/rules/{ruleCode}/versions/{version}` returns one governed rule metadata view
+  - threshold visibility remains deferred for now to keep this slice focused on governance metadata
 
 ### Sprint 2.5.4
 Define activation and validation boundaries.
