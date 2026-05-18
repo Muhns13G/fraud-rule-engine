@@ -26,6 +26,8 @@ import com.capitec.fraudengine.application.service.FraudEvaluationService;
 import com.capitec.fraudengine.application.service.FraudEvaluationSummarySortOrder;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
 import com.capitec.fraudengine.domain.model.enums.FraudDecision;
+import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
+import com.capitec.fraudengine.domain.model.enums.TransactionChannel;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -148,7 +150,7 @@ public class FraudEvaluationController {
 	@GetMapping
 	@Operation(
 		summary = "List fraud evaluations",
-		description = "Returns persisted fraud evaluations using the current review filters: decision, accountId, customerId, transactionId, evaluatedAt time range, and explicit summary sorting."
+		description = "Returns persisted fraud evaluations using the current review filters: decision, accountId, customerId, transactionId, merchantCategory, channel, evaluatedAt time range (including one-sided bounds), and explicit summary sorting."
 	)
 	@ApiResponses({
 		@ApiResponse(
@@ -176,6 +178,10 @@ public class FraudEvaluationController {
 		@RequestParam(required = false) String customerId,
 		@Parameter(description = "Optional transaction identifier filter.", example = "txn-123")
 		@RequestParam(required = false) String transactionId,
+		@Parameter(description = "Optional merchant category filter.", example = "GAMBLING")
+		@RequestParam(required = false) MerchantCategory merchantCategory,
+		@Parameter(description = "Optional transaction channel filter.", example = "ONLINE")
+		@RequestParam(required = false) TransactionChannel channel,
 		@Parameter(description = "Optional summary sort order. Defaults to newest evaluations first.", example = "NEWEST_FIRST")
 		@RequestParam(defaultValue = "NEWEST_FIRST") FraudEvaluationSummarySortOrder sort,
 		@Parameter(description = "Optional inclusive evaluated-at range start in ISO-8601 format.", example = "2026-05-12T09:00:00+02:00")
@@ -192,6 +198,8 @@ public class FraudEvaluationController {
 			accountId,
 			customerId,
 			transactionId,
+			merchantCategory,
+			channel,
 			sort,
 			from,
 			to,

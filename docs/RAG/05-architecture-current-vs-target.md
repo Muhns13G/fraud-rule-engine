@@ -17,8 +17,12 @@
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 - Rule governance groundwork now exists:
   - persisted metadata identity (`ruleCode + version`)
-  - admin read visibility endpoints for governed rule metadata
+  - admin read and constrained mutation endpoints for governed rule metadata
   - deterministic lifecycle/activation boundary validation with DB constraints
+- Retrieval layer is now review-oriented and scalable:
+  - paged list responses for `GET /api/fraud-evaluations`
+  - one-sided time filtering (`from`-only / `to`-only) and bounded ranges
+  - additional low-risk filters (`merchantCategory`, `channel`)
 
 ## Target Phase 1 Shape
 - `api`

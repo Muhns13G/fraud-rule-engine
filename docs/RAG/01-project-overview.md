@@ -28,7 +28,8 @@
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
   - admin rule-governance read visibility endpoints are now implemented
-  - retrieval now supports a modest review-oriented filter set plus explicit summary sorting
+  - admin governance mutation endpoints now support lifecycle/activation transitions and controlled version registration
+  - retrieval now supports paged responses, one-sided time filtering, review-oriented filters, and explicit summary sorting
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`

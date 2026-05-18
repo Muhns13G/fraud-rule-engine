@@ -420,6 +420,119 @@ class FraudEvaluationControllerIntegrationTest {
 	}
 
 	@Test
+	void shouldFilterEvaluationSummariesWithFromOnlyBound() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-from-only-old",
+				"account-from-001",
+				"customer-from-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T08:55:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T09:00:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-from-only-new",
+				"account-from-001",
+				"customer-from-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T09:55:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T10:00:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("from", "2026-05-12T09:30:00+02:00"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-from-only-new")));
+	}
+
+	@Test
+	void shouldFilterEvaluationSummariesWithToOnlyBound() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-to-only-old",
+				"account-to-001",
+				"customer-to-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T09:15:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T09:20:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-to-only-new",
+				"account-to-001",
+				"customer-to-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T10:25:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T10:30:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("to", "2026-05-12T09:45:00+02:00"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-to-only-old")));
+	}
+
+	@Test
+	void shouldFilterEvaluationSummariesByMerchantCategoryAndChannel() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-merchant-channel-match",
+				"account-merchant-channel-001",
+				"customer-merchant-channel-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T17:00:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T17:01:00+02:00"),
+				List.of(ruleResult("RISKY_MERCHANT_CATEGORY", true, RuleSeverity.REVIEW, 40)),
+				MerchantCategory.GAMBLING,
+				TransactionChannel.MOBILE_APP
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-merchant-channel-other",
+				"account-merchant-channel-002",
+				"customer-merchant-channel-002",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T17:05:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T17:06:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40)),
+				MerchantCategory.RETAIL,
+				TransactionChannel.ONLINE
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("merchantCategory", "GAMBLING")
+				.param("channel", "MOBILE_APP"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-merchant-channel-match")));
+	}
+
+	@Test
 	void shouldExposeOpenApiDocument() throws Exception {
 		mockMvc.perform(get("/v3/api-docs"))
 			.andExpect(status().isOk())
@@ -451,6 +564,34 @@ class FraudEvaluationControllerIntegrationTest {
 		OffsetDateTime evaluatedAt,
 		List<RuleEvaluationResult> ruleResults
 	) {
+		return fraudEvaluation(
+			evaluationId,
+			transactionId,
+			accountId,
+			customerId,
+			decision,
+			decisionScore,
+			eventTimestamp,
+			evaluatedAt,
+			ruleResults,
+			MerchantCategory.RETAIL,
+			TransactionChannel.ONLINE
+		);
+	}
+
+	private FraudEvaluation fraudEvaluation(
+		UUID evaluationId,
+		String transactionId,
+		String accountId,
+		String customerId,
+		FraudDecision decision,
+		int decisionScore,
+		OffsetDateTime eventTimestamp,
+		OffsetDateTime evaluatedAt,
+		List<RuleEvaluationResult> ruleResults,
+		MerchantCategory merchantCategory,
+		TransactionChannel channel
+	) {
 		TransactionEvent transactionEvent = new TransactionEvent(
 			transactionId,
 			accountId,
@@ -458,9 +599,9 @@ class FraudEvaluationControllerIntegrationTest {
 			new BigDecimal("1500.00"),
 			"ZAR",
 			"merchant-123",
-			MerchantCategory.RETAIL,
+			merchantCategory,
 			TransactionType.PURCHASE,
-			TransactionChannel.ONLINE,
+			channel,
 			eventTimestamp,
 			new TransactionLocation("ZA", "Cape Town"),
 			"api-integration-test"

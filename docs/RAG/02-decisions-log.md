@@ -53,6 +53,16 @@
   - `DEPRECATED` can remain `ACTIVE` or become `INACTIVE` during transition
   - current runtime execution boundary remains `CODE_DEFINED` only
   - invalid lifecycle/activation combinations are rejected via application policy and DB constraints
+- Sprint 3.1 locks first governed mutation scope to metadata only:
+  - lifecycle/activation transitions and version registration are allowed
+  - executable fraud rule logic remains code-defined and non-mutable
+- Sprint 3.1 retrieval behavior now includes:
+  - paged list responses (`page`, `size`, `totalElements`, `totalPages`)
+  - one-sided time filtering (`from`-only and `to`-only)
+  - additional low-risk filters: `merchantCategory`, `channel`
+- Sprint 3.1 keeps retrieval sorting explicit with:
+  - `NEWEST_FIRST`
+  - `OLDEST_FIRST`
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

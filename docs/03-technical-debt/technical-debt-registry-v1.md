@@ -1,4 +1,4 @@
-# Technical Debt Registry (Phase 2 Close-Out)
+# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.1)
 
 ## Baseline and Scope
 This registry is the canonical debt register at Phase 2 close-out. It is built from:
@@ -25,8 +25,8 @@ Audit mode:
 
 | Debt ID | Title | Source | First Reported Sprint | Current Status | Severity | Evidence Path |
 | --- | --- | --- | --- | --- | --- | --- |
-| TD-001 | Retrieval endpoint has no pagination | Recorded+Observed | 2.2 | Open | High | `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java` |
-| TD-002 | Single-bound time filtering (`from` only / `to` only) is not applied | Observed | N/A | Open | Medium | `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java` |
+| TD-001 | Retrieval endpoint has no pagination | Recorded+Observed | 2.2 | Closed | High | `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java` |
+| TD-002 | Single-bound time filtering (`from` only / `to` only) is not applied | Observed | N/A | Closed | Medium | `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java` |
 | TD-003 | Default profile remains intentionally open for API surface | Recorded+Observed | 1.4 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
 | TD-004 | Secure profile uses in-memory user store only | Recorded+Observed | 2.4 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java` |
 | TD-005 | No enterprise secret management/rotation for secure credentials | Recorded+Observed | 2.4 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/resources/application.yaml` |
@@ -36,13 +36,13 @@ Audit mode:
 | TD-009 | Mockito Java 25 dynamic-agent warning remains unresolved | Recorded | 1.5 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
 | TD-010 | Observability tests are incomplete (metrics/correlation/actuator contract) | Recorded+Observed | 2.3 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java` |
 | TD-011 | Metrics coverage is evaluation-focused; retrieval/error metrics remain limited | Recorded+Observed | 2.3 | Open | Low | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
-| TD-012 | Rule governance is read-only; mutation endpoints/workflows are deferred | Recorded+Observed | 2.5 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java` |
-| TD-013 | Governance metadata versioning is bootstrap-fixed at `1.0.0` | Recorded+Observed | 2.5 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMetadataBootstrapService.java` |
-| TD-014 | No controlled governance promotion/deprecation workflow yet | Recorded | 2.5 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md` |
-| TD-015 | Thresholds/window constants still code-level, not centrally configurable | Recorded+Observed | 1.4 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/domain/rule/impl/HighAmountFraudRule.java`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
+| TD-012 | Rule governance is read-only; mutation endpoints/workflows are deferred | Recorded+Observed | 2.5 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java` |
+| TD-013 | Governance metadata versioning is bootstrap-fixed at `1.0.0` | Recorded+Observed | 2.5 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMetadataBootstrapService.java` |
+| TD-014 | No controlled governance promotion/deprecation workflow yet | Recorded | 2.5 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md` |
+| TD-015 | Thresholds/window constants still code-level, not centrally configurable | Recorded+Observed | 1.4 | Closed | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/domain/rule/impl/HighAmountFraudRule.java`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
 | TD-016 | CI pipeline for compile/test/package is still missing | Recorded | 1.5 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
 | TD-017 | Deferred `location anomaly` heuristic remains out of scope | Recorded | 1.1 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md` |
-| TD-018 | Broader retrieval filters (`merchantCategory`, `channel`, rule-hit lookup) remain deferred | Recorded | 1.1 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md` |
+| TD-018 | Broader retrieval filters (`merchantCategory`, `channel`, rule-hit lookup) remain deferred | Recorded | 1.1 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md` |
 | TD-019 | Phase 1 planning debt (DTO/threshold/score/Flyway timing) | Recorded | 1.1 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.2-completion-report.md` |
 | TD-020 | Placeholder-rule/repo/controller hardening debt from 1.3/1.4 | Recorded | 1.3 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.3-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
 
@@ -53,25 +53,27 @@ Audit mode:
 ### TD-001
 - Debt ID: `TD-001`
 - Title: Retrieval endpoint has no pagination
-- Status: `Open`
+- Status: `Closed`
 - Severity: `High`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java`
 - Why it matters: Unbounded list results are an operational and API-consumer scaling risk.
+- Resolution note: Closed in Sprint `3.1.4` via paged retrieval contract (`page`, `size`, `totalElements`, `totalPages`).
 - Suggested resolution direction: Introduce pageable query contract and response metadata.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 
 ### TD-002
 - Debt ID: `TD-002`
 - Title: Single-bound time filtering (`from` only / `to` only) is not applied
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Medium`
 - Source: `Observed`
 - Evidence:
   - `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java`
 - Why it matters: Filter behavior can be surprising and silently broader than caller intent.
+- Resolution note: Closed in Sprint `3.1.5` via one-sided `>= from` and `<= to` predicates.
 - Suggested resolution direction: Add `>= from` and `<= to` predicates for one-sided bounds.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 
@@ -193,52 +195,56 @@ Audit mode:
 ### TD-012
 - Debt ID: `TD-012`
 - Title: Rule governance is read-only; mutation endpoints/workflows are deferred
-- Status: `Open`
+- Status: `Partially addressed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java`
-- Why it matters: Governance visibility exists, but operational governance actions are not yet modeled.
+- Why it matters: Governance visibility exists, but operational governance actions were initially absent.
+- Resolution note: Sprint `3.1.1` and `3.1.2` introduced constrained mutation endpoints (state transition + version registration). Remaining work is deeper workflow/audit-history maturity.
 - Suggested resolution direction: Add constrained mutation endpoints with explicit validation and auth controls.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 
 ### TD-013
 - Debt ID: `TD-013`
 - Title: Governance metadata versioning is bootstrap-fixed at `1.0.0`
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMetadataBootstrapService.java`
-- Why it matters: Version management is not yet flexible or workflow-driven.
+- Why it matters: Version management was originally not flexible or workflow-driven.
+- Resolution note: Closed in Sprint `3.1.2` with controlled version registration endpoint for existing rule codes.
 - Suggested resolution direction: Introduce controlled version registration/promotion model.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 
 ### TD-014
 - Debt ID: `TD-014`
 - Title: No controlled governance promotion/deprecation workflow yet
-- Status: `Open`
+- Status: `Partially addressed`
 - Severity: `Medium`
 - Source: `Recorded`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`
-- Why it matters: Lifecycle states exist but operational transitions are not yet exposed or audited.
+- Why it matters: Lifecycle states exist but require controlled operational transitions.
+- Resolution note: Sprint `3.1.1` introduced controlled transition APIs and policy checks; richer promotion/deprecation audit workflows remain future work.
 - Suggested resolution direction: Define state-transition workflow and audit trail.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 
 ### TD-015
 - Debt ID: `TD-015`
 - Title: Thresholds/window constants are still code-level
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/domain/rule/impl/HighAmountFraudRule.java`
   - `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java`
-- Why it matters: Operational tuning requires code change/redeploy instead of controlled configuration updates.
+- Why it matters: Operational tuning required code change/redeploy instead of controlled configuration updates.
+- Resolution note: Closed in Sprint `3.1.3` by externalizing thresholds/windows into validated configuration properties.
 - Suggested resolution direction: Centralize thresholds and windows in validated configuration properties.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 
@@ -269,13 +275,14 @@ Audit mode:
 ### TD-018
 - Debt ID: `TD-018`
 - Title: Broader retrieval filters remain deferred (`merchantCategory`, `channel`, rule-hit lookup)
-- Status: `Open`
+- Status: `Partially addressed`
 - Severity: `Low`
 - Source: `Recorded`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`
   - `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md`
-- Why it matters: Review API is intentionally narrow and may limit investigator workflows.
+- Why it matters: Review API can be too narrow for investigator workflows.
+- Resolution note: Sprint `3.1.5` added `merchantCategory` and `channel`; only rule-hit lookup remains deferred.
 - Suggested resolution direction: Expand filters incrementally with query-performance guardrails.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.1`
 

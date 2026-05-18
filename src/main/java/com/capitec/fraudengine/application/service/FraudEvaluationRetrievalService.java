@@ -19,6 +19,8 @@ import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryResponseDto;
 import com.capitec.fraudengine.application.mapper.FraudEvaluationApplicationMapper;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
 import com.capitec.fraudengine.domain.model.enums.FraudDecision;
+import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
+import com.capitec.fraudengine.domain.model.enums.TransactionChannel;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.FraudEvaluationPersistenceMapper;
 import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationJpaRepository;
 import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationSpecifications;
@@ -83,6 +85,8 @@ public class FraudEvaluationRetrievalService {
 		String accountId,
 		String customerId,
 		String transactionId,
+		MerchantCategory merchantCategory,
+		TransactionChannel channel,
 		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
 		OffsetDateTime to,
@@ -94,6 +98,8 @@ public class FraudEvaluationRetrievalService {
 			accountId,
 			customerId,
 			transactionId,
+			merchantCategory,
+			channel,
 			sortOrder,
 			from,
 			to,
@@ -102,11 +108,13 @@ public class FraudEvaluationRetrievalService {
 		).map(fraudEvaluationApplicationMapper::toSummaryResponse);
 
 		LOGGER.info(
-			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} fromPresent={} toPresent={} sort={} page={} size={} pageResultCount={} totalElements={} totalPages={}",
+			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} merchantCategoryPresent={} channelPresent={} fromPresent={} toPresent={} sort={} page={} size={} pageResultCount={} totalElements={} totalPages={}",
 			decision,
 			accountId != null,
 			customerId != null,
 			transactionId != null,
+			merchantCategory != null,
+			channel != null,
 			from != null,
 			to != null,
 			sortOrder,
@@ -131,6 +139,8 @@ public class FraudEvaluationRetrievalService {
 		String accountId,
 		String customerId,
 		String transactionId,
+		MerchantCategory merchantCategory,
+		TransactionChannel channel,
 		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
 		OffsetDateTime to,
@@ -138,7 +148,16 @@ public class FraudEvaluationRetrievalService {
 		int size
 	) {
 		return fraudEvaluationJpaRepository.findAll(
-			FraudEvaluationSpecifications.withReviewFilters(decision, accountId, customerId, transactionId, from, to),
+			FraudEvaluationSpecifications.withReviewFilters(
+				decision,
+				accountId,
+				customerId,
+				transactionId,
+				merchantCategory,
+				channel,
+				from,
+				to
+			),
 			PageRequest.of(page, size, toSort(sortOrder))
 		).map(fraudEvaluationPersistenceMapper::toDomain);
 	}
