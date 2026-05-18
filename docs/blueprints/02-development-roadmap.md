@@ -68,7 +68,7 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - `location anomaly` is deferred unless the first vertical slice is already stable.
 - Build tool stays Maven.
 - Persistence stays PostgreSQL-backed for both local development and tests.
-- Local development uses intentionally permissive security for Phase 1 and documents the missing production auth story explicitly.
+- Security baseline now uses profile-aware behavior: `default` open for reviewer-local usability and `secure` with authenticated access controls.
 - The current retrieval surface supports `decision`, `accountId`, `customerId`, `transactionId`, time range, and explicit summary sorting.
 
 ## Remaining Design Decisions

@@ -24,6 +24,7 @@
 - Runtime persistence: Flyway-managed PostgreSQL schema with fraud evaluation and rule-result tables
 - Persistence posture: evaluation rows retain business completion time plus row-level audit timestamps
 - Operational posture: request correlation, focused evaluation metrics, and limited actuator exposure now exist for local inspection
+- Security posture: profile-aware baseline now exists (`default` open, `secure` HTTP Basic with env-backed credentials)
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
   - retrieval now supports a modest review-oriented filter set plus explicit summary sorting

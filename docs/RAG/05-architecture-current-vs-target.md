@@ -11,7 +11,10 @@
   - request correlation via `X-Request-Id`
   - evaluation metrics through Micrometer
   - limited actuator exposure for local inspection
-- Phase 1 local security is intentionally permissive for reviewer usability
+- Security is now profile-aware:
+  - `default` profile remains permissive for reviewer usability
+  - `secure` profile enforces HTTP Basic with env-backed in-memory credentials
+  - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 
 ## Target Phase 1 Shape
 - `api`
@@ -31,7 +34,7 @@
   - Spring Data repositories
   - Flyway migrations
 - `infrastructure.security`
-  - intentional permissive local/test security config
+  - profile-aware security config (`default` open + `secure` authenticated)
 
 ## Architectural Priorities
 - Keep rule logic framework-light and testable without Spring context.

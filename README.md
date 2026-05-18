@@ -121,6 +121,25 @@ Useful local URLs:
 - Actuator info: `http://localhost:8080/actuator/info`
 - Actuator metrics: `http://localhost:8080/actuator/metrics`
 
+### Option 1b: Run in secure profile (HTTP Basic)
+
+Use this mode to verify the Sprint 2.4 secured posture.
+
+```bash
+SPRING_PROFILES_ACTIVE=secure \
+FRAUD_ENGINE_SECURE_USER=secure-user \
+FRAUD_ENGINE_SECURE_PASSWORD=change-me-secure \
+FRAUD_ENGINE_SECURE_ROLE=API_CLIENT \
+./mvnw spring-boot:run
+```
+
+Example authenticated request:
+
+```bash
+curl -u secure-user:change-me-secure \
+  http://localhost:8080/actuator/health
+```
+
 ### Option 2: Run PostgreSQL yourself, then start the app
 
 Start the database:
@@ -312,26 +331,23 @@ This is intentionally lightweight and optimized for local review, not production
 
 ## Security Posture
 
-Phase 1 security is intentionally permissive for local development and reviewer usability.
+Security is now profile-aware:
 
-Currently allowed without authentication:
+- `default` profile:
+  - intentionally open for local/reviewer usability
+  - `/api/**`, Swagger/OpenAPI, and exposed actuator endpoints are reachable without auth
+- `secure` profile:
+  - HTTP Basic authentication enabled
+  - protected surface:
+    - `/api/**`
+    - `/swagger-ui.html`
+    - `/swagger-ui/**`
+    - `/v3/api-docs/**`
+    - `/actuator/**`
+  - credentials come from env-backed `app.security.secure-profile.*` properties
+  - health details are restricted with `management.endpoint.health.show-details=when_authorized`
 
-- `/api/**`
-- `/swagger-ui.html`
-- `/swagger-ui/**`
-- `/v3/api-docs/**`
-- `/actuator/health`
-- `/actuator/info`
-- `/actuator/metrics`
-
-This is deliberate for the take-home and should not be treated as a production-ready security posture.
-
-Production hardening would likely include:
-
-- explicit authentication and authorization
-- environment-specific security policies
-- tighter actuator exposure
-- stronger API access controls
+This remains a pragmatic take-home baseline, not full enterprise identity integration.
 
 ## Known Simplifications
 
@@ -340,13 +356,13 @@ Production hardening would likely include:
 - `location anomaly` is intentionally deferred
 - retrieval remains intentionally bounded and is not intended to become a generic reporting surface
 - no CI pipeline exists yet
-- security is intentionally open for local/reviewer use
+- security is profile-aware but still based on in-memory Basic Auth credentials in secured mode
 - SpringDoc remains enabled by default for the current slice
 
 ## Future Improvements
 
 - centralize fraud thresholds and history-window configuration
-- add profile-specific security
+- evolve secured mode beyond in-memory Basic Auth when enterprise identity requirements are in scope
 - introduce richer observability and metrics
 - expand retrieval filters and audit support
 - add governed rule lifecycle management
@@ -354,11 +370,11 @@ Production hardening would likely include:
 
 ## Verification Snapshot
 
-Most recent local verification for the current Phase 1 slice:
+Most recent local verification for the current Phase 2.4 slice:
 
 - `./mvnw test`
   - passed
-  - `31` tests
+  - `44` tests
 - `docker build -t fraud-rule-engine:local .`
   - passed
 
