@@ -27,6 +27,12 @@
   - `transactionId`
   - time range
   - explicit summary sorting with `NEWEST_FIRST` and `OLDEST_FIRST`
+- Sprint 2.4.1 locks the security strategy to:
+  - `HTTP Basic` as the next-step authentication mechanism
+  - profile split: `default` open and `secure` authenticated
+  - secured-mode protection target: API + Swagger/OpenAPI + exposed actuator endpoints
+  - env-backed secure-profile credentials with local defaults
+- OAuth2/JWT and external identity provider integration remain intentionally deferred.
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

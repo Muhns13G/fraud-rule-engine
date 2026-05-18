@@ -10,6 +10,13 @@ spring:
   jpa:
     open-in-view: false
 
+app:
+  security:
+    secure-profile:
+      username: ${FRAUD_ENGINE_SECURE_USER:secure-user}
+      password: ${FRAUD_ENGINE_SECURE_PASSWORD:change-me-secure}
+      role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
+
 management:
   endpoints:
     web:

@@ -187,3 +187,14 @@ Build a Spring Boot service that processes categorized transaction events, evalu
 - No observability conventions exist yet for fraud-domain metrics, correlation, or audit events beyond persisted evaluation history.
 - No CI pipeline or deployment automation exists yet.
 - Additional retrieval filters and deferred heuristics such as `location anomaly` remain out of scope for Phase 1.
+
+## Security Strategy Baseline (Sprint 2.4.1)
+- The next-step hardening choice is `HTTP Basic` because it is the smallest credible improvement over the intentionally open Phase 1 posture.
+- Security behavior is profile-split by design:
+  - `default` remains open for local reviewer usability.
+  - `secure` is the authenticated mode for demonstration of deliberate access control.
+- In secured mode, the intended protected surface is API + Swagger/OpenAPI + exposed actuator endpoints.
+- Credentials are configured via env-backed properties with local defaults to keep setup practical while avoiding hardcoded production secrets.
+- Deliberately deferred for now:
+  - OAuth2/JWT and external identity providers
+  - enterprise-grade secret management and rotation

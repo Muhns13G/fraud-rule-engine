@@ -10,11 +10,23 @@ Replace the temporary open-access posture with a more deliberate security baseli
 
 ### Sprint 2.4.1
 Choose the next-step auth strategy.
-- likely options:
-  - lightweight API key
-  - simple Basic Auth
-  - profile-based split with open local and protected non-local modes
-- choose the smallest approach that materially improves the service posture
+- chosen auth mechanism: `HTTP Basic`
+- chosen profile strategy:
+  - `default`: open local/reviewer-friendly mode
+  - `secure`: authenticated mode
+- chosen protected surface for secured mode (enforced in Sprint 2.4.2/2.4.3):
+  - `/api/**`
+  - `/swagger-ui.html`
+  - `/swagger-ui/**`
+  - `/v3/api-docs/**`
+  - exposed `/actuator/**`
+- chosen credential source:
+  - env-backed properties with local defaults
+  - no hardcoded production secrets
+- deferred from this task:
+  - route enforcement
+  - matcher/authorization rule updates
+  - auth behavior tests
 
 ### Sprint 2.4.2
 Implement profile-aware security behavior.
