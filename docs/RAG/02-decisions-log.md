@@ -39,6 +39,10 @@
   - lifecycle status values are `DRAFT`, `ACTIVE`, `DEPRECATED`, `RETIRED`
   - activation values are `INACTIVE`, `ACTIVE`
   - rule metadata modeling is domain-first and persistence-agnostic in this step
+- Sprint 2.5.2 persists rule metadata only (not executable logic) by:
+  - introducing a dedicated `fraud_rule_governance_metadata` store
+  - bootstrapping one metadata row per code-defined rule at startup
+  - keeping runtime rule evaluation code-defined and deterministic
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

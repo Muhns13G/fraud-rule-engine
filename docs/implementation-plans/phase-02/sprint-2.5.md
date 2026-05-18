@@ -30,6 +30,11 @@ Define the rule identity and lifecycle model.
 Introduce persistence for rule metadata only if it meaningfully improves the model.
 - keep executable rule logic code-defined for now unless a narrower data-driven step is clearly justified
 - avoid a premature generic expression engine
+- chosen in this task:
+  - persisted table: `fraud_rule_governance_metadata`
+  - uniqueness boundary: `rule_code + rule_version`
+  - startup bootstrap persists/updates metadata rows for all current code-defined rules
+  - executable rule evaluation remains fully code-backed
 
 ### Sprint 2.5.3
 Add admin-facing read APIs for rule visibility.
