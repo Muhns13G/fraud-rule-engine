@@ -5,8 +5,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.capitec.fraudengine.api.dto.RuleGovernanceMetadataResponseDto;
 import com.capitec.fraudengine.api.error.RuleGovernanceMetadataNotFoundException;
+import com.capitec.fraudengine.api.error.RuleGovernanceRuleCodeNotFoundException;
+import com.capitec.fraudengine.common.error.InvalidRuleGovernanceStateException;
 import com.capitec.fraudengine.domain.model.RuleGovernanceMetadata;
+import com.capitec.fraudengine.domain.model.RuleIdentity;
 import com.capitec.fraudengine.domain.model.RuleLifecycleState;
+import com.capitec.fraudengine.domain.model.enums.RuleExecutionSource;
 import com.capitec.fraudengine.domain.policy.RuleGovernancePolicy;
 import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceMetadataEntity;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.RuleGovernanceMetadataPersistenceMapper;
@@ -73,6 +77,62 @@ public class RuleGovernanceMutationService {
 			updatedMetadata.lifecycleState().lifecycleStatus(),
 			updatedMetadata.lifecycleState().activationState(),
 			updatedMetadata.executionSource()
+		);
+	}
+
+	/**
+	 * Registers a new governed metadata version for an existing rule code.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param version new semantic rule version
+	 * @param lifecycleState target lifecycle + activation state for the new version
+	 * @return created metadata projection
+	 */
+	@Transactional
+	public RuleGovernanceMetadataResponseDto registerVersion(
+		String ruleCode,
+		String version,
+		RuleLifecycleState lifecycleState
+	) {
+		boolean hasExistingRuleCode = ruleGovernanceMetadataJpaRepository.existsByRuleCode(ruleCode);
+		if (!hasExistingRuleCode) {
+			throw new RuleGovernanceRuleCodeNotFoundException(ruleCode);
+		}
+
+		boolean versionAlreadyExists = ruleGovernanceMetadataJpaRepository.findByRuleCodeAndRuleVersion(ruleCode, version).isPresent();
+		if (versionAlreadyExists) {
+			throw new InvalidRuleGovernanceStateException(
+				"Rule governance version '" + version + "' already exists for ruleCode '" + ruleCode + "'."
+			);
+		}
+
+		RuleGovernanceMetadataEntity latestEntity = ruleGovernanceMetadataJpaRepository
+			.findFirstByRuleCodeOrderByUpdatedAtDesc(ruleCode)
+			.orElseThrow(() -> new RuleGovernanceRuleCodeNotFoundException(ruleCode));
+
+		RuleGovernanceMetadata latestMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(latestEntity);
+		RuleGovernanceMetadata newVersionMetadata = new RuleGovernanceMetadata(
+			new RuleIdentity(ruleCode, version),
+			latestMetadata.ruleName(),
+			lifecycleState,
+			RuleExecutionSource.CODE_DEFINED
+		);
+
+		ruleGovernancePolicy.validateState(newVersionMetadata);
+		ruleGovernancePolicy.validateExecutionBoundary(newVersionMetadata);
+
+		RuleGovernanceMetadataEntity savedEntity = ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(newVersionMetadata)
+		);
+		RuleGovernanceMetadata savedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(savedEntity);
+
+		return new RuleGovernanceMetadataResponseDto(
+			savedMetadata.identity().ruleCode(),
+			savedMetadata.identity().version(),
+			savedMetadata.ruleName(),
+			savedMetadata.lifecycleState().lifecycleStatus(),
+			savedMetadata.lifecycleState().activationState(),
+			savedMetadata.executionSource()
 		);
 	}
 }

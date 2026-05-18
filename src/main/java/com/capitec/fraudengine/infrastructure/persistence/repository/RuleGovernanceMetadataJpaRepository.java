@@ -14,6 +14,22 @@ import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceM
 public interface RuleGovernanceMetadataJpaRepository extends JpaRepository<RuleGovernanceMetadataEntity, Long> {
 
 	/**
+	 * Checks whether at least one governed version exists for a rule code.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @return true when any governed version exists
+	 */
+	boolean existsByRuleCode(String ruleCode);
+
+	/**
+	 * Finds the most recently updated governed metadata entry for a rule code.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @return latest updated entry when present
+	 */
+	Optional<RuleGovernanceMetadataEntity> findFirstByRuleCodeOrderByUpdatedAtDesc(String ruleCode);
+
+	/**
 	 * Finds rule metadata by rule code and version.
 	 *
 	 * @param ruleCode stable machine-readable rule code

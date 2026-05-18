@@ -106,6 +106,20 @@ public class GlobalExceptionHandler {
 	}
 
 	/**
+	 * Handles missing rule-governance metadata for a supplied rule code.
+	 *
+	 * @param exception missing-rule-code exception
+	 * @return structured not-found response
+	 */
+	@ExceptionHandler(RuleGovernanceRuleCodeNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleRuleGovernanceRuleCodeNotFound(
+		RuleGovernanceRuleCodeNotFoundException exception
+	) {
+		LOGGER.info("rule_governance_rule_code_not_found message={}", exception.getMessage());
+		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
+	}
+
+	/**
 	 * Handles deterministic rule-governance state validation failures.
 	 *
 	 * @param exception invalid governance state exception

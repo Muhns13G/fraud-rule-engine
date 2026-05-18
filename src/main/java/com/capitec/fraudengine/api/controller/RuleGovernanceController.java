@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.capitec.fraudengine.api.dto.RuleGovernanceMetadataResponseDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceStateTransitionRequestDto;
+import com.capitec.fraudengine.api.dto.RuleGovernanceVersionRegistrationRequestDto;
 import com.capitec.fraudengine.api.error.RuleGovernanceMetadataNotFoundException;
 import com.capitec.fraudengine.application.service.RuleGovernanceMutationService;
 import com.capitec.fraudengine.application.service.RuleGovernanceRetrievalService;
@@ -153,6 +155,51 @@ public class RuleGovernanceController {
 		return ruleGovernanceMutationService.transitionState(
 			ruleCode,
 			version,
+			new RuleLifecycleState(request.lifecycleStatus(), request.activationState())
+		);
+	}
+
+	/**
+	 * Registers a new governed metadata version for an existing rule code.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param request target version and lifecycle state
+	 * @return created rule metadata version
+	 */
+	@PostMapping("/{ruleCode}/versions")
+	@Operation(
+		summary = "Register governed rule version",
+		description = "Registers a new governance metadata version for an existing rule code while preserving CODE_DEFINED execution boundary."
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "Rule metadata version registered successfully.",
+			content = @Content(schema = @Schema(implementation = RuleGovernanceMetadataResponseDto.class))
+		),
+		@ApiResponse(
+			responseCode = "400",
+			description = "Supplied metadata version request violates governance constraints.",
+			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "No governed rule exists for the supplied rule code.",
+			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
+		),
+		@ApiResponse(
+			responseCode = "500",
+			description = "An unexpected server error occurred.",
+			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
+		)
+	})
+	public RuleGovernanceMetadataResponseDto registerRuleVersion(
+		@PathVariable String ruleCode,
+		@Valid @RequestBody RuleGovernanceVersionRegistrationRequestDto request
+	) {
+		return ruleGovernanceMutationService.registerVersion(
+			ruleCode,
+			request.version(),
 			new RuleLifecycleState(request.lifecycleStatus(), request.activationState())
 		);
 	}

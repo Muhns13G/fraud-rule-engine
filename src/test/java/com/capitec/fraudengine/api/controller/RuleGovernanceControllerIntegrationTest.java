@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -175,6 +176,77 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status", is(404)))
 			.andExpect(jsonPath("$.message", is("Rule governance metadata not found for ruleCode 'DOES_NOT_EXIST' and version '1.0.0'.")));
+	}
+
+	@Test
+	void shouldRegisterNewRuleVersionForExistingRuleCode() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.0.0", "High Amount Rule", RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			post("/api/admin/rules/HIGH_AMOUNT/versions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "version": "1.1.0",
+					  "lifecycleStatus": "DEPRECATED",
+					  "activationState": "INACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.ruleCode", is("HIGH_AMOUNT")))
+			.andExpect(jsonPath("$.version", is("1.1.0")))
+			.andExpect(jsonPath("$.ruleName", is("High Amount Rule")))
+			.andExpect(jsonPath("$.lifecycleStatus", is("DEPRECATED")))
+			.andExpect(jsonPath("$.activationState", is("INACTIVE")))
+			.andExpect(jsonPath("$.executionSource", is("CODE_DEFINED")));
+	}
+
+	@Test
+	void shouldRejectDuplicateRuleVersionRegistration() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.0.0", "High Amount Rule", RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			post("/api/admin/rules/HIGH_AMOUNT/versions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "version": "1.0.0",
+					  "lifecycleStatus": "DEPRECATED",
+					  "activationState": "INACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status", is(400)))
+			.andExpect(jsonPath("$.message", is("Rule governance state transition is invalid.")))
+			.andExpect(jsonPath("$.details[0]", is("Rule governance version '1.0.0' already exists for ruleCode 'HIGH_AMOUNT'.")));
+	}
+
+	@Test
+	void shouldReturnNotFoundWhenRegisteringVersionForUnknownRuleCode() throws Exception {
+		mockMvc.perform(
+			post("/api/admin/rules/UNKNOWN_RULE/versions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "version": "1.0.0",
+					  "lifecycleStatus": "ACTIVE",
+					  "activationState": "ACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status", is(404)))
+			.andExpect(jsonPath("$.message", is("Rule governance metadata not found for ruleCode 'UNKNOWN_RULE'.")));
 	}
 
 	private RuleGovernanceMetadata ruleMetadata(
