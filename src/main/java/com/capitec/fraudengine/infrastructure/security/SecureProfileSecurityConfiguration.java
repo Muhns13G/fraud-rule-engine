@@ -1,5 +1,6 @@
 package com.capitec.fraudengine.infrastructure.security;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,13 +25,18 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecureProfileSecurityConfiguration {
 
 	@Bean
-	public SecurityFilterChain secureSecurityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain secureSecurityFilterChain(
+		HttpSecurity http,
+		SecureProfileSecurityProperties properties
+	) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.formLogin(AbstractHttpConfigurer::disable)
 			.httpBasic(Customizer.withDefaults())
 			.logout(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize
+				.requestMatchers(HttpMethod.PATCH, "/api/admin/rules/**").hasRole(properties.getAdminRole())
+				.requestMatchers(HttpMethod.POST, "/api/admin/rules/**").hasRole(properties.getAdminRole())
 				.requestMatchers(
 					"/api/**",
 					"/swagger-ui.html",

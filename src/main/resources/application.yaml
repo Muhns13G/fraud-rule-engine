@@ -28,6 +28,7 @@ app:
       username: ${FRAUD_ENGINE_SECURE_USER:secure-user}
       password: ${FRAUD_ENGINE_SECURE_PASSWORD:change-me-secure}
       role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
+      admin-role: ${FRAUD_ENGINE_SECURE_ADMIN_ROLE:API_CLIENT}
 
 management:
   endpoints:

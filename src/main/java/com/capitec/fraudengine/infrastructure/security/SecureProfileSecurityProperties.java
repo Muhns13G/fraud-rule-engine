@@ -11,6 +11,7 @@ public class SecureProfileSecurityProperties {
 	private String username;
 	private String password;
 	private String role;
+	private String adminRole;
 
 	public String getUsername() {
 		return username;
@@ -34,5 +35,13 @@ public class SecureProfileSecurityProperties {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public String getAdminRole() {
+		return adminRole;
+	}
+
+	public void setAdminRole(String adminRole) {
+		this.adminRole = adminRole;
 	}
 }
