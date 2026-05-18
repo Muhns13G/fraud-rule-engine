@@ -70,6 +70,13 @@ class SecureProfileSecurityIntegrationTest {
 	}
 
 	@Test
+	void shouldAllowGovernanceReadWithValidBasicAuth() throws Exception {
+		mockMvc.perform(get("/api/admin/rules")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
+	}
+
+	@Test
 	void shouldRejectApiRequestWithInvalidCredentials() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations")
 				.with(httpBasic(SECURE_USERNAME, "wrong-password")))
