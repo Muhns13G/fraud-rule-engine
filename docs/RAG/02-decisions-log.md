@@ -33,6 +33,12 @@
   - secured-mode protection target: API + Swagger/OpenAPI + exposed actuator endpoints
   - env-backed secure-profile credentials with local defaults
 - OAuth2/JWT and external identity provider integration remain intentionally deferred.
+- Sprint 2.5.1 locks the first rule-governance model to:
+  - executable rule logic remains `CODE_DEFINED`
+  - governance identity is modeled as `ruleCode` + `version`
+  - lifecycle status values are `DRAFT`, `ACTIVE`, `DEPRECATED`, `RETIRED`
+  - activation values are `INACTIVE`, `ACTIVE`
+  - rule metadata modeling is domain-first and persistence-agnostic in this step
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

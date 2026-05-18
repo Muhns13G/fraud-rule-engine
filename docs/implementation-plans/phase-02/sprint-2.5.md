@@ -16,6 +16,15 @@ Define the rule identity and lifecycle model.
   - status
   - activation state
 - decide what remains code-backed versus persisted metadata
+- chosen in this task:
+  - executable rule logic remains code-defined
+  - governance model is introduced in domain as:
+    - `RuleIdentity` (`ruleCode`, `version`)
+    - `RuleLifecycleState` (`lifecycleStatus`, `activationState`)
+    - `RuleGovernanceMetadata` (identity + name + lifecycle + execution source)
+  - lifecycle status set: `DRAFT`, `ACTIVE`, `DEPRECATED`, `RETIRED`
+  - activation state set: `INACTIVE`, `ACTIVE`
+  - execution source currently locked to `CODE_DEFINED`
 
 ### Sprint 2.5.2
 Introduce persistence for rule metadata only if it meaningfully improves the model.
