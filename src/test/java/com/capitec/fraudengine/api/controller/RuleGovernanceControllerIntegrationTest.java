@@ -100,7 +100,8 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(jsonPath("$.ruleName", is("High Amount Rule")))
 			.andExpect(jsonPath("$.lifecycleStatus", is("ACTIVE")))
 			.andExpect(jsonPath("$.activationState", is("ACTIVE")))
-			.andExpect(jsonPath("$.executionSource", is("CODE_DEFINED")));
+			.andExpect(jsonPath("$.executionSource", is("CODE_DEFINED")))
+			.andExpect(jsonPath("$.activeConfiguration", is("reviewThreshold=10000.00, blockThreshold=25000.00")));
 	}
 
 	@Test

@@ -20,6 +20,7 @@ import com.capitec.fraudengine.domain.policy.FraudDecisionPolicy;
 import com.capitec.fraudengine.domain.policy.FraudDecisionPolicyResult;
 import com.capitec.fraudengine.domain.rule.FraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
+import com.capitec.fraudengine.infrastructure.config.FraudRuleProperties;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.FraudEvaluationPersistenceMapper;
 import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvaluationJpaRepository;
 
@@ -29,7 +30,6 @@ import com.capitec.fraudengine.infrastructure.persistence.repository.FraudEvalua
 @Service
 public class FraudEvaluationService {
 
-	private static final Duration VELOCITY_WINDOW = Duration.ofMinutes(5);
 	private static final Logger LOGGER = LoggerFactory.getLogger(FraudEvaluationService.class);
 
 	private final List<FraudRule> fraudRules;
@@ -39,6 +39,7 @@ public class FraudEvaluationService {
 	private final FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
 	private final MeterRegistry meterRegistry;
 	private final Timer evaluationDurationTimer;
+	private final Duration velocityWindow;
 
 	public FraudEvaluationService(
 		List<FraudRule> fraudRules,
@@ -46,7 +47,8 @@ public class FraudEvaluationService {
 		FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper,
 		FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper,
 		FraudEvaluationJpaRepository fraudEvaluationJpaRepository,
-		MeterRegistry meterRegistry
+		MeterRegistry meterRegistry,
+		FraudRuleProperties fraudRuleProperties
 	) {
 		this.fraudRules = fraudRules;
 		this.fraudDecisionPolicy = fraudDecisionPolicy;
@@ -54,6 +56,7 @@ public class FraudEvaluationService {
 		this.fraudEvaluationPersistenceMapper = fraudEvaluationPersistenceMapper;
 		this.fraudEvaluationJpaRepository = fraudEvaluationJpaRepository;
 		this.meterRegistry = meterRegistry;
+		this.velocityWindow = Duration.ofMinutes(fraudRuleProperties.getVelocity().getWindowMinutes());
 		this.evaluationDurationTimer = Timer.builder("fraud.evaluation.duration")
 			.description("End-to-end duration of one fraud evaluation request.")
 			.register(meterRegistry);
@@ -126,7 +129,7 @@ public class FraudEvaluationService {
 	}
 
 	private List<TransactionEvent> loadRecentTransactions(TransactionEvent transactionEvent) {
-		OffsetDateTime windowStart = transactionEvent.eventTimestamp().minus(VELOCITY_WINDOW);
+		OffsetDateTime windowStart = transactionEvent.eventTimestamp().minus(velocityWindow);
 
 		List<TransactionEvent> recentTransactions = fraudEvaluationJpaRepository.findByAccountIdAndEventTimestampBetween(
 			transactionEvent.accountId(),

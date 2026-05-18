@@ -25,15 +25,18 @@ public class RuleGovernanceMutationService {
 	private final RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository;
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
 	private final RuleGovernancePolicy ruleGovernancePolicy;
+	private final RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService;
 
 	public RuleGovernanceMutationService(
 		RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository,
 		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper,
-		RuleGovernancePolicy ruleGovernancePolicy
+		RuleGovernancePolicy ruleGovernancePolicy,
+		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService
 	) {
 		this.ruleGovernanceMetadataJpaRepository = ruleGovernanceMetadataJpaRepository;
 		this.ruleGovernanceMetadataPersistenceMapper = ruleGovernanceMetadataPersistenceMapper;
 		this.ruleGovernancePolicy = ruleGovernancePolicy;
+		this.ruleGovernanceConfigurationReadModelService = ruleGovernanceConfigurationReadModelService;
 	}
 
 	/**
@@ -76,7 +79,8 @@ public class RuleGovernanceMutationService {
 			updatedMetadata.ruleName(),
 			updatedMetadata.lifecycleState().lifecycleStatus(),
 			updatedMetadata.lifecycleState().activationState(),
-			updatedMetadata.executionSource()
+			updatedMetadata.executionSource(),
+			ruleGovernanceConfigurationReadModelService.describe(updatedMetadata.identity().ruleCode())
 		);
 	}
 
@@ -132,7 +136,8 @@ public class RuleGovernanceMutationService {
 			savedMetadata.ruleName(),
 			savedMetadata.lifecycleState().lifecycleStatus(),
 			savedMetadata.lifecycleState().activationState(),
-			savedMetadata.executionSource()
+			savedMetadata.executionSource(),
+			ruleGovernanceConfigurationReadModelService.describe(savedMetadata.identity().ruleCode())
 		);
 	}
 }

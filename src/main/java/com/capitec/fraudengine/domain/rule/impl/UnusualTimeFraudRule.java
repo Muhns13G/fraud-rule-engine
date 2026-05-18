@@ -8,6 +8,7 @@ import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
+import com.capitec.fraudengine.infrastructure.config.FraudRuleProperties;
 
 /**
  * Flags transactions occurring during the configured suspicious overnight window.
@@ -15,23 +16,25 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 @Component
 public class UnusualTimeFraudRule extends AbstractFraudRule {
 
-	private static final LocalTime WINDOW_START = LocalTime.MIDNIGHT;
-	private static final LocalTime WINDOW_END = LocalTime.of(4, 0);
+	private final LocalTime windowStart;
+	private final LocalTime windowEnd;
 
-	public UnusualTimeFraudRule() {
+	public UnusualTimeFraudRule(FraudRuleProperties fraudRuleProperties) {
 		super("UNUSUAL_TIME", "Unusual Time Rule");
+		this.windowStart = fraudRuleProperties.getUnusualTime().getStart();
+		this.windowEnd = fraudRuleProperties.getUnusualTime().getEnd();
 	}
 
 	@Override
 	public RuleEvaluationResult evaluate(FraudRuleContext context) {
 		LocalTime transactionTime = context.transactionEvent().eventTimestamp().toLocalTime();
 
-		if (!transactionTime.isBefore(WINDOW_START) && transactionTime.isBefore(WINDOW_END)) {
+		if (!transactionTime.isBefore(windowStart) && transactionTime.isBefore(windowEnd)) {
 			return result(
 				true,
 				RuleSeverity.REVIEW,
 				40,
-				"Transaction occurred during the unusual time window between 00:00 and 04:00."
+				"Transaction occurred during the unusual time window between " + windowStart + " and " + windowEnd + "."
 			);
 		}
 

@@ -20,13 +20,16 @@ public class RuleGovernanceRetrievalService {
 
 	private final RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository;
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
+	private final RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService;
 
 	public RuleGovernanceRetrievalService(
 		RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository,
-		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper
+		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper,
+		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService
 	) {
 		this.ruleGovernanceMetadataJpaRepository = ruleGovernanceMetadataJpaRepository;
 		this.ruleGovernanceMetadataPersistenceMapper = ruleGovernanceMetadataPersistenceMapper;
+		this.ruleGovernanceConfigurationReadModelService = ruleGovernanceConfigurationReadModelService;
 	}
 
 	/**
@@ -71,7 +74,8 @@ public class RuleGovernanceRetrievalService {
 			metadata.ruleName(),
 			metadata.lifecycleState().lifecycleStatus(),
 			metadata.lifecycleState().activationState(),
-			metadata.executionSource()
+			metadata.executionSource(),
+			ruleGovernanceConfigurationReadModelService.describe(metadata.identity().ruleCode())
 		);
 	}
 }

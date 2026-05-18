@@ -13,6 +13,7 @@ public record RuleGovernanceMetadataResponseDto(
 	String ruleName,
 	RuleLifecycleStatus lifecycleStatus,
 	RuleActivationState activationState,
-	RuleExecutionSource executionSource
+	RuleExecutionSource executionSource,
+	String activeConfiguration
 ) {
 }

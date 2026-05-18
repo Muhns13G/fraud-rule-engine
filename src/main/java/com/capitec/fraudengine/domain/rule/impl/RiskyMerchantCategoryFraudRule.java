@@ -1,6 +1,7 @@
 package com.capitec.fraudengine.domain.rule.impl;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -9,6 +10,7 @@ import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
+import com.capitec.fraudengine.infrastructure.config.FraudRuleProperties;
 
 /**
  * Flags transactions that occur in categories treated as higher-risk for the initial slice.
@@ -16,21 +18,21 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 @Component
 public class RiskyMerchantCategoryFraudRule extends AbstractFraudRule {
 
-	private static final Set<MerchantCategory> FLAGGED_CATEGORIES = Set.of(
-		MerchantCategory.GAMBLING,
-		MerchantCategory.CRYPTO,
-		MerchantCategory.MONEY_TRANSFER
-	);
+	private final Set<MerchantCategory> flaggedCategories;
 
-	public RiskyMerchantCategoryFraudRule() {
+	public RiskyMerchantCategoryFraudRule(FraudRuleProperties fraudRuleProperties) {
 		super("RISKY_MERCHANT_CATEGORY", "Risky Merchant Category Rule");
+		this.flaggedCategories = fraudRuleProperties.getRiskyMerchantCategory()
+			.getFlaggedCategories()
+			.stream()
+			.collect(Collectors.toUnmodifiableSet());
 	}
 
 	@Override
 	public RuleEvaluationResult evaluate(FraudRuleContext context) {
 		MerchantCategory merchantCategory = context.transactionEvent().merchantCategory();
 
-		if (FLAGGED_CATEGORIES.contains(merchantCategory)) {
+		if (flaggedCategories.contains(merchantCategory)) {
 			return result(
 				true,
 				RuleSeverity.REVIEW,

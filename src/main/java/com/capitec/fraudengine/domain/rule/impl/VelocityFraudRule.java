@@ -10,6 +10,7 @@ import com.capitec.fraudengine.domain.model.TransactionEvent;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
 import com.capitec.fraudengine.domain.rule.AbstractFraudRule;
 import com.capitec.fraudengine.domain.rule.FraudRuleContext;
+import com.capitec.fraudengine.infrastructure.config.FraudRuleProperties;
 
 /**
  * Flags accounts that have too many recent transactions within the configured time window.
@@ -17,11 +18,15 @@ import com.capitec.fraudengine.domain.rule.FraudRuleContext;
 @Component
 public class VelocityFraudRule extends AbstractFraudRule {
 
-	private static final int VELOCITY_LIMIT = 3;
-	private static final Duration VELOCITY_WINDOW = Duration.ofMinutes(5);
+	private final int velocityLimit;
+	private final Duration velocityWindow;
+	private final int velocityWindowMinutes;
 
-	public VelocityFraudRule() {
+	public VelocityFraudRule(FraudRuleProperties fraudRuleProperties) {
 		super("VELOCITY", "Velocity Rule");
+		this.velocityLimit = fraudRuleProperties.getVelocity().getThresholdCount();
+		this.velocityWindowMinutes = fraudRuleProperties.getVelocity().getWindowMinutes();
+		this.velocityWindow = Duration.ofMinutes(velocityWindowMinutes);
 	}
 
 	@Override
@@ -34,18 +39,18 @@ public class VelocityFraudRule extends AbstractFraudRule {
 			.filter(previousTransaction -> !previousTransaction.transactionId().equals(currentTransaction.transactionId()))
 			.filter(previousTransaction -> {
 				Duration age = Duration.between(previousTransaction.eventTimestamp(), currentTimestamp).abs();
-				return age.compareTo(VELOCITY_WINDOW) <= 0;
+				return age.compareTo(velocityWindow) <= 0;
 			})
 			.count();
 
 		long totalTransactionsInWindow = matchingRecentTransactions + 1;
 
-		if (totalTransactionsInWindow >= VELOCITY_LIMIT) {
+		if (totalTransactionsInWindow >= velocityLimit) {
 			return result(
 				true,
 				RuleSeverity.REVIEW,
 				40,
-				"Account has " + totalTransactionsInWindow + " transactions within 5 minutes."
+				"Account has " + totalTransactionsInWindow + " transactions within " + velocityWindowMinutes + " minutes."
 			);
 		}
 

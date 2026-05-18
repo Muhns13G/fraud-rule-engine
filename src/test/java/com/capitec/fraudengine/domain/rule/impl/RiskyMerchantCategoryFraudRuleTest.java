@@ -13,11 +13,12 @@ import org.junit.jupiter.api.Test;
 import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
+import com.capitec.fraudengine.infrastructure.config.FraudRuleProperties;
 import com.capitec.fraudengine.support.DomainTestFixtures;
 
 class RiskyMerchantCategoryFraudRuleTest {
 
-	private final RiskyMerchantCategoryFraudRule rule = new RiskyMerchantCategoryFraudRule();
+	private final RiskyMerchantCategoryFraudRule rule = new RiskyMerchantCategoryFraudRule(new FraudRuleProperties());
 
 	@Test
 	void shouldTriggerForGambling() {

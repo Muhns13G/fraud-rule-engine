@@ -11,6 +11,18 @@ spring:
     open-in-view: false
 
 app:
+  fraud-rules:
+    high-amount:
+      review-threshold: ${FRAUD_RULE_HIGH_AMOUNT_REVIEW_THRESHOLD:10000.00}
+      block-threshold: ${FRAUD_RULE_HIGH_AMOUNT_BLOCK_THRESHOLD:25000.00}
+    velocity:
+      threshold-count: ${FRAUD_RULE_VELOCITY_THRESHOLD_COUNT:3}
+      window-minutes: ${FRAUD_RULE_VELOCITY_WINDOW_MINUTES:5}
+    risky-merchant-category:
+      flagged-categories: ${FRAUD_RULE_RISKY_MERCHANT_CATEGORIES:GAMBLING,CRYPTO,MONEY_TRANSFER}
+    unusual-time:
+      start: ${FRAUD_RULE_UNUSUAL_TIME_START:00:00}
+      end: ${FRAUD_RULE_UNUSUAL_TIME_END:04:00}
   security:
     secure-profile:
       username: ${FRAUD_ENGINE_SECURE_USER:secure-user}

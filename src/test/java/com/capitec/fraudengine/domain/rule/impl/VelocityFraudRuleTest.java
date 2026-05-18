@@ -14,11 +14,12 @@ import com.capitec.fraudengine.domain.model.RuleEvaluationResult;
 import com.capitec.fraudengine.domain.model.TransactionEvent;
 import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.RuleSeverity;
+import com.capitec.fraudengine.infrastructure.config.FraudRuleProperties;
 import com.capitec.fraudengine.support.DomainTestFixtures;
 
 class VelocityFraudRuleTest {
 
-	private final VelocityFraudRule rule = new VelocityFraudRule();
+	private final VelocityFraudRule rule = new VelocityFraudRule(new FraudRuleProperties());
 
 	@Test
 	void shouldNotTriggerWhenOnlyCurrentTransactionExists() {
