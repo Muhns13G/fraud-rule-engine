@@ -1,5 +1,8 @@
 package com.capitec.fraudengine.infrastructure.security;
 
+import javax.sql.DataSource;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpMethod;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +14,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -52,12 +56,27 @@ public class SecureProfileSecurityConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnProperty(
+		prefix = "app.security.secure-profile",
+		name = "identity-provider",
+		havingValue = "IN_MEMORY",
+		matchIfMissing = true
+	)
 	public UserDetailsService userDetailsService(
 		SecureProfileSecurityProperties properties,
 		PasswordEncoder passwordEncoder
 	) {
+		String rawPassword = normalize(properties.getPassword());
+		String encodedPassword = normalize(properties.getPasswordEncoded());
+
+		if (rawPassword == null && encodedPassword == null) {
+			throw new IllegalStateException(
+				"Secure profile requires either app.security.secure-profile.password or password-encoded when identity-provider=IN_MEMORY."
+			);
+		}
+
 		UserDetails secureUser = User.withUsername(properties.getUsername())
-			.password(passwordEncoder.encode(properties.getPassword()))
+			.password(resolveStoredPassword(rawPassword, encodedPassword, passwordEncoder))
 			.roles(properties.getRole())
 			.build();
 
@@ -65,7 +84,53 @@ public class SecureProfileSecurityConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnProperty(
+		prefix = "app.security.secure-profile",
+		name = "identity-provider",
+		havingValue = "JDBC"
+	)
+	public UserDetailsService jdbcUserDetailsService(
+		DataSource dataSource,
+		SecureProfileSecurityProperties properties
+	) {
+		JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
+
+		String usersByUsernameQuery = normalize(properties.getUsersByUsernameQuery());
+		if (usersByUsernameQuery != null) {
+			manager.setUsersByUsernameQuery(usersByUsernameQuery);
+		}
+
+		String authoritiesByUsernameQuery = normalize(properties.getAuthoritiesByUsernameQuery());
+		if (authoritiesByUsernameQuery != null) {
+			manager.setAuthoritiesByUsernameQuery(authoritiesByUsernameQuery);
+		}
+
+		return manager;
+	}
+
+	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	private static String resolveStoredPassword(
+		String rawPassword,
+		String encodedPassword,
+		PasswordEncoder passwordEncoder
+	) {
+		if (encodedPassword != null) {
+			return encodedPassword;
+		}
+
+		return passwordEncoder.encode(rawPassword);
+	}
+
+	private static String normalize(String value) {
+		if (value == null) {
+			return null;
+		}
+
+		String normalized = value.trim();
+		return normalized.isEmpty() ? null : normalized;
 	}
 }

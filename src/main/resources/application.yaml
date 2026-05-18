@@ -25,10 +25,20 @@ app:
       end: ${FRAUD_RULE_UNUSUAL_TIME_END:04:00}
   security:
     secure-profile:
+      # Identity provider:
+      # - IN_MEMORY: single env-backed user for local/reviewer secure mode
+      # - JDBC: externalized/persistent-friendly identity source via database-backed users
+      identity-provider: ${FRAUD_ENGINE_SECURE_IDENTITY_PROVIDER:IN_MEMORY}
       username: ${FRAUD_ENGINE_SECURE_USER:secure-user}
       password: ${FRAUD_ENGINE_SECURE_PASSWORD:change-me-secure}
+      # Optional pre-encoded (for example BCrypt) password for non-local secret sources.
+      # When provided, this takes precedence over raw password.
+      password-encoded: ${FRAUD_ENGINE_SECURE_PASSWORD_ENCODED:}
       role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
       admin-role: ${FRAUD_ENGINE_SECURE_ADMIN_ROLE:API_CLIENT}
+      # Optional custom JDBC queries when identity-provider=JDBC.
+      users-by-username-query: ${FRAUD_ENGINE_SECURE_USERS_BY_USERNAME_QUERY:}
+      authorities-by-username-query: ${FRAUD_ENGINE_SECURE_AUTHORITIES_BY_USERNAME_QUERY:}
 
 management:
   endpoints:

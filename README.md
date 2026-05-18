@@ -375,6 +375,12 @@ Security is now profile-aware:
     - `/v3/api-docs/**`
     - `/actuator/**`
   - credentials come from env-backed `app.security.secure-profile.*` properties
+  - identity provider is configurable:
+    - `IN_MEMORY` (default) for local/reviewer secure mode
+    - `JDBC` for persistent-friendly identity sourcing
+  - secure credentials support either:
+    - raw password (`password`) for local use, or
+    - pre-encoded password (`password-encoded`) for non-local secret workflows
   - health details are restricted with `management.endpoint.health.show-details=when_authorized`
 
 This remains a pragmatic take-home baseline, not full enterprise identity integration.
@@ -386,7 +392,7 @@ This remains a pragmatic take-home baseline, not full enterprise identity integr
 - `location anomaly` is intentionally deferred
 - retrieval remains intentionally bounded and is not intended to become a generic reporting surface
 - no CI pipeline exists yet
-- security is profile-aware but still based on in-memory Basic Auth credentials in secured mode
+- security is profile-aware with configurable identity provider, but enterprise IAM integration is still out of scope
 - SpringDoc remains enabled by default for the current slice
 
 ## Future Improvements
