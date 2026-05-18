@@ -51,6 +51,13 @@ Define activation and validation boundaries.
 - decide what can and cannot be changed at runtime
 - add validation so invalid or ambiguous rule metadata states are rejected
 - keep live evaluation deterministic even if metadata evolves
+- chosen in this task:
+  - deterministic lifecycle/activation boundary:
+    - `ACTIVE` lifecycle requires `ACTIVE` activation
+    - `DRAFT` and `RETIRED` lifecycle require `INACTIVE` activation
+    - `DEPRECATED` may be `ACTIVE` or `INACTIVE` during controlled transition
+  - runtime boundary remains code-defined-only: execution source must be `CODE_DEFINED`
+  - boundaries are enforced in both application policy validation and DB check constraints
 
 ### Sprint 2.5.5
 Add tests and documentation for the rule-management foundation.

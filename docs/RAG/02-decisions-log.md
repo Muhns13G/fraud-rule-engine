@@ -47,6 +47,12 @@
   - `GET /api/admin/rules` (defaults to active-only view)
   - `GET /api/admin/rules/{ruleCode}/versions/{version}` for identity-level inspection
   - threshold-read endpoint intentionally deferred to keep this increment governance-focused
+- Sprint 2.5.4 locks governance validation boundaries to:
+  - `ACTIVE` lifecycle requires `ACTIVE` activation
+  - `DRAFT` and `RETIRED` lifecycle require `INACTIVE` activation
+  - `DEPRECATED` can remain `ACTIVE` or become `INACTIVE` during transition
+  - current runtime execution boundary remains `CODE_DEFINED` only
+  - invalid lifecycle/activation combinations are rejected via application policy and DB constraints
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

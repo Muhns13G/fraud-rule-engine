@@ -11,6 +11,7 @@ import com.capitec.fraudengine.domain.model.RuleLifecycleState;
 import com.capitec.fraudengine.domain.model.enums.RuleActivationState;
 import com.capitec.fraudengine.domain.model.enums.RuleExecutionSource;
 import com.capitec.fraudengine.domain.model.enums.RuleLifecycleStatus;
+import com.capitec.fraudengine.domain.policy.RuleGovernancePolicy;
 import com.capitec.fraudengine.domain.rule.FraudRule;
 import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceMetadataEntity;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.RuleGovernanceMetadataPersistenceMapper;
@@ -27,15 +28,18 @@ public class RuleGovernanceMetadataBootstrapService {
 	private final List<FraudRule> fraudRules;
 	private final RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository;
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
+	private final RuleGovernancePolicy ruleGovernancePolicy;
 
 	public RuleGovernanceMetadataBootstrapService(
 		List<FraudRule> fraudRules,
 		RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository,
-		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper
+		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper,
+		RuleGovernancePolicy ruleGovernancePolicy
 	) {
 		this.fraudRules = fraudRules;
 		this.ruleGovernanceMetadataJpaRepository = ruleGovernanceMetadataJpaRepository;
 		this.ruleGovernanceMetadataPersistenceMapper = ruleGovernanceMetadataPersistenceMapper;
+		this.ruleGovernancePolicy = ruleGovernancePolicy;
 	}
 
 	/**
@@ -50,10 +54,14 @@ public class RuleGovernanceMetadataBootstrapService {
 				new RuleLifecycleState(RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE),
 				RuleExecutionSource.CODE_DEFINED
 			);
+			ruleGovernancePolicy.validateState(metadata);
+			ruleGovernancePolicy.validateExecutionBoundary(metadata);
 
 			RuleGovernanceMetadataEntity entity = ruleGovernanceMetadataJpaRepository
 				.findByRuleCodeAndRuleVersion(metadata.identity().ruleCode(), metadata.identity().version())
 				.map(existing -> {
+					RuleGovernanceMetadata existingMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(existing);
+					ruleGovernancePolicy.validateExecutionBoundary(existingMetadata);
 					ruleGovernanceMetadataPersistenceMapper.updateEntity(metadata, existing);
 					return existing;
 				})
