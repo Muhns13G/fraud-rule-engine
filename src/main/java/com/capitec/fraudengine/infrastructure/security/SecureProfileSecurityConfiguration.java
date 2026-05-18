@@ -31,7 +31,14 @@ public class SecureProfileSecurityConfiguration {
 			.httpBasic(Customizer.withDefaults())
 			.logout(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize
-				.anyRequest().authenticated()
+				.requestMatchers(
+					"/api/**",
+					"/swagger-ui.html",
+					"/swagger-ui/**",
+					"/v3/api-docs/**",
+					"/actuator/**"
+				).authenticated()
+				.anyRequest().permitAll()
 			)
 			.headers(Customizer.withDefaults());
 
