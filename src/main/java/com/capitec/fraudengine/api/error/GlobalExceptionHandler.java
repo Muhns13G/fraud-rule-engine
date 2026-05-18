@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.capitec.fraudengine.common.error.InvalidRuleGovernanceStateException;
 import com.capitec.fraudengine.common.error.InvalidRequestValueException;
 
 /**
@@ -102,6 +103,24 @@ public class GlobalExceptionHandler {
 	) {
 		LOGGER.info("rule_governance_metadata_not_found message={}", exception.getMessage());
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
+	}
+
+	/**
+	 * Handles deterministic rule-governance state validation failures.
+	 *
+	 * @param exception invalid governance state exception
+	 * @return structured bad-request response
+	 */
+	@ExceptionHandler(InvalidRuleGovernanceStateException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidRuleGovernanceState(
+		InvalidRuleGovernanceStateException exception
+	) {
+		LOGGER.warn("rule_governance_state_rejected reason={}", exception.getMessage());
+		return buildResponse(
+			HttpStatus.BAD_REQUEST,
+			"Rule governance state transition is invalid.",
+			List.of(exception.getMessage())
+		);
 	}
 
 	/**

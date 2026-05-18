@@ -3,6 +3,7 @@ package com.capitec.fraudengine.api.controller;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.capitec.fraudengine.TestcontainersConfiguration;
@@ -106,6 +108,73 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status", is(404)))
 			.andExpect(jsonPath("$.message", is("Rule governance metadata not found for ruleCode 'DOES_NOT_EXIST' and version '9.9.9'.")));
+	}
+
+	@Test
+	void shouldTransitionRuleLifecycleStateWhenTransitionIsValid() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.0.0", "High Amount Rule", RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			patch("/api/admin/rules/HIGH_AMOUNT/versions/1.0.0/state")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "lifecycleStatus": "DEPRECATED",
+					  "activationState": "INACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.ruleCode", is("HIGH_AMOUNT")))
+			.andExpect(jsonPath("$.version", is("1.0.0")))
+			.andExpect(jsonPath("$.lifecycleStatus", is("DEPRECATED")))
+			.andExpect(jsonPath("$.activationState", is("INACTIVE")))
+			.andExpect(jsonPath("$.executionSource", is("CODE_DEFINED")));
+	}
+
+	@Test
+	void shouldRejectRuleLifecycleStateTransitionWhenPolicyIsViolated() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.0.0", "High Amount Rule", RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			patch("/api/admin/rules/HIGH_AMOUNT/versions/1.0.0/state")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "lifecycleStatus": "DRAFT",
+					  "activationState": "INACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status", is(400)))
+			.andExpect(jsonPath("$.message", is("Rule governance state transition is invalid.")))
+			.andExpect(jsonPath("$.details[0]", is("Lifecycle transition from ACTIVE to DRAFT is not permitted.")));
+	}
+
+	@Test
+	void shouldReturnNotFoundWhenTransitionTargetDoesNotExist() throws Exception {
+		mockMvc.perform(
+			patch("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/state")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "lifecycleStatus": "DEPRECATED",
+					  "activationState": "INACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status", is(404)))
+			.andExpect(jsonPath("$.message", is("Rule governance metadata not found for ruleCode 'DOES_NOT_EXIST' and version '1.0.0'.")));
 	}
 
 	private RuleGovernanceMetadata ruleMetadata(

@@ -111,6 +111,50 @@ class RuleGovernancePolicyTest {
 		assertThrows(InvalidRuleGovernanceStateException.class, () -> policy.validateState(metadata));
 	}
 
+	@Test
+	void shouldAllowLifecycleTransitionFromActiveToDeprecated() {
+		RuleGovernanceMetadata current = metadata(
+			"HIGH_AMOUNT",
+			"1.0.0",
+			"High Amount Rule",
+			RuleLifecycleStatus.ACTIVE,
+			RuleActivationState.ACTIVE,
+			RuleExecutionSource.CODE_DEFINED
+		);
+		RuleGovernanceMetadata target = metadata(
+			"HIGH_AMOUNT",
+			"1.0.0",
+			"High Amount Rule",
+			RuleLifecycleStatus.DEPRECATED,
+			RuleActivationState.INACTIVE,
+			RuleExecutionSource.CODE_DEFINED
+		);
+
+		assertDoesNotThrow(() -> policy.validateTransition(current, target));
+	}
+
+	@Test
+	void shouldRejectLifecycleTransitionFromRetiredToActive() {
+		RuleGovernanceMetadata current = metadata(
+			"HIGH_AMOUNT",
+			"1.0.0",
+			"High Amount Rule",
+			RuleLifecycleStatus.RETIRED,
+			RuleActivationState.INACTIVE,
+			RuleExecutionSource.CODE_DEFINED
+		);
+		RuleGovernanceMetadata target = metadata(
+			"HIGH_AMOUNT",
+			"1.0.0",
+			"High Amount Rule",
+			RuleLifecycleStatus.ACTIVE,
+			RuleActivationState.ACTIVE,
+			RuleExecutionSource.CODE_DEFINED
+		);
+
+		assertThrows(InvalidRuleGovernanceStateException.class, () -> policy.validateTransition(current, target));
+	}
+
 	private RuleGovernanceMetadata metadata(
 		String ruleCode,
 		String version,

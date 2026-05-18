@@ -59,4 +59,32 @@ public class RuleGovernancePolicy {
 			);
 		}
 	}
+
+	/**
+	 * Validates allowed lifecycle transitions for governed rule metadata.
+	 *
+	 * @param current current stored metadata state
+	 * @param target requested metadata state
+	 */
+	public void validateTransition(RuleGovernanceMetadata current, RuleGovernanceMetadata target) {
+		RuleLifecycleStatus from = current.lifecycleState().lifecycleStatus();
+		RuleLifecycleStatus to = target.lifecycleState().lifecycleStatus();
+
+		if (from == to) {
+			return;
+		}
+
+		boolean allowed = switch (from) {
+			case DRAFT -> to == RuleLifecycleStatus.ACTIVE || to == RuleLifecycleStatus.RETIRED;
+			case ACTIVE -> to == RuleLifecycleStatus.DEPRECATED || to == RuleLifecycleStatus.RETIRED;
+			case DEPRECATED -> to == RuleLifecycleStatus.ACTIVE || to == RuleLifecycleStatus.RETIRED;
+			case RETIRED -> false;
+		};
+
+		if (!allowed) {
+			throw new InvalidRuleGovernanceStateException(
+				"Lifecycle transition from " + from + " to " + to + " is not permitted."
+			);
+		}
+	}
 }
