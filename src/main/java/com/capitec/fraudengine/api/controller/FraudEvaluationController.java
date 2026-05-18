@@ -2,7 +2,6 @@ package com.capitec.fraudengine.api.controller;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.capitec.fraudengine.api.dto.FraudEvaluationRequestDto;
 import com.capitec.fraudengine.api.dto.FraudEvaluationResponseDto;
-import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryResponseDto;
+import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryPageResponseDto;
 import com.capitec.fraudengine.api.error.FraudEvaluationNotFoundException;
 import com.capitec.fraudengine.application.mapper.FraudEvaluationApplicationMapper;
 import com.capitec.fraudengine.application.service.FraudEvaluationRetrievalService;
@@ -155,7 +154,7 @@ public class FraudEvaluationController {
 		@ApiResponse(
 			responseCode = "200",
 			description = "Fraud evaluation summaries retrieved successfully.",
-			content = @Content(schema = @Schema(implementation = FraudEvaluationSummaryResponseDto.class))
+			content = @Content(schema = @Schema(implementation = FraudEvaluationSummaryPageResponseDto.class))
 		),
 		@ApiResponse(
 			responseCode = "400",
@@ -168,7 +167,7 @@ public class FraudEvaluationController {
 			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
 		)
 	})
-	public List<FraudEvaluationSummaryResponseDto> findSummaries(
+	public FraudEvaluationSummaryPageResponseDto findSummaries(
 		@Parameter(description = "Optional final fraud decision filter.", example = "REVIEW")
 		@RequestParam(required = false) FraudDecision decision,
 		@Parameter(description = "Optional account identifier filter.", example = "account-123")
@@ -182,7 +181,11 @@ public class FraudEvaluationController {
 		@Parameter(description = "Optional inclusive evaluated-at range start in ISO-8601 format.", example = "2026-05-12T09:00:00+02:00")
 		@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime from,
 		@Parameter(description = "Optional inclusive evaluated-at range end in ISO-8601 format.", example = "2026-05-12T12:00:00+02:00")
-		@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime to
+		@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime to,
+		@Parameter(description = "Zero-based page index.", example = "0")
+		@RequestParam(defaultValue = "0") int page,
+		@Parameter(description = "Page size.", example = "20")
+		@RequestParam(defaultValue = "20") int size
 	) {
 		return fraudEvaluationRetrievalService.findSummaries(
 			decision,
@@ -191,7 +194,9 @@ public class FraudEvaluationController {
 			transactionId,
 			sort,
 			from,
-			to
+			to,
+			page,
+			size
 		);
 	}
 }

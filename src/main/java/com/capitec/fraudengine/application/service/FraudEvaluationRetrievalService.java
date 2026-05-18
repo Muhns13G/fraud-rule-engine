@@ -7,11 +7,14 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Sort;
 
 import com.capitec.fraudengine.api.dto.FraudEvaluationResponseDto;
+import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryPageResponseDto;
 import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryResponseDto;
 import com.capitec.fraudengine.application.mapper.FraudEvaluationApplicationMapper;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
@@ -75,29 +78,31 @@ public class FraudEvaluationRetrievalService {
 	 * @return summary response DTOs
 	 */
 	@Transactional(readOnly = true)
-	public List<FraudEvaluationSummaryResponseDto> findSummaries(
+	public FraudEvaluationSummaryPageResponseDto findSummaries(
 		FraudDecision decision,
 		String accountId,
 		String customerId,
 		String transactionId,
 		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
-		OffsetDateTime to
+		OffsetDateTime to,
+		int page,
+		int size
 	) {
-		List<FraudEvaluationSummaryResponseDto> responses = findDomainEvaluations(
+		Page<FraudEvaluationSummaryResponseDto> responses = findDomainEvaluations(
 			decision,
 			accountId,
 			customerId,
 			transactionId,
 			sortOrder,
 			from,
-			to
-		).stream()
-			.map(fraudEvaluationApplicationMapper::toSummaryResponse)
-			.toList();
+			to,
+			page,
+			size
+		).map(fraudEvaluationApplicationMapper::toSummaryResponse);
 
 		LOGGER.info(
-			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} fromPresent={} toPresent={} sort={} resultCount={}",
+			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} fromPresent={} toPresent={} sort={} page={} size={} pageResultCount={} totalElements={} totalPages={}",
 			decision,
 			accountId != null,
 			customerId != null,
@@ -105,27 +110,37 @@ public class FraudEvaluationRetrievalService {
 			from != null,
 			to != null,
 			sortOrder,
-			responses.size()
+			page,
+			size,
+			responses.getNumberOfElements(),
+			responses.getTotalElements(),
+			responses.getTotalPages()
 		);
 
-		return responses;
+		return new FraudEvaluationSummaryPageResponseDto(
+			responses.getContent(),
+			responses.getNumber(),
+			responses.getSize(),
+			responses.getTotalElements(),
+			responses.getTotalPages()
+		);
 	}
 
-	private List<FraudEvaluation> findDomainEvaluations(
+	private Page<FraudEvaluation> findDomainEvaluations(
 		FraudDecision decision,
 		String accountId,
 		String customerId,
 		String transactionId,
 		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
-		OffsetDateTime to
+		OffsetDateTime to,
+		int page,
+		int size
 	) {
 		return fraudEvaluationJpaRepository.findAll(
 			FraudEvaluationSpecifications.withReviewFilters(decision, accountId, customerId, transactionId, from, to),
-			toSort(sortOrder)
-		).stream()
-			.map(fraudEvaluationPersistenceMapper::toDomain)
-			.toList();
+			PageRequest.of(page, size, toSort(sortOrder))
+		).map(fraudEvaluationPersistenceMapper::toDomain);
 	}
 
 	private Sort toSort(FraudEvaluationSummarySortOrder sortOrder) {

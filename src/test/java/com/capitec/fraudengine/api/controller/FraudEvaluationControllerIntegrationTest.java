@@ -201,10 +201,10 @@ class FraudEvaluationControllerIntegrationTest {
 				.param("from", "2026-05-12T09:59:00+02:00")
 				.param("to", "2026-05-12T10:01:00+02:00"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(1)))
-			.andExpect(jsonPath("$[0].transactionId", is("txn-list-001")))
-			.andExpect(jsonPath("$[0].accountId", is("account-list-001")))
-			.andExpect(jsonPath("$[0].decision", is("REVIEW")));
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-list-001")))
+			.andExpect(jsonPath("$.content[0].accountId", is("account-list-001")))
+			.andExpect(jsonPath("$.content[0].decision", is("REVIEW")));
 	}
 
 	@Test
@@ -239,9 +239,9 @@ class FraudEvaluationControllerIntegrationTest {
 		mockMvc.perform(get("/api/fraud-evaluations")
 				.param("customerId", "customer-filter-001"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(1)))
-			.andExpect(jsonPath("$[0].transactionId", is("txn-customer-001")))
-			.andExpect(jsonPath("$[0].accountId", is("account-customer-001")));
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-customer-001")))
+			.andExpect(jsonPath("$.content[0].accountId", is("account-customer-001")));
 	}
 
 	@Test
@@ -276,9 +276,9 @@ class FraudEvaluationControllerIntegrationTest {
 		mockMvc.perform(get("/api/fraud-evaluations")
 				.param("transactionId", "txn-lookup-001"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(1)))
-			.andExpect(jsonPath("$[0].transactionId", is("txn-lookup-001")))
-			.andExpect(jsonPath("$[0].decision", is("REVIEW")));
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-lookup-001")))
+			.andExpect(jsonPath("$.content[0].decision", is("REVIEW")));
 	}
 
 	@Test
@@ -314,9 +314,9 @@ class FraudEvaluationControllerIntegrationTest {
 				.param("customerId", "customer-combined-001")
 				.param("decision", "REVIEW"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(1)))
-			.andExpect(jsonPath("$[0].transactionId", is("txn-combined-001")))
-			.andExpect(jsonPath("$[0].decision", is("REVIEW")));
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-combined-001")))
+			.andExpect(jsonPath("$.content[0].decision", is("REVIEW")));
 	}
 
 	@Test
@@ -350,8 +350,8 @@ class FraudEvaluationControllerIntegrationTest {
 
 		mockMvc.perform(get("/api/fraud-evaluations"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[0].transactionId", is("txn-sort-newer")))
-			.andExpect(jsonPath("$[1].transactionId", is("txn-sort-older")));
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-sort-newer")))
+			.andExpect(jsonPath("$.content[1].transactionId", is("txn-sort-older")));
 	}
 
 	@Test
@@ -386,8 +386,37 @@ class FraudEvaluationControllerIntegrationTest {
 		mockMvc.perform(get("/api/fraud-evaluations")
 				.param("sort", "OLDEST_FIRST"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[0].transactionId", is("txn-sort-asc-older")))
-			.andExpect(jsonPath("$[1].transactionId", is("txn-sort-asc-newer")));
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-sort-asc-older")))
+			.andExpect(jsonPath("$.content[1].transactionId", is("txn-sort-asc-newer")));
+	}
+
+	@Test
+	void shouldReturnPaginationMetadataForSummaryQueries() throws Exception {
+		for (int index = 1; index <= 3; index++) {
+			fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+				fraudEvaluation(
+					UUID.randomUUID(),
+					"txn-page-00" + index,
+					"account-page-001",
+					"customer-page-001",
+					FraudDecision.REVIEW,
+					40,
+					OffsetDateTime.parse("2026-05-12T16:0" + index + ":00+02:00"),
+					OffsetDateTime.parse("2026-05-12T16:1" + index + ":00+02:00"),
+					List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+				)
+			));
+		}
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("page", "1")
+				.param("size", "2"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.page", is(1)))
+			.andExpect(jsonPath("$.size", is(2)))
+			.andExpect(jsonPath("$.totalElements", is(3)))
+			.andExpect(jsonPath("$.totalPages", is(2)))
+			.andExpect(jsonPath("$.content", hasSize(1)));
 	}
 
 	@Test
