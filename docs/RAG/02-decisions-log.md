@@ -115,6 +115,11 @@
     - structured `security_authn_denied` and `security_authz_denied` events
     - dedicated counters `fraud.security.authn.denied.total` and `fraud.security.authz.denied.total`
   - formalize an operational runbook baseline in README/RAG for profile access expectations and incident-triage signal flow
+- Sprint 4.4 close-out decisions:
+  - codify environment templates as first-class operational artifacts for `local-reviewer`, `secure`, and `production` modes
+  - enforce secure-profile configuration guardrails as fail-fast startup contracts rather than permissive runtime fallbacks
+  - treat Phase 4 cross-sprint security/ops regression as a dedicated gate (local script + CI job), not ad-hoc targeted runs
+  - reconcile debt status only with concrete code/test evidence and carry forward unresolved items explicitly
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

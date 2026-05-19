@@ -87,6 +87,22 @@ Supported sort values:
 - `secure` profile requires authentication for API and actuator routes, and requires admin role for governance mutation endpoints.
 - Swagger/OpenAPI and actuator exposure are now explicitly profile-driven through configuration.
 
+## Security/Observability Policy Notes (Sprint 4.3)
+- Profile policy baseline is now explicit:
+  - `default`: actuator `health,info,metrics`, Swagger/OpenAPI enabled
+  - `secure`: actuator `health,info` (authenticated), Swagger/OpenAPI disabled by default
+  - `production`: actuator `health` only, health details hidden, Swagger/OpenAPI disabled
+- Request-correlation handling is hardened:
+  - incoming `X-Request-Id` values must match UUID format and length constraints
+  - invalid/missing values are replaced with generated safe correlation IDs
+
+## Phase 4 Regression Notes (Sprint 4.4)
+- No new public API surface was added in Sprint `4.4`.
+- Operational confidence is now gated by a dedicated Phase 4 security/ops regression suite:
+  - access-control matrix checks
+  - secure identity-provider mode checks
+  - observability/actuator policy behavior checks
+
 ## Secure Identity Contract Notes (Sprint 4.2)
 - No public endpoint contract changed in Sprint 4.2.
 - `secure` profile identity and secret posture is now stricter and explicitly validated:

@@ -37,8 +37,11 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Further define error handling, correlation boundaries, and audit event boundaries for production readiness.
 - Add environment-specific configuration patterns for local, test, and production.
 - Status update:
+  - Phase 4 is completed through Sprint `4.4`.
   - Sprint `4.1` establishes explicit secure-profile role segmentation for API, governance read/mutation, actuator, and docs surfaces.
   - Sprint `4.2` hardens secure identity and secret posture with explicit secret-source strategies, JDBC query-contract validation/defaults, and credential-rotation readiness hooks.
+  - Sprint `4.3` standardizes profile-based observability policy, request-correlation hardening, and security-denial diagnostics.
+  - Sprint `4.4` closes operational resilience checks, cross-sprint regression gating, and debt reconciliation evidence.
   - `default` profile remains intentionally open with explicit guardrail messaging for local/reviewer mode.
   - enterprise IAM/JWT/OAuth2 remains intentionally deferred to avoid premature complexity in current scope.
 

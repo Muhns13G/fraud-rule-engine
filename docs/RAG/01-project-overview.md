@@ -42,6 +42,11 @@
     - `OPS_READER` for governance read + actuator diagnostics
     - `GOVERNANCE_ADMIN` for governance mutation
     - `PLATFORM_ADMIN` as optional superset role
+- Security and operations posture is now Phase 4 close-out complete:
+  - secure-profile startup guardrails fail fast on unsafe identity/secret/role and actuator configurations
+  - resilience checks cover datasource unavailability, invalid secure identity setup, and role-restricted actuator access
+  - a dedicated Phase 4 regression suite now gates access-control matrix behavior, identity-provider modes, and observability policy expectations
+  - security-denial diagnostics are captured as structured logs and dedicated authn/authz counters
 - Delivery and regression posture is now Phase 3 close-out ready:
   - baseline CI workflow exists for compile/test/package
   - governance regression suite now verifies mutation, authorization, and retrieval consistency

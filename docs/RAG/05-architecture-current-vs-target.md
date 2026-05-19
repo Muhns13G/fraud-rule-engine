@@ -26,8 +26,12 @@
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 - Delivery and verification architecture now includes:
   - GitHub Actions CI baseline for compile, test, and package gates
+  - dedicated Phase 4 security/operations regression gate (`scripts/run-phase4-security-ops-regression.sh`) wired into CI
   - governance regression tests that assert end-to-end state mutation, role-aware authorization behavior, and post-mutation retrieval consistency
   - explicit test-runtime alignment for Mockito on JDK 25 via Surefire Java agent configuration
+- Phase 4 operational resilience architecture now includes:
+  - fail-fast secure-profile guardrails for identity, secret-source, role contract, and actuator exposure configuration
+  - resilience-focused integration checks for datasource failure behavior and secure-profile misconfiguration paths
 - Rule governance groundwork now exists:
   - persisted metadata identity (`ruleCode + version`)
   - admin read and constrained mutation endpoints for governed rule metadata

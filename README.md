@@ -209,6 +209,11 @@ Current automated coverage includes:
 
 CI baseline:
 - GitHub Actions workflow at `.github/workflows/ci.yml` runs compile, test, and package checks.
+- Phase 4 security/operations regression gate is also wired in CI and can be run locally via:
+  - `./scripts/run-phase4-security-ops-regression.sh`
+
+Phase status:
+- Phase 4 (Security and Operations) is now closed through Sprint `4.4`, including profile policy hardening, resilience validation, and cross-sprint regression gating.
 
 ## Docker
 
