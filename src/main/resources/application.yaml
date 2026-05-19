@@ -68,6 +68,10 @@ app:
       authorities-by-username-query: ${FRAUD_ENGINE_SECURE_AUTHORITIES_BY_USERNAME_QUERY:}
 
 management:
+  # Actuator exposure contract by profile:
+  # - default: local/reviewer diagnostics (health, info, metrics) with details visible
+  # - secure: authenticated diagnostics (health, info) with details only for ops/admin roles
+  # - production: minimal diagnostics (health only) with no details
   endpoints:
     web:
       exposure:
@@ -98,7 +102,7 @@ management:
   endpoint:
     health:
       show-details: when_authorized
-      roles: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
+      roles: ${FRAUD_ENGINE_SECURE_OPS_READER_ROLE:OPS_READER}
 
 springdoc:
   api-docs:
@@ -109,3 +113,26 @@ springdoc:
 logging:
   pattern:
     console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%X{requestId:-no-request-id}] --- [%15.15t] %logger{36} : %msg%n"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${FRAUD_ENGINE_PRODUCTION_ACTUATOR_EXPOSURE:health}
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
