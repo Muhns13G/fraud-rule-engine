@@ -250,6 +250,57 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(jsonPath("$.message", is("Rule governance metadata not found for ruleCode 'UNKNOWN_RULE'.")));
 	}
 
+	@Test
+	void shouldReflectGovernanceMutationsInSubsequentRetrievals() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.0.0", "High Amount Rule", RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			patch("/api/admin/rules/HIGH_AMOUNT/versions/1.0.0/state")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "lifecycleStatus": "DEPRECATED",
+					  "activationState": "INACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.lifecycleStatus", is("DEPRECATED")))
+			.andExpect(jsonPath("$.activationState", is("INACTIVE")));
+
+		mockMvc.perform(
+			post("/api/admin/rules/HIGH_AMOUNT/versions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "version": "1.1.0",
+					  "lifecycleStatus": "ACTIVE",
+					  "activationState": "ACTIVE"
+					}
+					""")
+		)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.version", is("1.1.0")));
+
+		mockMvc.perform(get("/api/admin/rules/HIGH_AMOUNT/versions/1.0.0"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.lifecycleStatus", is("DEPRECATED")))
+			.andExpect(jsonPath("$.activationState", is("INACTIVE")));
+
+		mockMvc.perform(get("/api/admin/rules/HIGH_AMOUNT/versions/1.1.0"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.lifecycleStatus", is("ACTIVE")))
+			.andExpect(jsonPath("$.activationState", is("ACTIVE")));
+
+		mockMvc.perform(get("/api/admin/rules").param("activeOnly", "false"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$", hasSize(2)));
+	}
+
 	private RuleGovernanceMetadata ruleMetadata(
 		String ruleCode,
 		String version,
