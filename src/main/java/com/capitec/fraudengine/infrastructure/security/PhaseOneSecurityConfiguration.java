@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * This intentionally avoids authentication while the take-home focuses on fraud evaluation behavior.
  */
 @Configuration
-@Profile("!secure")
+@Profile("!secure & !hardened")
 public class PhaseOneSecurityConfiguration {
 
 	/**
