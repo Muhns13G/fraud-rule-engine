@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -92,6 +94,38 @@ class SecureProfileSecurityConfigurationTest {
 		when(secretSupplierProvider.getIfAvailable()).thenReturn(secretSupplier);
 
 		assertDoesNotThrow(() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder));
+	}
+
+	@Test
+	void shouldUseDefaultJdbcQueriesWhenNoneAreConfigured() {
+		SecureProfileSecurityProperties properties = new SecureProfileSecurityProperties();
+		properties.setIdentityProvider(SecureProfileSecurityProperties.IdentityProvider.JDBC);
+
+		assertDoesNotThrow(() -> configuration.jdbcUserDetailsService(mock(DataSource.class), properties));
+	}
+
+	@Test
+	void shouldRejectJdbcUsersQueryWithoutPlaceholder() {
+		SecureProfileSecurityProperties properties = new SecureProfileSecurityProperties();
+		properties.setIdentityProvider(SecureProfileSecurityProperties.IdentityProvider.JDBC);
+		properties.setUsersByUsernameQuery("select username, password, enabled from users");
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.jdbcUserDetailsService(mock(DataSource.class), properties)
+		);
+	}
+
+	@Test
+	void shouldRejectJdbcAuthoritiesQueryWithoutAuthorityColumn() {
+		SecureProfileSecurityProperties properties = new SecureProfileSecurityProperties();
+		properties.setIdentityProvider(SecureProfileSecurityProperties.IdentityProvider.JDBC);
+		properties.setAuthoritiesByUsernameQuery("select username, role from users where username = ?");
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.jdbcUserDetailsService(mock(DataSource.class), properties)
+		);
 	}
 
 	private static SecureProfileSecurityProperties baseInMemoryProperties() {

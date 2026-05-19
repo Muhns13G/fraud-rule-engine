@@ -31,6 +31,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableConfigurationProperties(SecureProfileSecurityProperties.class)
 public class SecureProfileSecurityConfiguration {
 
+	private static final String DEFAULT_USERS_BY_USERNAME_QUERY =
+		"select username, password, enabled from users where username = ?";
+	private static final String DEFAULT_AUTHORITIES_BY_USERNAME_QUERY =
+		"select username, authority from authorities where username = ?";
+
 	@Bean
 	public SecurityFilterChain secureSecurityFilterChain(
 		HttpSecurity http,
@@ -120,15 +125,10 @@ public class SecureProfileSecurityConfiguration {
 	) {
 		JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
 
-		String usersByUsernameQuery = normalize(properties.getUsersByUsernameQuery());
-		if (usersByUsernameQuery != null) {
-			manager.setUsersByUsernameQuery(usersByUsernameQuery);
-		}
-
-		String authoritiesByUsernameQuery = normalize(properties.getAuthoritiesByUsernameQuery());
-		if (authoritiesByUsernameQuery != null) {
-			manager.setAuthoritiesByUsernameQuery(authoritiesByUsernameQuery);
-		}
+		String usersByUsernameQuery = resolveJdbcUsersByUsernameQuery(properties);
+		String authoritiesByUsernameQuery = resolveJdbcAuthoritiesByUsernameQuery(properties);
+		manager.setUsersByUsernameQuery(usersByUsernameQuery);
+		manager.setAuthoritiesByUsernameQuery(authoritiesByUsernameQuery);
 
 		return manager;
 	}
@@ -168,6 +168,63 @@ public class SecureProfileSecurityConfiguration {
 			}
 		}
 		return uniqueRoles.toArray(String[]::new);
+	}
+
+	private static String resolveJdbcUsersByUsernameQuery(SecureProfileSecurityProperties properties) {
+		String configuredQuery = normalize(properties.getUsersByUsernameQuery());
+		String query = configuredQuery != null ? configuredQuery : DEFAULT_USERS_BY_USERNAME_QUERY;
+		validateJdbcUsersByUsernameQuery(query);
+		return query;
+	}
+
+	private static String resolveJdbcAuthoritiesByUsernameQuery(SecureProfileSecurityProperties properties) {
+		String configuredQuery = normalize(properties.getAuthoritiesByUsernameQuery());
+		String query = configuredQuery != null ? configuredQuery : DEFAULT_AUTHORITIES_BY_USERNAME_QUERY;
+		validateJdbcAuthoritiesByUsernameQuery(query);
+		return query;
+	}
+
+	private static void validateJdbcUsersByUsernameQuery(String query) {
+		String normalizedQuery = query.toLowerCase();
+		if (!normalizedQuery.startsWith("select ")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC users-by-username-query must be a SELECT statement."
+			);
+		}
+		if (!normalizedQuery.contains("?")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC users-by-username-query must contain a username parameter placeholder '?'."
+			);
+		}
+		if (!normalizedQuery.contains("password")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC users-by-username-query must select a password column."
+			);
+		}
+		if (!normalizedQuery.contains("enabled")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC users-by-username-query must select an enabled column."
+			);
+		}
+	}
+
+	private static void validateJdbcAuthoritiesByUsernameQuery(String query) {
+		String normalizedQuery = query.toLowerCase();
+		if (!normalizedQuery.startsWith("select ")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC authorities-by-username-query must be a SELECT statement."
+			);
+		}
+		if (!normalizedQuery.contains("?")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC authorities-by-username-query must contain a username parameter placeholder '?'."
+			);
+		}
+		if (!normalizedQuery.contains("authority")) {
+			throw new IllegalStateException(
+				"Secure profile JDBC authorities-by-username-query must select an authority column."
+			);
+		}
 	}
 
 	private static ResolvedInMemorySecrets resolveInMemorySecrets(

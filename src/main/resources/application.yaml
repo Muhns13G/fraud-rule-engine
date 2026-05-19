@@ -28,6 +28,8 @@ app:
       # Identity provider:
       # - IN_MEMORY: single env-backed user for local/reviewer secure mode
       # - JDBC: externalized/persistent-friendly identity source via database-backed users
+      #   expected defaults align with Spring Security schema:
+      #   users(username, password, enabled) and authorities(username, authority)
       identity-provider: ${FRAUD_ENGINE_SECURE_IDENTITY_PROVIDER:IN_MEMORY}
       # Secret source strategy when identity-provider=IN_MEMORY:
       # - ENV: raw password via env var (local/reviewer default)
@@ -50,6 +52,12 @@ app:
       # Optional future super-role for platform-level operations.
       platform-admin-role: ${FRAUD_ENGINE_SECURE_PLATFORM_ADMIN_ROLE:PLATFORM_ADMIN}
       # Optional custom JDBC queries when identity-provider=JDBC.
+      # Validation rules:
+      # - must be SELECT statements
+      # - must include username parameter placeholder '?'
+      # - users query must select password + enabled
+      # - authorities query must select authority
+      # If omitted, safe defaults are used.
       users-by-username-query: ${FRAUD_ENGINE_SECURE_USERS_BY_USERNAME_QUERY:}
       authorities-by-username-query: ${FRAUD_ENGINE_SECURE_AUTHORITIES_BY_USERNAME_QUERY:}
 
