@@ -87,6 +87,15 @@ Supported sort values:
 - `secure` profile requires authentication for API and actuator routes, and requires admin role for governance mutation endpoints.
 - Swagger/OpenAPI and actuator exposure are now explicitly profile-driven through configuration.
 
+## Authorization Matrix Notes (Sprint 4.1)
+- `secure` profile route authorization is role-segmented:
+  - core fraud-evaluation API (`/api/fraud-evaluations...`): `API_CLIENT` or stronger
+  - governance reads (`GET /api/admin/rules...`): `OPS_READER` or stronger
+  - governance mutations (`PATCH/POST /api/admin/rules...`): `GOVERNANCE_ADMIN` or `PLATFORM_ADMIN`
+  - actuator routes (`/actuator/**`): `OPS_READER` or stronger
+  - docs routes (`/swagger-ui/**`, `/v3/api-docs/**` when enabled): `OPS_READER` or stronger
+- `default` profile remains intentionally open with startup guardrail messaging.
+
 ## Governance Regression Notes (Sprint 3.4)
 - Governance mutation and retrieval behavior is now regression-tested as a closure gate.
 - Secure-profile authorization boundaries are explicitly asserted for:

@@ -86,6 +86,17 @@
   - lock role model to `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, optional `PLATFORM_ADMIN`
   - lock secure-profile access matrix by surface (evaluation API, governance read/mutation, actuator, Swagger/OpenAPI)
   - encode role contract via secure-profile properties without changing active authorization matchers yet
+- Sprint 4.1.2/4.1.4 enforcement + verification decisions:
+  - enforce secure-profile authorization by route group and HTTP method (governance read vs mutation, actuator, evaluation API, docs routes)
+  - support role overlap safely by de-duplicating configured role sets before `hasAnyRole(...)` checks
+  - assert full role matrix with dedicated integration coverage for:
+    - `API_CLIENT` baseline access and governance restrictions
+    - `OPS_READER` governance/actuator read access with mutation denial
+    - `GOVERNANCE_ADMIN` mutation + broader secure-surface access
+    - `PLATFORM_ADMIN` superset secure-surface access
+- Sprint 4.1.5 deferred-identity decision:
+  - continue with HTTP Basic + profile-aware role controls for this phase
+  - explicitly defer enterprise IAM/JWT/OAuth2 integration to a later phase to avoid scope inflation and preserve reviewer reproducibility
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

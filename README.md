@@ -381,12 +381,22 @@ Security is now profile-aware:
   - should not be used for non-local or internet-exposed deployment
 - `secure` profile:
   - HTTP Basic authentication enabled
+  - least-privilege role model:
+    - `API_CLIENT` for core fraud-evaluation API access
+    - `OPS_READER` for governance reads and actuator diagnostics
+    - `GOVERNANCE_ADMIN` for governance mutation
+    - `PLATFORM_ADMIN` optional super-role for broad secure-surface access
   - protected surface:
     - `/api/**`
     - `/swagger-ui.html`
     - `/swagger-ui/**`
     - `/v3/api-docs/**`
     - `/actuator/**`
+  - secure route authorization model:
+    - `PATCH/POST /api/admin/rules/**` requires `GOVERNANCE_ADMIN` or `PLATFORM_ADMIN`
+    - `GET /api/admin/rules/**` requires `OPS_READER` or stronger
+    - `/actuator/**` requires `OPS_READER` or stronger
+    - `/api/fraud-evaluations...` requires `API_CLIENT` or stronger
   - Swagger/OpenAPI exposure defaults to disabled (can be re-enabled by secure-profile env overrides)
   - actuator exposure defaults to `health,info` (can be widened by secure-profile env overrides)
   - credentials come from env-backed `app.security.secure-profile.*` properties
@@ -399,6 +409,9 @@ Security is now profile-aware:
   - health details are restricted with `management.endpoint.health.show-details=when_authorized`
 
 This remains a pragmatic take-home baseline, not full enterprise identity integration.
+
+Deferred by design:
+- enterprise IAM integrations (OAuth2/JWT/OIDC, external IdP tenancy, centralized policy engines) are intentionally postponed to a future phase so this project remains small, reviewable, and deterministic.
 
 For any non-local run, prefer secure mode:
 
@@ -425,11 +438,11 @@ SPRING_PROFILES_ACTIVE=secure ./mvnw spring-boot:run
 
 ## Verification Snapshot
 
-Most recent local verification for the current Phase 2.4 slice:
+Most recent local verification for the current security matrix slice:
 
-- `./mvnw test`
+- `./mvnw -Dtest=SecureProfileSecurityIntegrationTest,SecureProfileGovernanceAuthorizationIntegrationTest,SecureProfileGovernanceAdminIntegrationTest,SecureProfilePlatformAdminIntegrationTest,DefaultProfileSecurityIntegrationTest test`
   - passed
-  - `44` tests
+  - `27` tests
 - `docker build -t fraud-rule-engine:local .`
   - passed
 

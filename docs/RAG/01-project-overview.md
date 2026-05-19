@@ -33,6 +33,11 @@
   - `secure` enforces HTTP Basic
   - secure identity source is configurable (`IN_MEMORY` or `JDBC`)
   - Swagger/OpenAPI and actuator exposure are profile-driven
+  - secure authorization is now role-segmented by surface:
+    - `API_CLIENT` for core fraud-evaluation API
+    - `OPS_READER` for governance read + actuator diagnostics
+    - `GOVERNANCE_ADMIN` for governance mutation
+    - `PLATFORM_ADMIN` as optional superset role
 - Delivery and regression posture is now Phase 3 close-out ready:
   - baseline CI workflow exists for compile/test/package
   - governance regression suite now verifies mutation, authorization, and retrieval consistency
@@ -44,6 +49,7 @@
   - retrieval now supports paged responses, one-sided time filtering, review-oriented filters, and explicit summary sorting
   - location anomaly rule is now implemented with deterministic explainability
   - secure-profile governance mutation endpoints now have explicit admin/non-admin authorization regression coverage
+  - secure-profile role matrix coverage now includes `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, and `PLATFORM_ADMIN`
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`

@@ -36,6 +36,10 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Build on the existing actuator exposure policy, structured logging, domain metrics, and request correlation conventions.
 - Further define error handling, correlation boundaries, and audit event boundaries for production readiness.
 - Add environment-specific configuration patterns for local, test, and production.
+- Status update:
+  - Sprint `4.1` establishes explicit secure-profile role segmentation for API, governance read/mutation, actuator, and docs surfaces.
+  - `default` profile remains intentionally open with explicit guardrail messaging for local/reviewer mode.
+  - enterprise IAM/JWT/OAuth2 remains intentionally deferred to avoid premature complexity in current scope.
 
 ## Phase 5: Production Hardening
 - Add CI for compile, test, and packaging.
