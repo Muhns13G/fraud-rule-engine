@@ -377,6 +377,8 @@ Security is now profile-aware:
   - `/api/**`, Swagger/OpenAPI, and exposed actuator endpoints are reachable without auth
   - Swagger/OpenAPI exposure defaults to enabled
   - actuator exposure defaults to `health,info,metrics`
+  - startup guardrail warning is emitted to make local-only intent explicit
+  - should not be used for non-local or internet-exposed deployment
 - `secure` profile:
   - HTTP Basic authentication enabled
   - protected surface:
@@ -398,13 +400,17 @@ Security is now profile-aware:
 
 This remains a pragmatic take-home baseline, not full enterprise identity integration.
 
+For any non-local run, prefer secure mode:
+
+```bash
+SPRING_PROFILES_ACTIVE=secure ./mvnw spring-boot:run
+```
+
 ## Known Simplifications
 
 - rules are code-defined, not database-authored
-- no dynamic rule management or rule version administration yet
-- `location anomaly` is intentionally deferred
+- no dynamic executable-rule authoring beyond governed metadata transitions/versioning yet
 - retrieval remains intentionally bounded and is not intended to become a generic reporting surface
-- no CI pipeline exists yet
 - security is profile-aware with configurable identity provider, but enterprise IAM integration is still out of scope
 - SpringDoc and actuator exposure are now explicitly profile-driven
 
