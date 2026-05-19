@@ -41,10 +41,10 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://github.com/oitws/fraud-rule-engine.git</connection>
-        <developerConnection>scm:git:ssh://github.com:oitws/fraud-rule-engine.git</developerConnection>
+        <connection>scm:git:git://github.com/Muhns13G/fraud-rule-engine.git</connection>
+        <developerConnection>scm:git:ssh://github.com:Muhns13G/fraud-rule-engine.git</developerConnection>
         <tag/>
-		<url>https://github.com/oitws/fraud-rule-engine</url>
+		<url>https://github.com/Muhns13G/fraud-rule-engine</url>
     </scm>
     <properties>
         <java.version>25</java.version>
