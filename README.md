@@ -185,6 +185,27 @@ Reference templates are available under:
 
 These templates define the baseline property contracts for local/reviewer, secure, and production-style runs.
 
+### Hosted Deployment Prerequisites (Railway/Render)
+
+For hosted runtime, use the `production` profile by default:
+
+```bash
+SPRING_PROFILES_ACTIVE=production
+```
+
+Required datasource environment variables:
+
+```bash
+SPRING_DATASOURCE_URL=jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+SPRING_DATASOURCE_USERNAME=${PGUSER}
+SPRING_DATASOURCE_PASSWORD=${PGPASSWORD}
+```
+
+Notes:
+- Ensure your app service is linked to a PostgreSQL service so `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD` are injected.
+- Keep internal app port at `8080`; hosted platforms should route via `PORT` (`server.port=${PORT:8080}`).
+- Health check endpoint for deployment verification: `/actuator/health`.
+
 ## Running Tests
 
 All tests require Docker because integration tests and the context test use Testcontainers.
