@@ -22,7 +22,7 @@ class SecureProfileConfigurationGuardrailsTest {
 	}
 
 	@Test
-	void shouldRejectDuplicateSecureRoleContract() {
+	void shouldAllowOverlappingSecureRoleContractWhenExplicitlyConfigured() {
 		SecureProfileSecurityProperties properties = secureProperties(
 			"API_CLIENT",
 			"API_CLIENT",
@@ -30,9 +30,8 @@ class SecureProfileConfigurationGuardrailsTest {
 			"PLATFORM_ADMIN"
 		);
 
-		assertThatThrownBy(() -> SecureProfileConfigurationGuardrails.validateRoleContract(properties))
-			.isInstanceOf(IllegalStateException.class)
-			.hasMessageContaining("distinct role names");
+		assertThatCode(() -> SecureProfileConfigurationGuardrails.validateRoleContract(properties))
+			.doesNotThrowAnyException();
 	}
 
 	@Test

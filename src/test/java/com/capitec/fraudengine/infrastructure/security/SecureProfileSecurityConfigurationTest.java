@@ -47,6 +47,25 @@ class SecureProfileSecurityConfigurationTest {
 	}
 
 	@Test
+	void shouldRejectEnvSecretSourceWhenUsernameIsMissing() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setSecretSource(SecureProfileSecurityProperties.SecretSource.ENV);
+		properties.setUsername("   ");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		IllegalStateException exception = assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+		assertTrue(
+			exception.getMessage().contains("requires username and password"),
+			"Expected explicit guidance when required ENV credentials are missing."
+		);
+	}
+
+	@Test
 	void shouldRejectPreEncodedSecretSourceWhenRawPasswordIsAlsoProvided() {
 		SecureProfileSecurityProperties properties = baseInMemoryProperties();
 		properties.setSecretSource(SecureProfileSecurityProperties.SecretSource.PRE_ENCODED);

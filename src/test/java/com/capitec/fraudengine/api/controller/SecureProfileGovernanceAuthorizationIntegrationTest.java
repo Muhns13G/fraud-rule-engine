@@ -52,6 +52,13 @@ class SecureProfileGovernanceAuthorizationIntegrationTest {
 	}
 
 	@Test
+	void shouldReturnNotFoundForActuatorMetricsWhenSecureExposureDoesNotIncludeMetrics() throws Exception {
+		mockMvc.perform(get("/actuator/metrics")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
 	void shouldAllowFraudEvaluationApiForOpsReaderUser() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))

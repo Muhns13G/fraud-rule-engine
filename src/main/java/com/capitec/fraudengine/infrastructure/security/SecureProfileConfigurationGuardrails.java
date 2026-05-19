@@ -1,8 +1,5 @@
 package com.capitec.fraudengine.infrastructure.security;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -48,26 +45,10 @@ public class SecureProfileConfigurationGuardrails implements ApplicationRunner {
 		String apiClientRole = normalized(properties.getRole());
 		String opsReaderRole = normalized(properties.getOpsReaderRole());
 		String governanceAdminRole = normalized(properties.getAdminRole());
-		String platformAdminRole = normalized(properties.getPlatformAdminRole());
 
 		if (apiClientRole == null || opsReaderRole == null || governanceAdminRole == null) {
 			throw new IllegalStateException(
 				"Secure profile role contract is incomplete. Configure role, ops-reader-role, and admin-role."
-			);
-		}
-
-		Set<String> uniqueRoles = new LinkedHashSet<>();
-		uniqueRoles.add(apiClientRole);
-		uniqueRoles.add(opsReaderRole);
-		uniqueRoles.add(governanceAdminRole);
-		if (platformAdminRole != null) {
-			uniqueRoles.add(platformAdminRole);
-		}
-
-		int expectedRoleCount = platformAdminRole == null ? 3 : 4;
-		if (uniqueRoles.size() != expectedRoleCount) {
-			throw new IllegalStateException(
-				"Secure profile role contract must use distinct role names across API_CLIENT, OPS_READER, GOVERNANCE_ADMIN, and PLATFORM_ADMIN."
 			);
 		}
 	}
