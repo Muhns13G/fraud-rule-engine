@@ -38,6 +38,15 @@ public class SecureProfileSecurityConfiguration {
 	private static final String DEFAULT_AUTHORITIES_BY_USERNAME_QUERY =
 		"select username, authority from authorities where username = ?";
 
+	/**
+	 * Configures secure-profile authorization using HTTP Basic authentication.
+	 *
+	 * @param http Spring Security HTTP builder
+	 * @param properties secure profile identity and role properties
+	 * @param securityDiagnosticsHandlers handlers for structured authn/authz denial diagnostics
+	 * @return configured secure-profile security filter chain
+	 * @throws Exception if the filter chain cannot be built
+	 */
 	@Bean
 	public SecurityFilterChain secureSecurityFilterChain(
 		HttpSecurity http,
@@ -94,6 +103,14 @@ public class SecureProfileSecurityConfiguration {
 		return http.build();
 	}
 
+	/**
+	 * Builds an in-memory secure-profile identity provider from configured secret sources.
+	 *
+	 * @param properties secure profile identity properties
+	 * @param secretSupplierProvider provider for optional external secret supplier integration
+	 * @param passwordEncoder encoder used for raw password secret sources
+	 * @return configured user details service for HTTP Basic authentication
+	 */
 	@Bean
 	@ConditionalOnProperty(
 		prefix = "app.security.secure-profile",
@@ -136,6 +153,13 @@ public class SecureProfileSecurityConfiguration {
 		return new InMemoryUserDetailsManager(secureUsers);
 	}
 
+	/**
+	 * Builds a JDBC-backed secure-profile identity provider.
+	 *
+	 * @param dataSource application datasource
+	 * @param properties secure profile identity properties
+	 * @return configured JDBC user details manager
+	 */
 	@Bean
 	@ConditionalOnProperty(
 		prefix = "app.security.secure-profile",
@@ -156,6 +180,11 @@ public class SecureProfileSecurityConfiguration {
 		return manager;
 	}
 
+	/**
+	 * Provides the password encoder used by secure-profile identity sources.
+	 *
+	 * @return BCrypt password encoder
+	 */
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();

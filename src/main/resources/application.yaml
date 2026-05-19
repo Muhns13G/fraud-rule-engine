@@ -7,6 +7,10 @@ spring:
   jpa:
     open-in-view: false
 
+server:
+  # Best practice for Railway / PaaS
+  port: ${PORT:8080}
+
 app:
   fraud-rules:
     high-amount:

@@ -29,10 +29,20 @@ public class SecurityDiagnosticsHandlers {
 		this.meterRegistry = meterRegistry;
 	}
 
+	/**
+	 * Builds the authentication entry point for unauthenticated request handling.
+	 *
+	 * @return authentication entry point that emits structured denial diagnostics
+	 */
 	public AuthenticationEntryPoint authenticationEntryPoint() {
 		return this::handleUnauthorized;
 	}
 
+	/**
+	 * Builds the access denied handler for authenticated-but-unauthorized requests.
+	 *
+	 * @return access denied handler that emits structured denial diagnostics
+	 */
 	public AccessDeniedHandler accessDeniedHandler() {
 		return this::handleAccessDenied;
 	}

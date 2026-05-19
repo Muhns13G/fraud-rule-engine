@@ -28,6 +28,16 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(HardenedProfileSecurityProperties.class)
 public class HardenedProfileSecurityConfiguration {
 
+	/**
+	 * Configures hardened-profile request authorization and token-based authentication.
+	 *
+	 * @param http Spring Security HTTP builder
+	 * @param properties hardened profile identity properties
+	 * @param jwtAuthenticationConverter converter that maps JWT claims to Spring authorities
+	 * @param securityDiagnosticsHandlers handlers for structured authn/authz denial diagnostics
+	 * @return configured hardened-profile security filter chain
+	 * @throws Exception if the filter chain cannot be built
+	 */
 	@Bean
 	public SecurityFilterChain hardenedSecurityFilterChain(
 		HttpSecurity http,
@@ -69,6 +79,12 @@ public class HardenedProfileSecurityConfiguration {
 		return http.build();
 	}
 
+	/**
+	 * Builds a JWT authentication converter that maps configured token claims to application roles.
+	 *
+	 * @param properties hardened profile identity properties
+	 * @return converter that produces Spring authentication tokens from JWTs
+	 */
 	@Bean
 	public Converter<Jwt, org.springframework.security.authentication.AbstractAuthenticationToken> jwtAuthenticationConverter(
 		HardenedProfileSecurityProperties properties
@@ -89,6 +105,12 @@ public class HardenedProfileSecurityConfiguration {
 		return jwtAuthenticationConverter;
 	}
 
+	/**
+	 * Creates the hardened-profile JWT decoder using the configured JWK set URI.
+	 *
+	 * @param properties hardened profile identity properties
+	 * @return JWT decoder backed by the configured JWK set URI
+	 */
 	@Bean
 	public JwtDecoder jwtDecoder(HardenedProfileSecurityProperties properties) {
 		String jwkSetUri = properties.getJwkSetUri();

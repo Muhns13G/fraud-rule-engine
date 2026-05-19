@@ -134,6 +134,10 @@ Useful local URLs:
 - Actuator info: `http://localhost:8080/actuator/info`
 - Actuator metrics: `http://localhost:8080/actuator/metrics`
 
+Port behavior:
+- Local default is `8080`.
+- Hosted environments can override the runtime port via `PORT` (`server.port=${PORT:8080}`), which supports platforms such as Railway and Render.
+
 ### Option 1b: Run in secure profile (HTTP Basic)
 
 Use this mode to verify the Sprint 2.4 secured posture.

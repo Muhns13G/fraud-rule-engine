@@ -5,5 +5,11 @@ package com.capitec.fraudengine.infrastructure.security;
  */
 public interface SecureProfileSecretSupplier {
 
+	/**
+	 * Resolves secure-profile credentials from an external secret reference.
+	 *
+	 * @param externalSecretRef external secret identifier/reference
+	 * @return resolved credentials containing username and exactly one password representation
+	 */
 	SecureProfileResolvedSecrets resolve(String externalSecretRef);
 }
