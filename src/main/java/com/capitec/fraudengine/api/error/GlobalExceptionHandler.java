@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.capitec.fraudengine.common.error.InvalidRuleGovernanceStateException;
 import com.capitec.fraudengine.common.error.InvalidRequestValueException;
@@ -148,6 +149,19 @@ public class GlobalExceptionHandler {
 			"Rule governance state transition is invalid.",
 			List.of(exception.getMessage())
 		);
+	}
+
+	/**
+	 * Handles requests for unmapped or disabled static/resource endpoints.
+	 *
+	 * @param exception missing-resource exception
+	 * @return structured not-found response
+	 */
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleNoResourceFound(NoResourceFoundException exception) {
+		LOGGER.info("resource_not_found message={}", exception.getMessage());
+		recordErrorMetric(HttpStatus.NOT_FOUND, exception);
+		return buildResponse(HttpStatus.NOT_FOUND, "Requested resource was not found.", List.of());
 	}
 
 	/**
