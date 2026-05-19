@@ -1,4 +1,4 @@
-# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.4)
+# Technical Debt Registry (Phase 2 Close-Out, Reconciled Through Sprint 4.4.4)
 
 ## Baseline and Scope
 This registry is the canonical debt register at Phase 2 close-out. It is built from:
@@ -21,6 +21,14 @@ Audit mode:
 9. `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`
 10. `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`
 
+## Phase 4 Reconciliation Summary (Sprint 4.4.4)
+- Reviewed against implemented Phase 4 tasks (`4.1.x` to `4.4.3`) and current codebase posture.
+- Status updates in this pass:
+  - `TD-007` moved from `Partially addressed` to `Closed`.
+- Carry-forward items after Phase 4:
+  - `TD-003` remains `Open` by design (default profile intentionally open for local/reviewer ergonomics).
+  - `TD-005` remains `Partially addressed` (secret-source strategy and rotation hooks shipped; enterprise secret-manager integration remains future work).
+
 ## Normalized Audit Table
 
 | Debt ID | Title | Source | First Reported Sprint | Current Status | Severity | Evidence Path |
@@ -31,7 +39,7 @@ Audit mode:
 | TD-004 | Secure profile uses in-memory user store only | Recorded+Observed | 2.4 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java` |
 | TD-005 | No enterprise secret management/rotation for secure credentials | Recorded+Observed | 2.4 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
 | TD-006 | Default-profile openness behavior is not explicitly tested | Recorded | 2.4 | Closed | Low | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/DefaultProfileSecurityIntegrationTest.java` |
-| TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
+| TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java`, `src/test/java/com/capitec/fraudengine/api/controller/DefaultProfileSecurityIntegrationTest.java` |
 | TD-008 | SpringDoc production-exposure warning remains unresolved | Recorded+Observed | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
 | TD-009 | Mockito Java 25 dynamic-agent warning remains unresolved | Recorded | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `pom.xml` |
 | TD-010 | Observability tests are incomplete (metrics/correlation/actuator contract) | Recorded+Observed | 2.3 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/ObservabilityContractIntegrationTest.java` |
@@ -134,14 +142,15 @@ Audit mode:
 ### TD-007
 - Debt ID: `TD-007`
 - Title: Generated Spring Security password warning still appears in logs
-- Status: `Partially addressed`
+- Status: `Closed`
 - Severity: `Low`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java`
+  - `src/test/java/com/capitec/fraudengine/api/controller/DefaultProfileSecurityIntegrationTest.java`
 - Why it matters: Noise in verification output and reviewer confusion around active security posture.
-- Resolution note: Sprint `3.2.4` replaced exclusion-based handling with explicit profile beans to remove generated-user confusion paths; retain as partial until all startup contexts are consistently warning-free.
+- Resolution note: Closed by the explicit non-secure profile `UserDetailsService` and verified in Sprint `4.4.4` reconciliation via focused default-profile integration run (`DefaultProfileSecurityIntegrationTest`) with no generated-password warning emitted.
 - Suggested resolution direction: Revisit auto-configuration exclusions and profile-specific security defaults.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
