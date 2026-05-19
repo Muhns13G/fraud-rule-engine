@@ -20,6 +20,9 @@ app:
     unusual-time:
       start: ${FRAUD_RULE_UNUSUAL_TIME_START:00:00}
       end: ${FRAUD_RULE_UNUSUAL_TIME_END:04:00}
+    location-anomaly:
+      score-contribution: ${FRAUD_RULE_LOCATION_ANOMALY_SCORE_CONTRIBUTION:40}
+      compare-city-when-country-matches: ${FRAUD_RULE_LOCATION_ANOMALY_COMPARE_CITY_WHEN_COUNTRY_MATCHES:true}
   security:
     secure-profile:
       # Identity provider:

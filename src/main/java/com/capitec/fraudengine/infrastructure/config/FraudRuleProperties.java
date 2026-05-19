@@ -38,6 +38,10 @@ public class FraudRuleProperties {
 	@NotNull
 	private UnusualTime unusualTime = new UnusualTime();
 
+	@Valid
+	@NotNull
+	private LocationAnomaly locationAnomaly = new LocationAnomaly();
+
 	public HighAmount getHighAmount() {
 		return highAmount;
 	}
@@ -68,6 +72,14 @@ public class FraudRuleProperties {
 
 	public void setUnusualTime(UnusualTime unusualTime) {
 		this.unusualTime = unusualTime;
+	}
+
+	public LocationAnomaly getLocationAnomaly() {
+		return locationAnomaly;
+	}
+
+	public void setLocationAnomaly(LocationAnomaly locationAnomaly) {
+		this.locationAnomaly = locationAnomaly;
 	}
 
 	public static class HighAmount {
@@ -162,6 +174,30 @@ public class FraudRuleProperties {
 
 		public void setEnd(LocalTime end) {
 			this.end = end;
+		}
+	}
+
+	public static class LocationAnomaly {
+
+		@Min(1)
+		private int scoreContribution = 40;
+
+		private boolean compareCityWhenCountryMatches = true;
+
+		public int getScoreContribution() {
+			return scoreContribution;
+		}
+
+		public void setScoreContribution(int scoreContribution) {
+			this.scoreContribution = scoreContribution;
+		}
+
+		public boolean isCompareCityWhenCountryMatches() {
+			return compareCityWhenCountryMatches;
+		}
+
+		public void setCompareCityWhenCountryMatches(boolean compareCityWhenCountryMatches) {
+			this.compareCityWhenCountryMatches = compareCityWhenCountryMatches;
 		}
 	}
 }

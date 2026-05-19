@@ -31,6 +31,8 @@ public class RuleGovernanceConfigurationReadModelService {
 				.collect(Collectors.joining("|"));
 			case "UNUSUAL_TIME" -> "start=" + fraudRuleProperties.getUnusualTime().getStart()
 				+ ", end=" + fraudRuleProperties.getUnusualTime().getEnd();
+			case "LOCATION_ANOMALY" -> "scoreContribution=" + fraudRuleProperties.getLocationAnomaly().getScoreContribution()
+				+ ", compareCityWhenCountryMatches=" + fraudRuleProperties.getLocationAnomaly().isCompareCityWhenCountryMatches();
 			default -> "No active configuration mapping available for this rule code.";
 		};
 	}

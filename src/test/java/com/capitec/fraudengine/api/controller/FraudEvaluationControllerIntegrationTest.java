@@ -84,7 +84,7 @@ class FraudEvaluationControllerIntegrationTest {
 			.andExpect(jsonPath("$.decision", is("BLOCK")))
 			.andExpect(jsonPath("$.decisionScore", is(100)))
 			.andExpect(jsonPath("$.traceSummary", containsString("HIGH_AMOUNT")))
-			.andExpect(jsonPath("$.ruleResults", hasSize(4)));
+			.andExpect(jsonPath("$.ruleResults", hasSize(5)));
 
 		assertThatStoredEvaluationCountIs(1);
 	}
