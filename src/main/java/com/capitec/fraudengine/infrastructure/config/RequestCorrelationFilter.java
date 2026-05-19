@@ -1,6 +1,7 @@
 package com.capitec.fraudengine.infrastructure.config;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -24,6 +25,7 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
 
 	public static final String REQUEST_ID_HEADER = "X-Request-Id";
 	public static final String REQUEST_ID_MDC_KEY = "requestId";
+	private static final int MAX_REQUEST_ID_LENGTH = 64;
 	private static final Pattern UUID_REQUEST_ID_PATTERN = Pattern.compile(
 		"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
 	);
@@ -50,8 +52,9 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
 		String incomingRequestId = request.getHeader(REQUEST_ID_HEADER);
 		if (incomingRequestId != null && !incomingRequestId.isBlank()) {
 			String candidateRequestId = incomingRequestId.trim();
-			if (UUID_REQUEST_ID_PATTERN.matcher(candidateRequestId).matches()) {
-				return candidateRequestId;
+			if (candidateRequestId.length() <= MAX_REQUEST_ID_LENGTH
+				&& UUID_REQUEST_ID_PATTERN.matcher(candidateRequestId).matches()) {
+				return candidateRequestId.toLowerCase(Locale.ROOT);
 			}
 		}
 

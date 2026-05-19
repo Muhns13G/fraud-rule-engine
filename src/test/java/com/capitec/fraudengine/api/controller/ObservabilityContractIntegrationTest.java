@@ -98,7 +98,7 @@ class ObservabilityContractIntegrationTest {
 
 	@Test
 	void shouldReuseValidRequestIdFromHeader() throws Exception {
-		String requestId = UUID.randomUUID().toString();
+		String requestId = UUID.randomUUID().toString().toUpperCase();
 
 		mockMvc.perform(post("/api/fraud-evaluations")
 				.header(RequestCorrelationFilter.REQUEST_ID_HEADER, requestId)
@@ -123,7 +123,7 @@ class ObservabilityContractIntegrationTest {
 					}
 					"""))
 			.andExpect(status().isCreated())
-			.andExpect(header().string(RequestCorrelationFilter.REQUEST_ID_HEADER, requestId));
+			.andExpect(header().string(RequestCorrelationFilter.REQUEST_ID_HEADER, requestId.toLowerCase()));
 	}
 
 	@Test
@@ -157,6 +157,58 @@ class ObservabilityContractIntegrationTest {
 		assertThat(responseRequestId).isNotBlank();
 		assertThat(responseRequestId).isNotEqualTo("invalid-request-id");
 		assertThat(UUID.fromString(responseRequestId)).isNotNull();
+	}
+
+	@Test
+	void shouldGenerateNewRequestIdWhenIncomingHeaderIsOverlyLong() throws Exception {
+		String overlyLongHeader = "12345678-1234-1234-8234-123456789012-extra-padding-invalid";
+
+		MvcResult result = mockMvc.perform(post("/api/fraud-evaluations")
+				.header(RequestCorrelationFilter.REQUEST_ID_HEADER, overlyLongHeader)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "transactionId": "txn-observability-004",
+					  "accountId": "account-observability-004",
+					  "customerId": "customer-observability-004",
+					  "amount": 1600.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-observability-004",
+					  "merchantCategory": "RETAIL",
+					  "transactionType": "PURCHASE",
+					  "channel": "ONLINE",
+					  "eventTimestamp": "2026-05-12T18:15:00+02:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "observability-correlation-overlong"
+					}
+					"""))
+			.andExpect(status().isCreated())
+			.andReturn();
+
+		String responseRequestId = result.getResponse().getHeader(RequestCorrelationFilter.REQUEST_ID_HEADER);
+		assertThat(responseRequestId).isNotBlank();
+		assertThat(responseRequestId).isNotEqualTo(overlyLongHeader);
+		assertThat(UUID.fromString(responseRequestId)).isNotNull();
+	}
+
+	@Test
+	void shouldPropagateRequestIdOnGovernanceErrorPath() throws Exception {
+		String requestId = UUID.randomUUID().toString();
+
+		mockMvc.perform(patch("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/state")
+				.header(RequestCorrelationFilter.REQUEST_ID_HEADER, requestId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "lifecycleStatus": "ACTIVE",
+					  "activationState": "ACTIVE"
+					}
+					"""))
+			.andExpect(status().isNotFound())
+			.andExpect(header().string(RequestCorrelationFilter.REQUEST_ID_HEADER, requestId));
 	}
 
 	@Test
