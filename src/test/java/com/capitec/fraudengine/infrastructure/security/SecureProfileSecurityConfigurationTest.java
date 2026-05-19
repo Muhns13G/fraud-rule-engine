@@ -2,6 +2,7 @@ package com.capitec.fraudengine.infrastructure.security;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,10 +39,11 @@ class SecureProfileSecurityConfigurationTest {
 		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
 		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
 
-		assertThrows(
+		IllegalStateException exception = assertThrows(
 			IllegalStateException.class,
 			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
 		);
+		assertTrue(exception.getMessage().contains("secret-source ENV does not allow password-encoded"));
 	}
 
 	@Test
@@ -70,9 +72,13 @@ class SecureProfileSecurityConfigurationTest {
 		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
 		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
 
-		assertThrows(
+		IllegalStateException exception = assertThrows(
 			IllegalStateException.class,
 			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+		assertTrue(
+			exception.getMessage().contains("requires a SecureProfileSecretSupplier bean"),
+			"Expected explicit guidance about missing SecureProfileSecretSupplier bean."
 		);
 	}
 
@@ -136,9 +142,13 @@ class SecureProfileSecurityConfigurationTest {
 		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
 		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
 
-		assertThrows(
+		IllegalStateException exception = assertThrows(
 			IllegalStateException.class,
 			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+		assertTrue(
+			exception.getMessage().contains("must provide exactly one of rotation-password or rotation-password-encoded"),
+			"Expected explicit guidance for invalid rotation credential combination."
 		);
 	}
 
@@ -168,9 +178,13 @@ class SecureProfileSecurityConfigurationTest {
 		properties.setIdentityProvider(SecureProfileSecurityProperties.IdentityProvider.JDBC);
 		properties.setAuthoritiesByUsernameQuery("select username, role from users where username = ?");
 
-		assertThrows(
+		IllegalStateException exception = assertThrows(
 			IllegalStateException.class,
 			() -> configuration.jdbcUserDetailsService(mock(DataSource.class), properties)
+		);
+		assertTrue(
+			exception.getMessage().contains("must select an authority column"),
+			"Expected explicit guidance about missing authority column."
 		);
 	}
 
