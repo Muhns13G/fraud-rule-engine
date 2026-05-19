@@ -29,11 +29,18 @@ app:
       # - IN_MEMORY: single env-backed user for local/reviewer secure mode
       # - JDBC: externalized/persistent-friendly identity source via database-backed users
       identity-provider: ${FRAUD_ENGINE_SECURE_IDENTITY_PROVIDER:IN_MEMORY}
+      # Secret source strategy when identity-provider=IN_MEMORY:
+      # - ENV: raw password via env var (local/reviewer default)
+      # - PRE_ENCODED: pre-encoded password from env/secret mount
+      # - EXTERNAL_MANAGER: resolve credentials via SecureProfileSecretSupplier integration seam
+      secret-source: ${FRAUD_ENGINE_SECURE_SECRET_SOURCE:ENV}
       username: ${FRAUD_ENGINE_SECURE_USER:secure-user}
       password: ${FRAUD_ENGINE_SECURE_PASSWORD:change-me-secure}
       # Optional pre-encoded (for example BCrypt) password for non-local secret sources.
       # When provided, this takes precedence over raw password.
       password-encoded: ${FRAUD_ENGINE_SECURE_PASSWORD_ENCODED:}
+      # Optional external secret reference for EXTERNAL_MANAGER strategy.
+      external-secret-ref: ${FRAUD_ENGINE_SECURE_EXTERNAL_SECRET_REF:}
       # Baseline authenticated API role.
       role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
       # Read-only operations role (governance reads + actuator surface).

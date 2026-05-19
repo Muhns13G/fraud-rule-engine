@@ -13,6 +13,12 @@ public class SecureProfileSecurityProperties {
 		JDBC
 	}
 
+	public enum SecretSource {
+		ENV,
+		PRE_ENCODED,
+		EXTERNAL_MANAGER
+	}
+
 	private String username;
 	private String password;
 	private String passwordEncoded;
@@ -21,6 +27,8 @@ public class SecureProfileSecurityProperties {
 	private String adminRole;
 	private String platformAdminRole;
 	private IdentityProvider identityProvider = IdentityProvider.IN_MEMORY;
+	private SecretSource secretSource = SecretSource.ENV;
+	private String externalSecretRef;
 	private String usersByUsernameQuery;
 	private String authoritiesByUsernameQuery;
 
@@ -86,6 +94,22 @@ public class SecureProfileSecurityProperties {
 
 	public void setIdentityProvider(IdentityProvider identityProvider) {
 		this.identityProvider = identityProvider;
+	}
+
+	public SecretSource getSecretSource() {
+		return secretSource;
+	}
+
+	public void setSecretSource(SecretSource secretSource) {
+		this.secretSource = secretSource;
+	}
+
+	public String getExternalSecretRef() {
+		return externalSecretRef;
+	}
+
+	public void setExternalSecretRef(String externalSecretRef) {
+		this.externalSecretRef = externalSecretRef;
 	}
 
 	public String getUsersByUsernameQuery() {

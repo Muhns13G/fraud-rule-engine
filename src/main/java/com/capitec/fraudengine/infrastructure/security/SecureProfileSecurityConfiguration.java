@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpMethod;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -90,19 +91,17 @@ public class SecureProfileSecurityConfiguration {
 	)
 	public UserDetailsService userDetailsService(
 		SecureProfileSecurityProperties properties,
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider,
 		PasswordEncoder passwordEncoder
 	) {
-		String rawPassword = normalize(properties.getPassword());
-		String encodedPassword = normalize(properties.getPasswordEncoded());
+		ResolvedInMemorySecrets resolvedSecrets = resolveInMemorySecrets(properties, secretSupplierProvider);
 
-		if (rawPassword == null && encodedPassword == null) {
-			throw new IllegalStateException(
-				"Secure profile requires either app.security.secure-profile.password or password-encoded when identity-provider=IN_MEMORY."
-			);
-		}
-
-		UserDetails secureUser = User.withUsername(properties.getUsername())
-			.password(resolveStoredPassword(rawPassword, encodedPassword, passwordEncoder))
+		UserDetails secureUser = User.withUsername(resolvedSecrets.username())
+			.password(resolveStoredPassword(
+				resolvedSecrets.password(),
+				resolvedSecrets.passwordEncoded(),
+				passwordEncoder
+			))
 			.roles(properties.getRole())
 			.build();
 
@@ -169,5 +168,118 @@ public class SecureProfileSecurityConfiguration {
 			}
 		}
 		return uniqueRoles.toArray(String[]::new);
+	}
+
+	private static ResolvedInMemorySecrets resolveInMemorySecrets(
+		SecureProfileSecurityProperties properties,
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider
+	) {
+		SecureProfileSecurityProperties.SecretSource secretSource = properties.getSecretSource();
+		if (secretSource == null) {
+			secretSource = SecureProfileSecurityProperties.SecretSource.ENV;
+		}
+
+		return switch (secretSource) {
+			case ENV -> resolveEnvSecrets(properties);
+			case PRE_ENCODED -> resolvePreEncodedSecrets(properties);
+			case EXTERNAL_MANAGER -> resolveExternalManagerSecrets(properties, secretSupplierProvider);
+		};
+	}
+
+	private static ResolvedInMemorySecrets resolveEnvSecrets(SecureProfileSecurityProperties properties) {
+		String username = normalize(properties.getUsername());
+		String rawPassword = normalize(properties.getPassword());
+		String encodedPassword = normalize(properties.getPasswordEncoded());
+
+		if (username == null || rawPassword == null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source ENV requires username and password."
+			);
+		}
+
+		if (encodedPassword != null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source ENV does not allow password-encoded."
+			);
+		}
+
+		return new ResolvedInMemorySecrets(username, rawPassword, null);
+	}
+
+	private static ResolvedInMemorySecrets resolvePreEncodedSecrets(SecureProfileSecurityProperties properties) {
+		String username = normalize(properties.getUsername());
+		String rawPassword = normalize(properties.getPassword());
+		String encodedPassword = normalize(properties.getPasswordEncoded());
+
+		if (username == null || encodedPassword == null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source PRE_ENCODED requires username and password-encoded."
+			);
+		}
+
+		if (rawPassword != null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source PRE_ENCODED does not allow raw password."
+			);
+		}
+
+		return new ResolvedInMemorySecrets(username, null, encodedPassword);
+	}
+
+	private static ResolvedInMemorySecrets resolveExternalManagerSecrets(
+		SecureProfileSecurityProperties properties,
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider
+	) {
+		String externalSecretRef = normalize(properties.getExternalSecretRef());
+		if (externalSecretRef == null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source EXTERNAL_MANAGER requires external-secret-ref."
+			);
+		}
+
+		if (normalize(properties.getPassword()) != null || normalize(properties.getPasswordEncoded()) != null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source EXTERNAL_MANAGER does not allow local password properties."
+			);
+		}
+
+		SecureProfileSecretSupplier secretSupplier = secretSupplierProvider.getIfAvailable();
+		if (secretSupplier == null) {
+			throw new IllegalStateException(
+				"Secure profile secret-source EXTERNAL_MANAGER requires a SecureProfileSecretSupplier bean."
+			);
+		}
+
+		SecureProfileResolvedSecrets resolvedSecrets = secretSupplier.resolve(externalSecretRef);
+		if (resolvedSecrets == null) {
+			throw new IllegalStateException(
+				"Secure profile external secret supplier returned null credentials."
+			);
+		}
+
+		String username = normalize(resolvedSecrets.username());
+		String rawPassword = normalize(resolvedSecrets.password());
+		String encodedPassword = normalize(resolvedSecrets.passwordEncoded());
+
+		if (username == null) {
+			throw new IllegalStateException(
+				"Secure profile external secret supplier must provide username."
+			);
+		}
+
+		if ((rawPassword == null && encodedPassword == null) || (rawPassword != null && encodedPassword != null)) {
+			throw new IllegalStateException(
+				"Secure profile external secret supplier must provide exactly one of password or passwordEncoded."
+			);
+		}
+
+		return new ResolvedInMemorySecrets(username, rawPassword, encodedPassword);
+	}
+
+	private record ResolvedInMemorySecrets(
+		String username,
+		String password,
+		String passwordEncoded
+	) {
 	}
 }
