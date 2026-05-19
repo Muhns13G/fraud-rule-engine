@@ -27,7 +27,9 @@
 - Observability posture is now broader and test-backed:
   - evaluation, retrieval, governance, and API-error metric coverage
   - governance lifecycle/version mutation audit events
+  - security denial diagnostics and counters for authn/authz outcomes
   - request correlation propagation validated in observability contract tests
+  - profile-specific observability contract tests for secure and production modes
 - Security posture is now profile-aware and policy-explicit:
   - `default` remains open for reviewer usability
   - `secure` enforces HTTP Basic

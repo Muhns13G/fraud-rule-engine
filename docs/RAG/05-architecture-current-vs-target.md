@@ -10,6 +10,7 @@
   - structured evaluation and retrieval logs
   - request correlation via `X-Request-Id`
   - evaluation, retrieval, governance, and API error metrics through Micrometer
+  - explicit security-denial diagnostics and counters for `401`/`403` outcomes
   - limited actuator exposure for local inspection
   - governance mutation audit events with request-id and actor context
 - Security is now profile-aware:
@@ -21,6 +22,7 @@
   - governance mutation endpoints require governance-admin scope in `secure` profile
   - governance read/ops diagnostics routes now follow an explicit least-privilege role matrix
   - Swagger/OpenAPI and actuator exposure are explicitly profile-driven
+  - production profile now enforces health-only actuator exposure with hidden health details and no docs surface
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 - Delivery and verification architecture now includes:
   - GitHub Actions CI baseline for compile, test, and package gates

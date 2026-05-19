@@ -103,6 +103,18 @@
   - harden JDBC identity mode with validated query contract and safe default queries aligned with Spring Security tables
   - add credential-rotation readiness hook for in-memory mode using a controlled dual-credential overlap window
   - keep implementation vendor-neutral; document enterprise secret-manager/IAM integrations as deferred beyond current scope
+- Sprint 4.3 operational observability decisions:
+  - lock profile-specific actuator/docs exposure contract:
+    - `default`: actuator `health,info,metrics`, Swagger/OpenAPI enabled
+    - `secure`: actuator `health,info` (authenticated), Swagger/OpenAPI disabled by default
+    - `production`: actuator `health` only, health details hidden, Swagger/OpenAPI disabled
+  - strengthen correlation boundary:
+    - accept only UUID-shaped `X-Request-Id` values within configured length boundary
+    - generate and propagate safe fallback IDs when invalid/missing
+  - add explicit security denial diagnostics:
+    - structured `security_authn_denied` and `security_authz_denied` events
+    - dedicated counters `fraud.security.authn.denied.total` and `fraud.security.authz.denied.total`
+  - formalize an operational runbook baseline in README/RAG for profile access expectations and incident-triage signal flow
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

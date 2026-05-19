@@ -361,12 +361,53 @@ Current local observability posture includes:
   - `fraud.evaluation.decision.count`
   - `fraud.evaluation.rule.triggered.count`
   - `fraud.evaluation.duration`
+- Additional operational metrics:
+  - `fraud.security.authn.denied.total`
+  - `fraud.security.authz.denied.total`
+  - retrieval/governance/API-error counters (see `ObservabilityContractIntegrationTest`)
 - Actuator exposure limited to:
   - `health`
   - `info`
   - `metrics`
 
 This is intentionally lightweight and optimized for local review, not production-scale observability infrastructure.
+
+### Operational Runbook Baseline
+
+Profile-specific observability access expectations:
+
+- `default` profile:
+  - actuator defaults: `health,info,metrics`
+  - Swagger/OpenAPI enabled
+  - no authentication enforced (local-only posture)
+- `secure` profile:
+  - actuator defaults: `health,info` (authenticated)
+  - Swagger/OpenAPI disabled by default
+  - auth required for API and observability surfaces
+- `production` profile:
+  - actuator defaults: `health` only
+  - health details disabled (`show-details=never`)
+  - Swagger/OpenAPI disabled
+
+Incident triage signals:
+
+1. Start with the request ID (`X-Request-Id`) from the client/response.
+2. Trace logs by request ID:
+   - evaluation/retrieval flow logs
+   - security denial diagnostics:
+     - `security_authn_denied` (`401` path)
+     - `security_authz_denied` (`403` path)
+3. Check counters in `/actuator/metrics` (where exposed) for:
+   - denial-rate changes (`fraud.security.authn.denied.total`, `fraud.security.authz.denied.total`)
+   - evaluation/retrieval/governance/error-volume shifts
+4. Confirm profile exposure contract before deeper debugging:
+   - hidden endpoints should return `404` for disabled surfaces in production mode.
+
+Safe local-vs-non-local posture:
+
+- local reviewer workflow: `default` profile is acceptable by design.
+- any shared/non-local environment: use `secure` (or stricter) profile.
+- production-like environments: use `production` profile endpoint exposure defaults and keep docs endpoints disabled.
 
 ## Security Posture
 
