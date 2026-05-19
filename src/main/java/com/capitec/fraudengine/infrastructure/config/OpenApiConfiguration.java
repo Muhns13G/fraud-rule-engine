@@ -18,7 +18,9 @@ public class OpenApiConfiguration {
 		return new OpenAPI().info(new Info()
 			.title("Fraud Rule Engine API")
 			.version("v1")
-			.description("Phase 1 API for evaluating categorized transaction events and retrieving persisted fraud evaluations.")
+			.description(
+				"API for evaluating categorized transaction events, retrieving persisted fraud evaluations, and administering governed rule metadata."
+			)
 			.contact(new Contact()
 				.name("Mansoer Gallie")
 				.email("fraudengine@octothorp.co.za")));

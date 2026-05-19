@@ -24,6 +24,16 @@ app:
       score-contribution: ${FRAUD_RULE_LOCATION_ANOMALY_SCORE_CONTRIBUTION:40}
       compare-city-when-country-matches: ${FRAUD_RULE_LOCATION_ANOMALY_COMPARE_CITY_WHEN_COUNTRY_MATCHES:true}
   security:
+    # Hardened profile contract (Phase 5.1.1):
+    # this is a config-only contract in 5.1.1; enforcement starts in 5.1.2.
+    hardened-profile:
+      auth-mechanism: ${FRAUD_ENGINE_HARDENED_AUTH_MECHANISM:JWT_OIDC}
+      issuer-uri: ${FRAUD_ENGINE_HARDENED_ISSUER_URI:}
+      jwk-set-uri: ${FRAUD_ENGINE_HARDENED_JWK_SET_URI:}
+      audience: ${FRAUD_ENGINE_HARDENED_AUDIENCE:}
+      principal-claim: ${FRAUD_ENGINE_HARDENED_PRINCIPAL_CLAIM:sub}
+      roles-claim: ${FRAUD_ENGINE_HARDENED_ROLES_CLAIM:roles}
+      clock-skew-seconds: ${FRAUD_ENGINE_HARDENED_CLOCK_SKEW_SECONDS:60}
     secure-profile:
       # Identity provider:
       # - IN_MEMORY: single env-backed user for local/reviewer secure mode

@@ -120,6 +120,10 @@
   - enforce secure-profile configuration guardrails as fail-fast startup contracts rather than permissive runtime fallbacks
   - treat Phase 4 cross-sprint security/ops regression as a dedicated gate (local script + CI job), not ad-hoc targeted runs
   - reconcile debt status only with concrete code/test evidence and carry forward unresolved items explicitly
+- Sprint 5.1.1 identity-strategy contract decisions:
+  - lock non-local hardened identity strategy to token-based auth (`JWT/OIDC` contract)
+  - keep `default` open and `secure` basic-auth modes unchanged for compatibility during transition
+  - introduce `hardened` profile configuration contract keys first (issuer/jwk/audience/claim mapping/clock skew), with enforcement deferred to `5.1.2`
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category
