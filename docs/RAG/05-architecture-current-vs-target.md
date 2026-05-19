@@ -16,6 +16,7 @@
 - Security is now profile-aware:
   - `default` profile remains permissive for reviewer usability
   - `secure` profile enforces HTTP Basic with env-backed credentials
+  - `hardened` and `production` profiles enforce JWT resource-server authentication
   - secure identity provider is configurable (`IN_MEMORY` or `JDBC`)
   - secure in-memory credentials now support explicit secret-source modes and rotation overlap hooks
   - secure JDBC identity mode now applies validated query contracts with safe defaults
@@ -23,6 +24,7 @@
   - governance read/ops diagnostics routes now follow an explicit least-privilege role matrix
   - Swagger/OpenAPI and actuator exposure are explicitly profile-driven
   - production profile now enforces health-only actuator exposure with hidden health details and no docs surface
+  - hardened token contract is configuration-backed through issuer/jwk/audience/claim properties
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 - Delivery and verification architecture now includes:
   - GitHub Actions CI baseline for compile, test, and package gates

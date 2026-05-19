@@ -33,6 +33,7 @@
 - Security posture is now profile-aware and policy-explicit:
   - `default` remains open for reviewer usability
   - `secure` enforces HTTP Basic
+  - `hardened`/`production` now enforce JWT token authentication
   - secure identity source is configurable (`IN_MEMORY` or `JDBC`)
   - secure secret-source strategy is explicit for in-memory mode (`ENV`, `PRE_ENCODED`, `EXTERNAL_MANAGER` seam)
   - secure credential rotation readiness hooks now support controlled overlap windows
@@ -42,6 +43,14 @@
     - `OPS_READER` for governance read + actuator diagnostics
     - `GOVERNANCE_ADMIN` for governance mutation
     - `PLATFORM_ADMIN` as optional superset role
+  - hardened/production JWT contract properties now include:
+    - `issuer-uri`
+    - `jwk-set-uri`
+    - `audience`
+    - `principal-claim`
+    - `roles-claim`
+    - `clock-skew-seconds`
+  - reviewer-hosted deployments without external IdP are now explicitly documented to run on `secure` profile with authenticated actuator access
 - Security and operations posture is now Phase 4 close-out complete:
   - secure-profile startup guardrails fail fast on unsafe identity/secret/role and actuator configurations
   - resilience checks cover datasource unavailability, invalid secure identity setup, and role-restricted actuator access

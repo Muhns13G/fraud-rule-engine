@@ -55,6 +55,11 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Revisit performance characteristics for high-throughput decision evaluation.
 - Status update:
   - The baseline CI gate for compile/test/package was delivered in Sprint `3.4.1`.
+  - Sprint `5.1` is completed:
+    - hardened/production JWT profile enforcement is implemented and test-covered
+    - role-mapped token authorization is enforced across API, governance, actuator, and docs surfaces
+    - reviewer-hosted deployment guidance is standardized on `secure` profile when external IdP configuration is unavailable
+    - profile matrix verification/docs closeout is complete (`default`, `secure`, `hardened`, `production`)
   - Remaining Phase 5 hardening still includes broader pipeline maturity and performance-focused quality gates.
 
 ## First Concrete Deliverables

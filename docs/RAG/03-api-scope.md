@@ -96,6 +96,18 @@ Supported sort values:
   - incoming `X-Request-Id` values must match UUID format and length constraints
   - invalid/missing values are replaced with generated safe correlation IDs
 
+## Hardened Identity Policy Notes (Sprint 5.1)
+- `hardened` and `production` profiles now use JWT token authentication for protected routes.
+- Hardened JWT configuration contract keys:
+  - `issuer-uri`
+  - `jwk-set-uri`
+  - `audience`
+  - `principal-claim`
+  - `roles-claim`
+  - `clock-skew-seconds`
+- Startup fails fast for hardened/production when JWT `jwk-set-uri` is missing.
+- Reviewer-hosted mode remains `secure` profile when external IdP wiring is unavailable; actuator endpoints still require authentication.
+
 ## Phase 4 Regression Notes (Sprint 4.4)
 - No new public API surface was added in Sprint `4.4`.
 - Operational confidence is now gated by a dedicated Phase 4 security/ops regression suite:

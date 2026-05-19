@@ -124,6 +124,14 @@
   - lock non-local hardened identity strategy to token-based auth (`JWT/OIDC` contract)
   - keep `default` open and `secure` basic-auth modes unchanged for compatibility during transition
   - introduce `hardened` profile configuration contract keys first (issuer/jwk/audience/claim mapping/clock skew), with enforcement deferred to `5.1.2`
+- Sprint 5.1.2/5.1.3 hardened-enforcement decisions:
+  - enforce JWT resource-server authentication in `hardened` and `production` profiles
+  - require hardened `jwk-set-uri` at startup and fail fast when missing
+  - map JWT claims to application roles for governance mutation, governance reads, actuator routes, docs routes, and API surface authorization
+- Sprint 5.1.4/5.1.5 safety + reviewer-ergonomics decisions:
+  - keep hosted reviewer guidance centered on `secure` profile when external IdP configuration is not available
+  - preserve default-profile local-only guardrail behavior and explicit warning posture
+  - document profile migration path (`default` -> `secure` -> `hardened`/`production`) and add matrix verification commands as first-class handoff guidance
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

@@ -206,6 +206,85 @@ Notes:
 - Keep internal app port at `8080`; hosted platforms should route via `PORT` (`server.port=${PORT:8080}`).
 - Health check endpoint for deployment verification: `/actuator/health`.
 
+### Reviewer-Friendly Hosted Mode (Take-Home Submission)
+
+For this take-home deployment, the live hosted environment runs in `secure` profile so reviewers can validate behavior without external OIDC/JWT infrastructure.
+
+```bash
+SPRING_PROFILES_ACTIVE=secure
+FRAUD_ENGINE_SECURE_USER=<reviewer-username>
+FRAUD_ENGINE_SECURE_PASSWORD=<reviewer-password>
+FRAUD_ENGINE_SECURE_ROLE=API_CLIENT
+```
+
+Why a browser may show a Whitelabel `401` page:
+- In `secure` profile, actuator endpoints require authentication.
+- Accessing `/actuator/health` or `/actuator/info` without credentials returns `401 Unauthorized`.
+
+Reviewer verification examples (hosted):
+
+```bash
+curl -u <reviewer-username>:<reviewer-password> \
+  https://fraud.oitw.site/actuator/health
+```
+
+```bash
+curl -u <reviewer-username>:<reviewer-password> \
+  https://fraud.oitw.site/actuator/info
+```
+
+Reviewer access template (for submission message):
+
+```text
+Live Demo: https://fraud.oitw.site
+Profile: secure
+Username: <reviewer-username>
+Password: <share-via-private-channel>
+Notes:
+- /actuator/health requires authentication in secure profile.
+- /actuator/info requires authentication in secure profile.
+```
+
+`production` profile remains implemented and available for environments that provide hardened JWT/OIDC configuration (`issuer-uri`, `jwk-set-uri`, and audience).
+
+### Profile Matrix and Migration Path
+
+Security posture by profile:
+
+- `default` (local/reviewer-open): unauthenticated local ergonomics with guardrails to prevent hosted misuse.
+- `secure` (reviewer-hosted): HTTP Basic authentication with explicit role boundaries.
+- `hardened` / `production` (non-local enterprise): JWT/OIDC resource-server posture with claim-to-role mapping.
+
+Local verification path:
+
+1. Validate local-open behavior (`default`):
+
+```bash
+./mvnw -Dtest=DefaultProfileSecurityIntegrationTest test
+```
+
+2. Validate reviewer-hosted behavior (`secure`):
+
+```bash
+./mvnw -Dtest=SecureProfileSecurityIntegrationTest test
+```
+
+3. Validate hardened non-local behavior (`hardened`):
+
+```bash
+./mvnw -Dtest=HardenedProfileSecurityIntegrationTest test
+```
+
+4. Validate production observability posture (`production` + JWT contract):
+
+```bash
+./mvnw -Dtest=ProductionProfileObservabilityIntegrationTest test
+```
+
+Notes:
+- Hardened/production tests use mocked JWT authentication in integration tests; no live external IdP is required for local verification.
+- Live hosted `production` requires valid `issuer-uri`, `jwk-set-uri`, and audience values from your IdP.
+
 ## Running Tests
 
 All tests require Docker because integration tests and the context test use Testcontainers.
