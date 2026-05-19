@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
  * Hardened profile security baseline for token-based authentication.
  */
 @Configuration
-@Profile("hardened")
+@Profile("hardened | production")
 @EnableConfigurationProperties(HardenedProfileSecurityProperties.class)
 public class HardenedProfileSecurityConfiguration {
 

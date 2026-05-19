@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * This intentionally avoids authentication while the take-home focuses on fraud evaluation behavior.
  */
 @Configuration
-@Profile("!secure & !hardened")
+@Profile("default")
 public class PhaseOneSecurityConfiguration {
 
 	/**
@@ -47,6 +47,11 @@ public class PhaseOneSecurityConfiguration {
 		return http.build();
 	}
 
+	/**
+	 * Provides an explicit empty user store to suppress generated default-user behavior.
+	 *
+	 * @return empty in-memory user details manager for default-profile local mode
+	 */
 	@Bean
 	public UserDetailsService phaseOneUserDetailsService() {
 		// Explicit empty user store prevents Spring Security from creating a generated default user.
