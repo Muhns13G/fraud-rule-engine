@@ -1,8 +1,13 @@
 package com.capitec.fraudengine.application.service;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.capitec.fraudengine.api.dto.RuleGovernanceMetadataResponseDto;
 import com.capitec.fraudengine.api.error.RuleGovernanceMetadataNotFoundException;
@@ -11,6 +16,7 @@ import com.capitec.fraudengine.common.error.InvalidRuleGovernanceStateException;
 import com.capitec.fraudengine.domain.model.RuleGovernanceMetadata;
 import com.capitec.fraudengine.domain.model.RuleIdentity;
 import com.capitec.fraudengine.domain.model.RuleLifecycleState;
+import com.capitec.fraudengine.infrastructure.config.RequestCorrelationFilter;
 import com.capitec.fraudengine.domain.model.enums.RuleExecutionSource;
 import com.capitec.fraudengine.domain.policy.RuleGovernancePolicy;
 import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceMetadataEntity;
@@ -22,6 +28,8 @@ import com.capitec.fraudengine.infrastructure.persistence.repository.RuleGoverna
  */
 @Service
 public class RuleGovernanceMutationService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(RuleGovernanceMutationService.class);
 
 	private final RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository;
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
@@ -57,6 +65,9 @@ public class RuleGovernanceMutationService {
 		String version,
 		RuleLifecycleState lifecycleState
 	) {
+		String actor = resolveActorIdentity();
+		String requestId = resolveRequestId();
+
 		RuleGovernanceMetadataEntity existingEntity = ruleGovernanceMetadataJpaRepository
 			.findByRuleCodeAndRuleVersion(ruleCode, version)
 			.orElseThrow(() -> new RuleGovernanceMetadataNotFoundException(ruleCode, version));
@@ -77,6 +88,18 @@ public class RuleGovernanceMutationService {
 		RuleGovernanceMetadataEntity updatedEntity = ruleGovernanceMetadataJpaRepository.save(existingEntity);
 		RuleGovernanceMetadata updatedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(updatedEntity);
 		recordMutationMetric("transition_state", "success");
+		recordLifecycleTransitionMetric(existingMetadata, updatedMetadata);
+		LOGGER.info(
+			"rule_governance_state_transition_audit requestId={} actor={} ruleCode={} version={} fromLifecycle={} fromActivation={} toLifecycle={} toActivation={}",
+			requestId,
+			actor,
+			updatedMetadata.identity().ruleCode(),
+			updatedMetadata.identity().version(),
+			existingMetadata.lifecycleState().lifecycleStatus(),
+			existingMetadata.lifecycleState().activationState(),
+			updatedMetadata.lifecycleState().lifecycleStatus(),
+			updatedMetadata.lifecycleState().activationState()
+		);
 
 		return new RuleGovernanceMetadataResponseDto(
 			updatedMetadata.identity().ruleCode(),
@@ -103,6 +126,9 @@ public class RuleGovernanceMutationService {
 		String version,
 		RuleLifecycleState lifecycleState
 	) {
+		String actor = resolveActorIdentity();
+		String requestId = resolveRequestId();
+
 		boolean hasExistingRuleCode = ruleGovernanceMetadataJpaRepository.existsByRuleCode(ruleCode);
 		if (!hasExistingRuleCode) {
 			throw new RuleGovernanceRuleCodeNotFoundException(ruleCode);
@@ -135,6 +161,17 @@ public class RuleGovernanceMutationService {
 		);
 		RuleGovernanceMetadata savedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(savedEntity);
 		recordMutationMetric("register_version", "success");
+		recordVersionRegistrationMetric(savedMetadata);
+		LOGGER.info(
+			"rule_governance_version_registration_audit requestId={} actor={} ruleCode={} version={} lifecycleStatus={} activationState={} executionSource={}",
+			requestId,
+			actor,
+			savedMetadata.identity().ruleCode(),
+			savedMetadata.identity().version(),
+			savedMetadata.lifecycleState().lifecycleStatus(),
+			savedMetadata.lifecycleState().activationState(),
+			savedMetadata.executionSource()
+		);
 
 		return new RuleGovernanceMetadataResponseDto(
 			savedMetadata.identity().ruleCode(),
@@ -155,5 +192,52 @@ public class RuleGovernanceMutationService {
 			"outcome",
 			outcome
 		).increment();
+	}
+
+	private void recordLifecycleTransitionMetric(
+		RuleGovernanceMetadata previousMetadata,
+		RuleGovernanceMetadata updatedMetadata
+	) {
+		meterRegistry.counter(
+			"fraud.governance.lifecycle.transition.total",
+			"ruleCode",
+			updatedMetadata.identity().ruleCode(),
+			"fromLifecycle",
+			previousMetadata.lifecycleState().lifecycleStatus().name(),
+			"toLifecycle",
+			updatedMetadata.lifecycleState().lifecycleStatus().name(),
+			"fromActivation",
+			previousMetadata.lifecycleState().activationState().name(),
+			"toActivation",
+			updatedMetadata.lifecycleState().activationState().name()
+		).increment();
+	}
+
+	private void recordVersionRegistrationMetric(RuleGovernanceMetadata savedMetadata) {
+		meterRegistry.counter(
+			"fraud.governance.version.registration.total",
+			"ruleCode",
+			savedMetadata.identity().ruleCode(),
+			"lifecycleStatus",
+			savedMetadata.lifecycleState().lifecycleStatus().name(),
+			"activationState",
+			savedMetadata.lifecycleState().activationState().name()
+		).increment();
+	}
+
+	private String resolveActorIdentity() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+			return "anonymous";
+		}
+		return authentication.getName();
+	}
+
+	private String resolveRequestId() {
+		String requestId = MDC.get(RequestCorrelationFilter.REQUEST_ID_MDC_KEY);
+		if (requestId == null || requestId.isBlank()) {
+			return "no-request-id";
+		}
+		return requestId;
 	}
 }

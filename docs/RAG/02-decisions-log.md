@@ -69,6 +69,15 @@
   - introducing configurable secure identity-provider strategy (`IN_MEMORY` default, optional `JDBC`)
   - supporting pre-encoded secure credentials for non-local secret workflows
   - making Swagger/OpenAPI and actuator exposure explicitly profile-driven
+- Sprint 3.3 deepens observability by:
+  - adding contract tests for metrics and request-correlation behavior
+  - expanding metrics beyond evaluation into retrieval, governance mutation, and API error paths
+  - adding lifecycle/version governance observability (audit events + dedicated counters)
+- Sprint 3.3 fraud-rule expansion decision:
+  - implement `LOCATION_ANOMALY` as a deterministic, explainable heuristic
+  - compare current location to the most recent comparable prior transaction
+  - trigger review on country change, and optionally city change within same country
+  - externalize location-anomaly behavior through validated rule properties
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

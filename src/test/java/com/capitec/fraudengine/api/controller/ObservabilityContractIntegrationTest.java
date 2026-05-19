@@ -2,6 +2,7 @@ package com.capitec.fraudengine.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -196,6 +197,28 @@ class ObservabilityContractIntegrationTest {
 			"outcome",
 			"success"
 		);
+		double lifecycleTransitionBefore = counterValue(
+			"fraud.governance.lifecycle.transition.total",
+			"ruleCode",
+			"OBSERVABILITY_RULE",
+			"fromLifecycle",
+			"ACTIVE",
+			"toLifecycle",
+			"DEPRECATED",
+			"fromActivation",
+			"ACTIVE",
+			"toActivation",
+			"INACTIVE"
+		);
+		double versionRegistrationBefore = counterValue(
+			"fraud.governance.version.registration.total",
+			"ruleCode",
+			"OBSERVABILITY_RULE",
+			"lifecycleStatus",
+			"DEPRECATED",
+			"activationState",
+			"INACTIVE"
+		);
 
 		mockMvc.perform(get("/api/fraud-evaluations"))
 			.andExpect(status().isOk());
@@ -209,6 +232,16 @@ class ObservabilityContractIntegrationTest {
 				.content("""
 					{
 					  "version": "1.1.0",
+					  "lifecycleStatus": "DEPRECATED",
+					  "activationState": "INACTIVE"
+					}
+					"""))
+			.andExpect(status().isOk());
+
+		mockMvc.perform(patch("/api/admin/rules/OBSERVABILITY_RULE/versions/1.0.0/state")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
 					  "lifecycleStatus": "DEPRECATED",
 					  "activationState": "INACTIVE"
 					}
@@ -240,6 +273,28 @@ class ObservabilityContractIntegrationTest {
 			"outcome",
 			"success"
 		)).isEqualTo(governanceMutationBefore + 1);
+		assertThat(counterValue(
+			"fraud.governance.lifecycle.transition.total",
+			"ruleCode",
+			"OBSERVABILITY_RULE",
+			"fromLifecycle",
+			"ACTIVE",
+			"toLifecycle",
+			"DEPRECATED",
+			"fromActivation",
+			"ACTIVE",
+			"toActivation",
+			"INACTIVE"
+		)).isEqualTo(lifecycleTransitionBefore + 1);
+		assertThat(counterValue(
+			"fraud.governance.version.registration.total",
+			"ruleCode",
+			"OBSERVABILITY_RULE",
+			"lifecycleStatus",
+			"DEPRECATED",
+			"activationState",
+			"INACTIVE"
+		)).isEqualTo(versionRegistrationBefore + 1);
 	}
 
 	@Test

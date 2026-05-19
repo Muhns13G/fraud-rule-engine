@@ -1,4 +1,4 @@
-# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.2)
+# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.3)
 
 ## Baseline and Scope
 This registry is the canonical debt register at Phase 2 close-out. It is built from:
@@ -34,14 +34,14 @@ Audit mode:
 | TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
 | TD-008 | SpringDoc production-exposure warning remains unresolved | Recorded+Observed | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
 | TD-009 | Mockito Java 25 dynamic-agent warning remains unresolved | Recorded | 1.5 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
-| TD-010 | Observability tests are incomplete (metrics/correlation/actuator contract) | Recorded+Observed | 2.3 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java` |
-| TD-011 | Metrics coverage is evaluation-focused; retrieval/error metrics remain limited | Recorded+Observed | 2.3 | Open | Low | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
+| TD-010 | Observability tests are incomplete (metrics/correlation/actuator contract) | Recorded+Observed | 2.3 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/ObservabilityContractIntegrationTest.java` |
+| TD-011 | Metrics coverage is evaluation-focused; retrieval/error metrics remain limited | Recorded+Observed | 2.3 | Closed | Low | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationRetrievalService.java`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMutationService.java`, `src/main/java/com/capitec/fraudengine/api/error/GlobalExceptionHandler.java` |
 | TD-012 | Rule governance is read-only; mutation endpoints/workflows are deferred | Recorded+Observed | 2.5 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java` |
 | TD-013 | Governance metadata versioning is bootstrap-fixed at `1.0.0` | Recorded+Observed | 2.5 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMetadataBootstrapService.java` |
 | TD-014 | No controlled governance promotion/deprecation workflow yet | Recorded | 2.5 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md` |
 | TD-015 | Thresholds/window constants still code-level, not centrally configurable | Recorded+Observed | 1.4 | Closed | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/domain/rule/impl/HighAmountFraudRule.java`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
 | TD-016 | CI pipeline for compile/test/package is still missing | Recorded | 1.5 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
-| TD-017 | Deferred `location anomaly` heuristic remains out of scope | Recorded | 1.1 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md` |
+| TD-017 | Deferred `location anomaly` heuristic remains out of scope | Recorded | 1.1 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `src/main/java/com/capitec/fraudengine/domain/rule/impl/LocationAnomalyFraudRule.java` |
 | TD-018 | Broader retrieval filters (`merchantCategory`, `channel`, rule-hit lookup) remain deferred | Recorded | 1.1 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md` |
 | TD-019 | Phase 1 planning debt (DTO/threshold/score/Flyway timing) | Recorded | 1.1 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.2-completion-report.md` |
 | TD-020 | Placeholder-rule/repo/controller hardening debt from 1.3/1.4 | Recorded | 1.3 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.3-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
@@ -175,27 +175,29 @@ Audit mode:
 ### TD-010
 - Debt ID: `TD-010`
 - Title: Observability tests are incomplete (metrics/correlation/actuator contract)
-- Status: `Partially addressed`
+- Status: `Closed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`
   - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java`
 - Why it matters: Some security actuator behavior is tested, but metrics/correlation contract verification remains thin.
-- Suggested resolution direction: Add focused integration tests for emitted metrics and request-correlation propagation.
+- Resolution note: Closed in Sprint `3.3.1` with dedicated observability contract integration tests that assert metrics emission and request-correlation propagation behavior.
+- Suggested resolution direction: Maintain contract tests as observability surface evolves.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.3`
 
 ### TD-011
 - Debt ID: `TD-011`
 - Title: Metrics coverage is evaluation-focused; retrieval/error metrics remain limited
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Low`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java`
 - Why it matters: Operational visibility is good for evaluate path but uneven across full API behavior.
-- Suggested resolution direction: Expand metrics selectively where operator value is clear.
+- Resolution note: Closed in Sprint `3.3.2` by adding retrieval, governance mutation, and API error metrics with consistent naming/tags, then expanded in Sprint `3.3.4` with lifecycle/version mutation observability.
+- Suggested resolution direction: Maintain naming/tag conventions and add only high-signal metrics.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.3`
 
 ### TD-012
@@ -269,13 +271,14 @@ Audit mode:
 ### TD-017
 - Debt ID: `TD-017`
 - Title: Deferred `location anomaly` heuristic remains out of scope
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Low`
 - Source: `Recorded`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`
 - Why it matters: Known feature-gap versus broader fraud-domain expectations.
-- Suggested resolution direction: Introduce only with clear explanation model and history support.
+- Resolution note: Closed in Sprint `3.3.3` with deterministic `LOCATION_ANOMALY` rule behavior, explicit evidence in rule-result reasons, and targeted unit/integration coverage.
+- Suggested resolution direction: Keep behavior deterministic and explicitly explainable.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.3`
 
 ### TD-018

@@ -70,9 +70,17 @@ Supported sort values:
 ## Not In Phase 1 By Default
 - bulk ingestion
 - asynchronous processing
-- rule activation or mutation endpoints (read visibility only currently)
+- rule activation or mutation endpoints outside governed admin controls
 - customer-facing APIs
 - broader search filters such as rule-hit lookup
+
+## Rule Evaluation Surface Notes (Sprint 3.3)
+- The rule set now includes `LOCATION_ANOMALY` in addition to:
+  - `HIGH_AMOUNT`
+  - `VELOCITY`
+  - `RISKY_MERCHANT_CATEGORY`
+  - `UNUSUAL_TIME`
+- `ruleResults` remains the explainability contract surface for per-rule evidence.
 
 ## Security Exposure Notes (Sprint 3.2)
 - `default` profile keeps API, Swagger/OpenAPI, and configured actuator endpoints open for local review workflows.

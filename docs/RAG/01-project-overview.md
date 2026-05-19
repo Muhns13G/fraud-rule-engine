@@ -24,6 +24,10 @@
 - Runtime persistence: Flyway-managed PostgreSQL schema with fraud evaluation and rule-result tables
 - Persistence posture: evaluation rows retain business completion time plus row-level audit timestamps
 - Operational posture: request correlation, focused evaluation metrics, and limited actuator exposure now exist for local inspection
+- Observability posture is now broader and test-backed:
+  - evaluation, retrieval, governance, and API-error metric coverage
+  - governance lifecycle/version mutation audit events
+  - request correlation propagation validated in observability contract tests
 - Security posture is now profile-aware and policy-explicit:
   - `default` remains open for reviewer usability
   - `secure` enforces HTTP Basic
@@ -34,6 +38,7 @@
   - admin rule-governance read visibility endpoints are now implemented
   - admin governance mutation endpoints now support lifecycle/activation transitions and controlled version registration
   - retrieval now supports paged responses, one-sided time filtering, review-oriented filters, and explicit summary sorting
+  - location anomaly rule is now implemented with deterministic explainability
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`
@@ -55,7 +60,7 @@
   - risky merchant category
   - unusual time
 - Deferred unless time allows:
-  - location anomaly
+  - rule-hit retrieval filter
 
 ## Why This Shape
 - It matches the project brief directly.

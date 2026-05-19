@@ -9,8 +9,9 @@
 - Lightweight observability conventions now exist:
   - structured evaluation and retrieval logs
   - request correlation via `X-Request-Id`
-  - evaluation metrics through Micrometer
+  - evaluation, retrieval, governance, and API error metrics through Micrometer
   - limited actuator exposure for local inspection
+  - governance mutation audit events with request-id and actor context
 - Security is now profile-aware:
   - `default` profile remains permissive for reviewer usability
   - `secure` profile enforces HTTP Basic with env-backed credentials
@@ -22,10 +23,12 @@
   - persisted metadata identity (`ruleCode + version`)
   - admin read and constrained mutation endpoints for governed rule metadata
   - deterministic lifecycle/activation boundary validation with DB constraints
+  - lifecycle/version mutation observability with structured audit logs and dedicated metrics
 - Retrieval layer is now review-oriented and scalable:
   - paged list responses for `GET /api/fraud-evaluations`
   - one-sided time filtering (`from`-only / `to`-only) and bounded ranges
   - additional low-risk filters (`merchantCategory`, `channel`)
+- Fraud capability now includes deterministic location anomaly evaluation with explainable evidence in rule results.
 
 ## Target Phase 1 Shape
 - `api`
