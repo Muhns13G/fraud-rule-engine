@@ -171,6 +171,16 @@ The local Compose service is pinned to `postgres:18.3`.
 
 For PostgreSQL `18+`, the Compose volume is mounted at `/var/lib/postgresql` rather than `/var/lib/postgresql/data` to match the image's major-version-aware data layout.
 
+### Environment Configuration Templates
+
+Reference templates are available under:
+
+- `docs/operations/env/local-reviewer.env.template`
+- `docs/operations/env/secure.env.template`
+- `docs/operations/env/production.env.template`
+
+These templates define the baseline property contracts for local/reviewer, secure, and production-style runs.
+
 ## Running Tests
 
 All tests require Docker because integration tests and the context test use Testcontainers.
