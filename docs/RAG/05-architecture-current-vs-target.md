@@ -16,6 +16,8 @@
   - `default` profile remains permissive for reviewer usability
   - `secure` profile enforces HTTP Basic with env-backed credentials
   - secure identity provider is configurable (`IN_MEMORY` or `JDBC`)
+  - secure in-memory credentials now support explicit secret-source modes and rotation overlap hooks
+  - secure JDBC identity mode now applies validated query contracts with safe defaults
   - governance mutation endpoints require governance-admin scope in `secure` profile
   - governance read/ops diagnostics routes now follow an explicit least-privilege role matrix
   - Swagger/OpenAPI and actuator exposure are explicitly profile-driven

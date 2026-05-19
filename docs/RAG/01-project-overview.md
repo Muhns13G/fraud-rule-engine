@@ -32,6 +32,8 @@
   - `default` remains open for reviewer usability
   - `secure` enforces HTTP Basic
   - secure identity source is configurable (`IN_MEMORY` or `JDBC`)
+  - secure secret-source strategy is explicit for in-memory mode (`ENV`, `PRE_ENCODED`, `EXTERNAL_MANAGER` seam)
+  - secure credential rotation readiness hooks now support controlled overlap windows
   - Swagger/OpenAPI and actuator exposure are profile-driven
   - secure authorization is now role-segmented by surface:
     - `API_CLIENT` for core fraud-evaluation API
@@ -50,6 +52,7 @@
   - location anomaly rule is now implemented with deterministic explainability
   - secure-profile governance mutation endpoints now have explicit admin/non-admin authorization regression coverage
   - secure-profile role matrix coverage now includes `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, and `PLATFORM_ADMIN`
+  - secure-profile identity contract coverage now includes secret-source validation, JDBC query contract validation, and rotation-window authentication checks
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`

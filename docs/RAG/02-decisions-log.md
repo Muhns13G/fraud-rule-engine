@@ -97,6 +97,12 @@
 - Sprint 4.1.5 deferred-identity decision:
   - continue with HTTP Basic + profile-aware role controls for this phase
   - explicitly defer enterprise IAM/JWT/OAuth2 integration to a later phase to avoid scope inflation and preserve reviewer reproducibility
+- Sprint 4.2 secure identity/secret hardening decisions:
+  - lock explicit secure in-memory secret-source modes: `ENV`, `PRE_ENCODED`, and `EXTERNAL_MANAGER` integration seam
+  - enforce fail-fast startup validation for incompatible secret-source combinations
+  - harden JDBC identity mode with validated query contract and safe default queries aligned with Spring Security tables
+  - add credential-rotation readiness hook for in-memory mode using a controlled dual-credential overlap window
+  - keep implementation vendor-neutral; document enterprise secret-manager/IAM integrations as deferred beyond current scope
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

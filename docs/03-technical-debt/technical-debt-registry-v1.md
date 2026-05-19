@@ -28,8 +28,8 @@ Audit mode:
 | TD-001 | Retrieval endpoint has no pagination | Recorded+Observed | 2.2 | Closed | High | `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java` |
 | TD-002 | Single-bound time filtering (`from` only / `to` only) is not applied | Observed | N/A | Closed | Medium | `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java` |
 | TD-003 | Default profile remains intentionally open for API surface | Recorded+Observed | 1.4 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
-| TD-004 | Secure profile uses in-memory user store only | Recorded+Observed | 2.4 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java` |
-| TD-005 | No enterprise secret management/rotation for secure credentials | Recorded+Observed | 2.4 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/resources/application.yaml` |
+| TD-004 | Secure profile uses in-memory user store only | Recorded+Observed | 2.4 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java` |
+| TD-005 | No enterprise secret management/rotation for secure credentials | Recorded+Observed | 2.4 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
 | TD-006 | Default-profile openness behavior is not explicitly tested | Recorded | 2.4 | Closed | Low | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/DefaultProfileSecurityIntegrationTest.java` |
 | TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
 | TD-008 | SpringDoc production-exposure warning remains unresolved | Recorded+Observed | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
@@ -93,14 +93,14 @@ Audit mode:
 ### TD-004
 - Debt ID: `TD-004`
 - Title: Secure profile uses in-memory user store only
-- Status: `Partially addressed`
+- Status: `Closed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java`
-- Why it matters: No persistent identity source, no user lifecycle, and limited operational realism.
-- Resolution note: Sprint `3.2.2` introduced configurable secure identity provider (`IN_MEMORY` or `JDBC`), but enterprise-grade identity integration is still deferred.
+- Why it matters: In-memory-only identity is brittle and not operationally realistic for secure mode.
+- Resolution note: Closed by Sprint `4.2.2` with hardened JDBC identity configuration, safe default queries, and fail-fast query contract validation, backed by secure-config tests.
 - Suggested resolution direction: Move secure profile identity source to externalized/persistent backing.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
@@ -113,8 +113,8 @@ Audit mode:
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`
   - `src/main/resources/application.yaml`
-- Why it matters: Environment variables are practical locally but incomplete for stronger operational controls.
-- Resolution note: Sprint `3.2.2` added pre-encoded credential support and clearer secret-source configuration paths, but centralized secret-rotation workflows remain unresolved.
+- Why it matters: Plain env credentials alone are practical locally but incomplete for stronger operational controls.
+- Resolution note: Sprint `4.2` added explicit secret-source strategies, external-secret integration seam, and credential-rotation overlap hooks. Still partial because concrete enterprise secret-manager integration and centralized rotation orchestration remain future work.
 - Suggested resolution direction: Introduce profile-based secret provider integration for non-local environments.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 

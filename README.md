@@ -403,9 +403,20 @@ Security is now profile-aware:
   - identity provider is configurable:
     - `IN_MEMORY` (default) for local/reviewer secure mode
     - `JDBC` for persistent-friendly identity sourcing
+  - JDBC identity mode now validates query contracts and falls back to safe defaults aligned to Spring Security `users` / `authorities` schema
   - secure credentials support either:
     - raw password (`password`) for local use, or
     - pre-encoded password (`password-encoded`) for non-local secret workflows
+  - secret source strategy is explicit for `IN_MEMORY` mode:
+    - `ENV`
+    - `PRE_ENCODED`
+    - `EXTERNAL_MANAGER` (via `SecureProfileSecretSupplier` seam)
+  - credential rotation readiness hook (IN_MEMORY mode):
+    - optional overlap window via `rotation-enabled=true`
+    - secondary credential fields:
+      - `rotation-username`
+      - `rotation-password` or `rotation-password-encoded`
+    - both primary and rotation credentials authenticate during overlap; remove rotation fields after cutover
   - health details are restricted with `management.endpoint.health.show-details=when_authorized`
 
 This remains a pragmatic take-home baseline, not full enterprise identity integration.
@@ -418,6 +429,14 @@ For any non-local run, prefer secure mode:
 ```bash
 SPRING_PROFILES_ACTIVE=secure ./mvnw spring-boot:run
 ```
+
+### Secure Credential Rotation Workflow (IN_MEMORY)
+
+1. Configure primary secure credential as usual.
+2. Set `rotation-enabled=true` and provide a distinct `rotation-username` plus one rotation password field.
+3. Deploy and migrate callers to the rotation credential during the overlap window.
+4. Promote the rotated credential to primary configuration.
+5. Disable rotation (`rotation-enabled=false`) and remove rotation fields.
 
 ## Known Simplifications
 

@@ -87,6 +87,13 @@ Supported sort values:
 - `secure` profile requires authentication for API and actuator routes, and requires admin role for governance mutation endpoints.
 - Swagger/OpenAPI and actuator exposure are now explicitly profile-driven through configuration.
 
+## Secure Identity Contract Notes (Sprint 4.2)
+- No public endpoint contract changed in Sprint 4.2.
+- `secure` profile identity and secret posture is now stricter and explicitly validated:
+  - in-memory secret-source modes: `ENV`, `PRE_ENCODED`, `EXTERNAL_MANAGER` seam
+  - JDBC identity query contract validation with safe defaults
+  - optional credential-rotation overlap contract for controlled cutover
+
 ## Authorization Matrix Notes (Sprint 4.1)
 - `secure` profile route authorization is role-segmented:
   - core fraud-evaluation API (`/api/fraud-evaluations...`): `API_CLIENT` or stronger
