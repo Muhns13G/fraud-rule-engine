@@ -69,4 +69,18 @@ class SecureProfileGovernanceAdminIntegrationTest {
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
 			.andExpect(status().isOk());
 	}
+
+	@Test
+	void shouldAllowActuatorEndpointForAdminUser() throws Exception {
+		mockMvc.perform(get("/actuator/health")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	void shouldAllowFraudEvaluationApiForAdminUser() throws Exception {
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
+	}
 }

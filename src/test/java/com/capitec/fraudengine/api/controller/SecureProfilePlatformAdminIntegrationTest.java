@@ -23,11 +23,12 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.role=OPS_READER",
+	"app.security.secure-profile.role=PLATFORM_ADMIN",
 	"app.security.secure-profile.ops-reader-role=OPS_READER",
-	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
+	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN",
+	"app.security.secure-profile.platform-admin-role=PLATFORM_ADMIN"
 })
-class SecureProfileGovernanceAuthorizationIntegrationTest {
+class SecureProfilePlatformAdminIntegrationTest {
 
 	private static final String SECURE_USERNAME = "secure-user";
 	private static final String SECURE_PASSWORD = "change-me-secure";
@@ -36,28 +37,14 @@ class SecureProfileGovernanceAuthorizationIntegrationTest {
 	private MockMvc mockMvc;
 
 	@Test
-	void shouldAllowGovernanceReadEndpointForOpsReaderUser() throws Exception {
+	void shouldAllowGovernanceReadEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(get("/api/admin/rules")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
 			.andExpect(status().isOk());
 	}
 
 	@Test
-	void shouldAllowActuatorEndpointForOpsReaderUser() throws Exception {
-		mockMvc.perform(get("/actuator/health")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
-			.andExpect(status().isOk());
-	}
-
-	@Test
-	void shouldAllowFraudEvaluationApiForOpsReaderUser() throws Exception {
-		mockMvc.perform(get("/api/fraud-evaluations")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
-			.andExpect(status().isOk());
-	}
-
-	@Test
-	void shouldRejectGovernanceStateTransitionEndpointForNonAdminUser() throws Exception {
+	void shouldAllowGovernanceStateTransitionEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(patch("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/state")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
 				.contentType(MediaType.APPLICATION_JSON)
@@ -67,11 +54,11 @@ class SecureProfileGovernanceAuthorizationIntegrationTest {
 					  "activationState": "ACTIVE"
 					}
 					"""))
-			.andExpect(status().isForbidden());
+			.andExpect(status().isNotFound());
 	}
 
 	@Test
-	void shouldRejectGovernanceVersionRegistrationEndpointForNonAdminUser() throws Exception {
+	void shouldAllowGovernanceVersionRegistrationEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(post("/api/admin/rules/DOES_NOT_EXIST/versions")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
 				.contentType(MediaType.APPLICATION_JSON)
@@ -82,6 +69,20 @@ class SecureProfileGovernanceAuthorizationIntegrationTest {
 					  "activationState": "INACTIVE"
 					}
 					"""))
-			.andExpect(status().isForbidden());
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void shouldAllowActuatorEndpointForPlatformAdminUser() throws Exception {
+		mockMvc.perform(get("/actuator/health")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	void shouldAllowFraudEvaluationApiForPlatformAdminUser() throws Exception {
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
 	}
 }
