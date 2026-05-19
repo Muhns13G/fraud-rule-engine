@@ -1,6 +1,7 @@
 package com.capitec.fraudengine.api.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,7 +23,8 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.role=GOVERNANCE_READER",
+	"app.security.secure-profile.role=OPS_READER",
+	"app.security.secure-profile.ops-reader-role=OPS_READER",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })
 class SecureProfileGovernanceAuthorizationIntegrationTest {
@@ -32,6 +34,20 @@ class SecureProfileGovernanceAuthorizationIntegrationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Test
+	void shouldAllowGovernanceReadEndpointForOpsReaderUser() throws Exception {
+		mockMvc.perform(get("/api/admin/rules")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	void shouldAllowActuatorEndpointForOpsReaderUser() throws Exception {
+		mockMvc.perform(get("/actuator/health")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk());
+	}
 
 	@Test
 	void shouldRejectGovernanceStateTransitionEndpointForNonAdminUser() throws Exception {

@@ -1,6 +1,8 @@
 package com.capitec.fraudengine.infrastructure.security;
 
 import javax.sql.DataSource;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpMethod;
@@ -39,15 +41,39 @@ public class SecureProfileSecurityConfiguration {
 			.httpBasic(Customizer.withDefaults())
 			.logout(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(HttpMethod.PATCH, "/api/admin/rules/**").hasRole(properties.getAdminRole())
-				.requestMatchers(HttpMethod.POST, "/api/admin/rules/**").hasRole(properties.getAdminRole())
+				.requestMatchers(HttpMethod.PATCH, "/api/admin/rules/**")
+				.hasAnyRole(uniqueRoles(properties.getAdminRole(), properties.getPlatformAdminRole()))
+				.requestMatchers(HttpMethod.POST, "/api/admin/rules/**")
+				.hasAnyRole(uniqueRoles(properties.getAdminRole(), properties.getPlatformAdminRole()))
+				.requestMatchers(HttpMethod.GET, "/api/admin/rules/**")
+				.hasAnyRole(uniqueRoles(
+					properties.getOpsReaderRole(),
+					properties.getAdminRole(),
+					properties.getPlatformAdminRole()
+				))
+				.requestMatchers("/actuator/**")
+				.hasAnyRole(uniqueRoles(
+					properties.getOpsReaderRole(),
+					properties.getAdminRole(),
+					properties.getPlatformAdminRole()
+				))
+				.requestMatchers("/api/**")
+				.hasAnyRole(uniqueRoles(
+					properties.getRole(),
+					properties.getOpsReaderRole(),
+					properties.getAdminRole(),
+					properties.getPlatformAdminRole()
+				))
 				.requestMatchers(
-					"/api/**",
 					"/swagger-ui.html",
 					"/swagger-ui/**",
-					"/v3/api-docs/**",
-					"/actuator/**"
-				).authenticated()
+					"/v3/api-docs/**"
+				)
+				.hasAnyRole(uniqueRoles(
+					properties.getOpsReaderRole(),
+					properties.getAdminRole(),
+					properties.getPlatformAdminRole()
+				))
 				.anyRequest().permitAll()
 			)
 			.headers(Customizer.withDefaults());
@@ -132,5 +158,16 @@ public class SecureProfileSecurityConfiguration {
 
 		String normalized = value.trim();
 		return normalized.isEmpty() ? null : normalized;
+	}
+
+	private static String[] uniqueRoles(String... roles) {
+		Set<String> uniqueRoles = new LinkedHashSet<>();
+		for (String role : roles) {
+			String normalizedRole = normalize(role);
+			if (normalizedRole != null) {
+				uniqueRoles.add(normalizedRole);
+			}
+		}
+		return uniqueRoles.toArray(String[]::new);
 	}
 }

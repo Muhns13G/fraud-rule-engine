@@ -3,7 +3,6 @@ package com.capitec.fraudengine.api.controller;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
@@ -65,15 +64,14 @@ class SecureProfileSecurityIntegrationTest {
 	void shouldAllowActuatorHealthWithValidBasicAuth() throws Exception {
 		mockMvc.perform(get("/actuator/health")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.status").exists());
+			.andExpect(status().isForbidden());
 	}
 
 	@Test
-	void shouldAllowGovernanceReadWithValidBasicAuth() throws Exception {
+	void shouldRejectGovernanceReadWhenSecureUserLacksOpsRole() throws Exception {
 		mockMvc.perform(get("/api/admin/rules")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
-			.andExpect(status().isOk());
+			.andExpect(status().isForbidden());
 	}
 
 	@Test
