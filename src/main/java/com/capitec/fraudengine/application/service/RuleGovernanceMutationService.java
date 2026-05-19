@@ -1,5 +1,6 @@
 package com.capitec.fraudengine.application.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,17 +27,20 @@ public class RuleGovernanceMutationService {
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
 	private final RuleGovernancePolicy ruleGovernancePolicy;
 	private final RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService;
+	private final MeterRegistry meterRegistry;
 
 	public RuleGovernanceMutationService(
 		RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository,
 		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper,
 		RuleGovernancePolicy ruleGovernancePolicy,
-		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService
+		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService,
+		MeterRegistry meterRegistry
 	) {
 		this.ruleGovernanceMetadataJpaRepository = ruleGovernanceMetadataJpaRepository;
 		this.ruleGovernanceMetadataPersistenceMapper = ruleGovernanceMetadataPersistenceMapper;
 		this.ruleGovernancePolicy = ruleGovernancePolicy;
 		this.ruleGovernanceConfigurationReadModelService = ruleGovernanceConfigurationReadModelService;
+		this.meterRegistry = meterRegistry;
 	}
 
 	/**
@@ -72,6 +76,7 @@ public class RuleGovernanceMutationService {
 		ruleGovernanceMetadataPersistenceMapper.updateEntity(targetMetadata, existingEntity);
 		RuleGovernanceMetadataEntity updatedEntity = ruleGovernanceMetadataJpaRepository.save(existingEntity);
 		RuleGovernanceMetadata updatedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(updatedEntity);
+		recordMutationMetric("transition_state", "success");
 
 		return new RuleGovernanceMetadataResponseDto(
 			updatedMetadata.identity().ruleCode(),
@@ -129,6 +134,7 @@ public class RuleGovernanceMutationService {
 			ruleGovernanceMetadataPersistenceMapper.toEntity(newVersionMetadata)
 		);
 		RuleGovernanceMetadata savedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(savedEntity);
+		recordMutationMetric("register_version", "success");
 
 		return new RuleGovernanceMetadataResponseDto(
 			savedMetadata.identity().ruleCode(),
@@ -139,5 +145,15 @@ public class RuleGovernanceMutationService {
 			savedMetadata.executionSource(),
 			ruleGovernanceConfigurationReadModelService.describe(savedMetadata.identity().ruleCode())
 		);
+	}
+
+	private void recordMutationMetric(String operation, String outcome) {
+		meterRegistry.counter(
+			"fraud.governance.mutation.total",
+			"operation",
+			operation,
+			"outcome",
+			outcome
+		).increment();
 	}
 }

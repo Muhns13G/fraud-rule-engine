@@ -3,6 +3,7 @@ package com.capitec.fraudengine.api.error;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,11 @@ import com.capitec.fraudengine.common.error.InvalidRequestValueException;
 public class GlobalExceptionHandler {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+	private final MeterRegistry meterRegistry;
+
+	public GlobalExceptionHandler(MeterRegistry meterRegistry) {
+		this.meterRegistry = meterRegistry;
+	}
 
 	/**
 	 * Handles bean validation failures for request bodies.
@@ -41,6 +47,7 @@ public class GlobalExceptionHandler {
 			details.size(),
 			details
 		);
+		recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
 
 		return buildResponse(
 			HttpStatus.BAD_REQUEST,
@@ -64,6 +71,7 @@ public class GlobalExceptionHandler {
 			exception.getValue(),
 			exception.getRequiredType() != null ? exception.getRequiredType().getSimpleName() : "unknown"
 		);
+		recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
 		return buildResponse(HttpStatus.BAD_REQUEST, "Request parameter could not be parsed.", List.of(detail));
 	}
 
@@ -76,6 +84,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(InvalidRequestValueException.class)
 	public ResponseEntity<ApiErrorResponse> handleInvalidRequestValue(InvalidRequestValueException exception) {
 		LOGGER.warn("request_payload_value_rejected reason={}", exception.getMessage());
+		recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
 		return buildResponse(HttpStatus.BAD_REQUEST, "Request payload contains an unsupported value.", List.of(exception.getMessage()));
 	}
 
@@ -88,6 +97,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(FraudEvaluationNotFoundException.class)
 	public ResponseEntity<ApiErrorResponse> handleFraudEvaluationNotFound(FraudEvaluationNotFoundException exception) {
 		LOGGER.info("fraud_evaluation_not_found message={}", exception.getMessage());
+		recordErrorMetric(HttpStatus.NOT_FOUND, exception);
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
 	}
 
@@ -102,6 +112,7 @@ public class GlobalExceptionHandler {
 		RuleGovernanceMetadataNotFoundException exception
 	) {
 		LOGGER.info("rule_governance_metadata_not_found message={}", exception.getMessage());
+		recordErrorMetric(HttpStatus.NOT_FOUND, exception);
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
 	}
 
@@ -116,6 +127,7 @@ public class GlobalExceptionHandler {
 		RuleGovernanceRuleCodeNotFoundException exception
 	) {
 		LOGGER.info("rule_governance_rule_code_not_found message={}", exception.getMessage());
+		recordErrorMetric(HttpStatus.NOT_FOUND, exception);
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), List.of());
 	}
 
@@ -130,6 +142,7 @@ public class GlobalExceptionHandler {
 		InvalidRuleGovernanceStateException exception
 	) {
 		LOGGER.warn("rule_governance_state_rejected reason={}", exception.getMessage());
+		recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
 		return buildResponse(
 			HttpStatus.BAD_REQUEST,
 			"Rule governance state transition is invalid.",
@@ -146,6 +159,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception) {
 		LOGGER.error("request_processing_failed errorType={} message={}", exception.getClass().getSimpleName(), exception.getMessage(), exception);
+		recordErrorMetric(HttpStatus.INTERNAL_SERVER_ERROR, exception);
 		return buildResponse(
 			HttpStatus.INTERNAL_SERVER_ERROR,
 			"An unexpected error occurred while processing the request.",
@@ -167,5 +181,15 @@ public class GlobalExceptionHandler {
 
 	private String formatFieldError(FieldError fieldError) {
 		return fieldError.getField() + ": " + fieldError.getDefaultMessage();
+	}
+
+	private void recordErrorMetric(HttpStatus status, Exception exception) {
+		meterRegistry.counter(
+			"fraud.api.error.total",
+			"status",
+			Integer.toString(status.value()),
+			"exception",
+			exception.getClass().getSimpleName()
+		).increment();
 	}
 }

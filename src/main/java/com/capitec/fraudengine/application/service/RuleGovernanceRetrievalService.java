@@ -3,6 +3,7 @@ package com.capitec.fraudengine.application.service;
 import java.util.List;
 import java.util.Optional;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,15 +22,18 @@ public class RuleGovernanceRetrievalService {
 	private final RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository;
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
 	private final RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService;
+	private final MeterRegistry meterRegistry;
 
 	public RuleGovernanceRetrievalService(
 		RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository,
 		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper,
-		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService
+		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService,
+		MeterRegistry meterRegistry
 	) {
 		this.ruleGovernanceMetadataJpaRepository = ruleGovernanceMetadataJpaRepository;
 		this.ruleGovernanceMetadataPersistenceMapper = ruleGovernanceMetadataPersistenceMapper;
 		this.ruleGovernanceConfigurationReadModelService = ruleGovernanceConfigurationReadModelService;
+		this.meterRegistry = meterRegistry;
 	}
 
 	/**
@@ -50,6 +54,7 @@ public class RuleGovernanceRetrievalService {
 				.map(ruleGovernanceMetadataPersistenceMapper::toDomain)
 				.toList();
 
+		recordRetrievalMetric("find_rules", "success");
 		return metadata.stream().map(this::toResponse).toList();
 	}
 
@@ -62,9 +67,11 @@ public class RuleGovernanceRetrievalService {
 	 */
 	@Transactional(readOnly = true)
 	public Optional<RuleGovernanceMetadataResponseDto> findRule(String ruleCode, String version) {
-		return ruleGovernanceMetadataJpaRepository.findByRuleCodeAndRuleVersion(ruleCode, version)
+		Optional<RuleGovernanceMetadataResponseDto> response = ruleGovernanceMetadataJpaRepository.findByRuleCodeAndRuleVersion(ruleCode, version)
 			.map(ruleGovernanceMetadataPersistenceMapper::toDomain)
 			.map(this::toResponse);
+		recordRetrievalMetric("find_rule", response.isPresent() ? "found" : "not_found");
+		return response;
 	}
 
 	private RuleGovernanceMetadataResponseDto toResponse(RuleGovernanceMetadata metadata) {
@@ -77,5 +84,17 @@ public class RuleGovernanceRetrievalService {
 			metadata.executionSource(),
 			ruleGovernanceConfigurationReadModelService.describe(metadata.identity().ruleCode())
 		);
+	}
+
+	private void recordRetrievalMetric(String operation, String outcome) {
+		meterRegistry.counter(
+			"fraud.retrieval.request.total",
+			"resource",
+			"rule_governance",
+			"operation",
+			operation,
+			"outcome",
+			outcome
+		).increment();
 	}
 }

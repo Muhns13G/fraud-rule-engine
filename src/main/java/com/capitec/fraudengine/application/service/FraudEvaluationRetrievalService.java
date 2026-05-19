@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -36,15 +37,18 @@ public class FraudEvaluationRetrievalService {
 	private final FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper;
 	private final FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper;
 	private final FraudEvaluationJpaRepository fraudEvaluationJpaRepository;
+	private final MeterRegistry meterRegistry;
 
 	public FraudEvaluationRetrievalService(
 		FraudEvaluationApplicationMapper fraudEvaluationApplicationMapper,
 		FraudEvaluationPersistenceMapper fraudEvaluationPersistenceMapper,
-		FraudEvaluationJpaRepository fraudEvaluationJpaRepository
+		FraudEvaluationJpaRepository fraudEvaluationJpaRepository,
+		MeterRegistry meterRegistry
 	) {
 		this.fraudEvaluationApplicationMapper = fraudEvaluationApplicationMapper;
 		this.fraudEvaluationPersistenceMapper = fraudEvaluationPersistenceMapper;
 		this.fraudEvaluationJpaRepository = fraudEvaluationJpaRepository;
+		this.meterRegistry = meterRegistry;
 	}
 
 	/**
@@ -64,6 +68,7 @@ public class FraudEvaluationRetrievalService {
 			evaluationId,
 			response.isPresent()
 		);
+		recordRetrievalMetric("find_by_id", response.isPresent() ? "found" : "not_found");
 
 		return response;
 	}
@@ -124,6 +129,7 @@ public class FraudEvaluationRetrievalService {
 			responses.getTotalElements(),
 			responses.getTotalPages()
 		);
+		recordRetrievalMetric("find_summaries", "success");
 
 		return new FraudEvaluationSummaryPageResponseDto(
 			responses.getContent(),
@@ -175,5 +181,17 @@ public class FraudEvaluationRetrievalService {
 			Sort.Order.desc("decisionScore"),
 			Sort.Order.desc("evaluationId")
 		);
+	}
+
+	private void recordRetrievalMetric(String operation, String outcome) {
+		meterRegistry.counter(
+			"fraud.retrieval.request.total",
+			"resource",
+			"fraud_evaluation",
+			"operation",
+			operation,
+			"outcome",
+			outcome
+		).increment();
 	}
 }
