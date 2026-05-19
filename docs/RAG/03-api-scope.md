@@ -86,3 +86,9 @@ Supported sort values:
 - `default` profile keeps API, Swagger/OpenAPI, and configured actuator endpoints open for local review workflows.
 - `secure` profile requires authentication for API and actuator routes, and requires admin role for governance mutation endpoints.
 - Swagger/OpenAPI and actuator exposure are now explicitly profile-driven through configuration.
+
+## Governance Regression Notes (Sprint 3.4)
+- Governance mutation and retrieval behavior is now regression-tested as a closure gate.
+- Secure-profile authorization boundaries are explicitly asserted for:
+  - admin user access to governance mutation routes
+  - non-admin user rejection for governance mutation routes

@@ -33,12 +33,17 @@
   - `secure` enforces HTTP Basic
   - secure identity source is configurable (`IN_MEMORY` or `JDBC`)
   - Swagger/OpenAPI and actuator exposure are profile-driven
+- Delivery and regression posture is now Phase 3 close-out ready:
+  - baseline CI workflow exists for compile/test/package
+  - governance regression suite now verifies mutation, authorization, and retrieval consistency
+  - Mockito/JDK 25 dynamic-agent warning path is addressed through explicit Surefire agent configuration
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
   - admin rule-governance read visibility endpoints are now implemented
   - admin governance mutation endpoints now support lifecycle/activation transitions and controlled version registration
   - retrieval now supports paged responses, one-sided time filtering, review-oriented filters, and explicit summary sorting
   - location anomaly rule is now implemented with deterministic explainability
+  - secure-profile governance mutation endpoints now have explicit admin/non-admin authorization regression coverage
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`

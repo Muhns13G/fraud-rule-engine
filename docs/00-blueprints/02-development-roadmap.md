@@ -26,6 +26,9 @@ Move from a working take-home vertical slice to a configurable rules platform. D
 - Add admin-facing endpoints for listing and activating rule versions.
 - Decide whether rule logic remains code-backed or becomes data-driven with a constrained expression model.
 - Add validation to prevent invalid or ambiguous rule configurations.
+- Status update:
+  - Phase 3 is completed through Sprint `3.4`.
+  - Current scope now includes governed rule mutation (state transition + version registration), profile-aware authorization boundaries, observability contracts, and close-out regression/CI gates.
 
 ## Phase 4: Security And Operations
 - Replace generated-password defaults with explicit authentication and authorization strategy suitable for a banking-flavored API.
@@ -42,6 +45,9 @@ Move from a working take-home vertical slice to a configurable rules platform. D
   - API tests for request/response behavior
 - Keep infrastructure image versions explicitly pinned and reviewer-reproducible.
 - Revisit performance characteristics for high-throughput decision evaluation.
+- Status update:
+  - The baseline CI gate for compile/test/package was delivered in Sprint `3.4.1`.
+  - Remaining Phase 5 hardening still includes broader pipeline maturity and performance-focused quality gates.
 
 ## First Concrete Deliverables
 - `POST /api/fraud-evaluations` endpoint

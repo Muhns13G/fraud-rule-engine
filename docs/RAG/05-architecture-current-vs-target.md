@@ -19,6 +19,10 @@
   - governance mutation endpoints require admin role in `secure` profile
   - Swagger/OpenAPI and actuator exposure are explicitly profile-driven
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
+- Delivery and verification architecture now includes:
+  - GitHub Actions CI baseline for compile, test, and package gates
+  - governance regression tests that assert end-to-end state mutation, role-aware authorization behavior, and post-mutation retrieval consistency
+  - explicit test-runtime alignment for Mockito on JDK 25 via Surefire Java agent configuration
 - Rule governance groundwork now exists:
   - persisted metadata identity (`ruleCode + version`)
   - admin read and constrained mutation endpoints for governed rule metadata

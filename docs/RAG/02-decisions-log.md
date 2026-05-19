@@ -78,6 +78,10 @@
   - compare current location to the most recent comparable prior transaction
   - trigger review on country change, and optionally city change within same country
   - externalize location-anomaly behavior through validated rule properties
+- Sprint 3.4 reliability and close-out decisions:
+  - add a baseline GitHub Actions CI gate for compile, test, and package checks
+  - resolve Mockito/JDK 25 dynamic-agent warning path via explicit Surefire Java agent configuration
+  - treat governance regression as a first-class closure gate: mutation flows + secure-profile authorization + retrieval consistency after mutation
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

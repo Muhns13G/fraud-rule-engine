@@ -17,7 +17,7 @@ This project was built as a Capitec take-home submission. The goal of the curren
 - Testcontainers
 - Maven Wrapper
 
-## Phase 1 Scope
+## Current Implemented Scope
 
 Implemented API surface:
 
@@ -26,6 +26,8 @@ Implemented API surface:
 - `GET /api/fraud-evaluations`
 - `GET /api/admin/rules`
 - `GET /api/admin/rules/{ruleCode}/versions/{version}`
+- `PATCH /api/admin/rules/{ruleCode}/versions/{version}/state`
+- `POST /api/admin/rules/{ruleCode}/versions`
 
 Implemented fraud rules:
 
@@ -55,6 +57,8 @@ Rule governance visibility:
 - metadata is persisted per `ruleCode + version`
 - active-rule list defaults to `GET /api/admin/rules`
 - identity-level inspection is available at `GET /api/admin/rules/{ruleCode}/versions/{version}`
+- constrained state mutation is available via `PATCH /api/admin/rules/{ruleCode}/versions/{version}/state`
+- controlled version registration is available via `POST /api/admin/rules/{ruleCode}/versions`
 
 ## Architecture Summary
 
@@ -190,6 +194,11 @@ Current automated coverage includes:
 - integration tests for the repository layer
 - integration tests for the API layer
 - application context startup test
+- secure-profile and default-profile security behavior matrix tests
+- governance mutation/retrieval regression coverage
+
+CI baseline:
+- GitHub Actions workflow at `.github/workflows/ci.yml` runs compile, test, and package checks.
 
 ## Docker
 

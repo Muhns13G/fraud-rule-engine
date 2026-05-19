@@ -1,4 +1,4 @@
-# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.3)
+# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.4)
 
 ## Baseline and Scope
 This registry is the canonical debt register at Phase 2 close-out. It is built from:
@@ -33,14 +33,14 @@ Audit mode:
 | TD-006 | Default-profile openness behavior is not explicitly tested | Recorded | 2.4 | Closed | Low | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/DefaultProfileSecurityIntegrationTest.java` |
 | TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
 | TD-008 | SpringDoc production-exposure warning remains unresolved | Recorded+Observed | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
-| TD-009 | Mockito Java 25 dynamic-agent warning remains unresolved | Recorded | 1.5 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
+| TD-009 | Mockito Java 25 dynamic-agent warning remains unresolved | Recorded | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `pom.xml` |
 | TD-010 | Observability tests are incomplete (metrics/correlation/actuator contract) | Recorded+Observed | 2.3 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/ObservabilityContractIntegrationTest.java` |
 | TD-011 | Metrics coverage is evaluation-focused; retrieval/error metrics remain limited | Recorded+Observed | 2.3 | Closed | Low | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationRetrievalService.java`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMutationService.java`, `src/main/java/com/capitec/fraudengine/api/error/GlobalExceptionHandler.java` |
 | TD-012 | Rule governance is read-only; mutation endpoints/workflows are deferred | Recorded+Observed | 2.5 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java` |
 | TD-013 | Governance metadata versioning is bootstrap-fixed at `1.0.0` | Recorded+Observed | 2.5 | Closed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMetadataBootstrapService.java` |
 | TD-014 | No controlled governance promotion/deprecation workflow yet | Recorded | 2.5 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md` |
 | TD-015 | Thresholds/window constants still code-level, not centrally configurable | Recorded+Observed | 1.4 | Closed | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/domain/rule/impl/HighAmountFraudRule.java`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
-| TD-016 | CI pipeline for compile/test/package is still missing | Recorded | 1.5 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
+| TD-016 | CI pipeline for compile/test/package is still missing | Recorded | 1.5 | Closed | Medium | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `.github/workflows/ci.yml` |
 | TD-017 | Deferred `location anomaly` heuristic remains out of scope | Recorded | 1.1 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `src/main/java/com/capitec/fraudengine/domain/rule/impl/LocationAnomalyFraudRule.java` |
 | TD-018 | Broader retrieval filters (`merchantCategory`, `channel`, rule-hit lookup) remain deferred | Recorded | 1.1 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md` |
 | TD-019 | Phase 1 planning debt (DTO/threshold/score/Flyway timing) | Recorded | 1.1 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md`, `docs/01-completion-reports/phase-01/sprint-1.2-completion-report.md` |
@@ -163,12 +163,14 @@ Audit mode:
 ### TD-009
 - Debt ID: `TD-009`
 - Title: Mockito Java 25 dynamic-agent warning remains unresolved
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Low`
 - Source: `Recorded`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`
+  - `pom.xml`
 - Why it matters: Not functionally blocking, but creates repetitive test-log noise.
+- Resolution note: Closed in Sprint `3.4.2` by adding the Mockito Java agent configuration to the Maven Surefire test runtime.
 - Suggested resolution direction: Align test JVM/Mockito agent strategy with JDK 25 guidance.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.4`
 
@@ -259,12 +261,14 @@ Audit mode:
 ### TD-016
 - Debt ID: `TD-016`
 - Title: CI pipeline for compile/test/package is still missing
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Medium`
 - Source: `Recorded`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`
+  - `.github/workflows/ci.yml`
 - Why it matters: No automated gate to protect quality and reproducibility across branches.
+- Resolution note: Closed in Sprint `3.4.1` by introducing a baseline GitHub Actions workflow for compile, test, and package checks.
 - Suggested resolution direction: Add minimal CI for build, tests, and packaging checks.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.4`
 
