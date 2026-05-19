@@ -57,6 +57,9 @@ app:
       password-encoded: ${FRAUD_ENGINE_SECURE_PASSWORD_ENCODED:}
       # Optional external secret reference for EXTERNAL_MANAGER strategy.
       external-secret-ref: ${FRAUD_ENGINE_SECURE_EXTERNAL_SECRET_REF:}
+      # Optional concrete external-manager adapter selection.
+      # - ENV: resolve external-secret-ref env:VAR / env://VAR payload through EnvExternalManagerSecretSupplier
+      external-manager-adapter: ${FRAUD_ENGINE_SECURE_EXTERNAL_MANAGER_ADAPTER:}
       # Rotation readiness hook (IN_MEMORY mode):
       # enable an overlap window with a secondary credential identity so callers can migrate safely.
       rotation-enabled: ${FRAUD_ENGINE_SECURE_ROTATION_ENABLED:false}

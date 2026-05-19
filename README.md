@@ -571,6 +571,12 @@ Security is now profile-aware:
     - `ENV`
     - `PRE_ENCODED`
     - `EXTERNAL_MANAGER` (via `SecureProfileSecretSupplier` seam)
+  - concrete external-manager adapter is now available:
+    - set `FRAUD_ENGINE_SECURE_EXTERNAL_MANAGER_ADAPTER=ENV`
+    - set `FRAUD_ENGINE_SECURE_EXTERNAL_SECRET_REF=env:YOUR_SECRET_ENV_VAR`
+    - provide secret payload in the referenced env var as JSON or key/value entries containing:
+      - `username`
+      - exactly one of `password` or `passwordEncoded`
   - credential rotation readiness hook (IN_MEMORY mode):
     - optional overlap window via `rotation-enabled=true`
     - secondary credential fields:
