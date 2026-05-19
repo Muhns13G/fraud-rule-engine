@@ -17,7 +17,9 @@ public class SecureProfileSecurityProperties {
 	private String password;
 	private String passwordEncoded;
 	private String role;
+	private String opsReaderRole;
 	private String adminRole;
+	private String platformAdminRole;
 	private IdentityProvider identityProvider = IdentityProvider.IN_MEMORY;
 	private String usersByUsernameQuery;
 	private String authoritiesByUsernameQuery;
@@ -60,6 +62,22 @@ public class SecureProfileSecurityProperties {
 
 	public void setAdminRole(String adminRole) {
 		this.adminRole = adminRole;
+	}
+
+	public String getOpsReaderRole() {
+		return opsReaderRole;
+	}
+
+	public void setOpsReaderRole(String opsReaderRole) {
+		this.opsReaderRole = opsReaderRole;
+	}
+
+	public String getPlatformAdminRole() {
+		return platformAdminRole;
+	}
+
+	public void setPlatformAdminRole(String platformAdminRole) {
+		this.platformAdminRole = platformAdminRole;
 	}
 
 	public IdentityProvider getIdentityProvider() {

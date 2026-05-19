@@ -34,8 +34,14 @@ app:
       # Optional pre-encoded (for example BCrypt) password for non-local secret sources.
       # When provided, this takes precedence over raw password.
       password-encoded: ${FRAUD_ENGINE_SECURE_PASSWORD_ENCODED:}
+      # Baseline authenticated API role.
       role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
-      admin-role: ${FRAUD_ENGINE_SECURE_ADMIN_ROLE:API_CLIENT}
+      # Read-only operations role (governance reads + actuator surface).
+      ops-reader-role: ${FRAUD_ENGINE_SECURE_OPS_READER_ROLE:OPS_READER}
+      # Governance mutation role.
+      admin-role: ${FRAUD_ENGINE_SECURE_ADMIN_ROLE:GOVERNANCE_ADMIN}
+      # Optional future super-role for platform-level operations.
+      platform-admin-role: ${FRAUD_ENGINE_SECURE_PLATFORM_ADMIN_ROLE:PLATFORM_ADMIN}
       # Optional custom JDBC queries when identity-provider=JDBC.
       users-by-username-query: ${FRAUD_ENGINE_SECURE_USERS_BY_USERNAME_QUERY:}
       authorities-by-username-query: ${FRAUD_ENGINE_SECURE_AUTHORITIES_BY_USERNAME_QUERY:}

@@ -82,6 +82,10 @@
   - add a baseline GitHub Actions CI gate for compile, test, and package checks
   - resolve Mockito/JDK 25 dynamic-agent warning path via explicit Surefire Java agent configuration
   - treat governance regression as a first-class closure gate: mutation flows + secure-profile authorization + retrieval consistency after mutation
+- Sprint 4.1.1 access-policy contract decisions:
+  - lock role model to `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, optional `PLATFORM_ADMIN`
+  - lock secure-profile access matrix by surface (evaluation API, governance read/mutation, actuator, Swagger/OpenAPI)
+  - encode role contract via secure-profile properties without changing active authorization matchers yet
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category
