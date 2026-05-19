@@ -41,13 +41,18 @@ public class SecureProfileSecurityConfiguration {
 	@Bean
 	public SecurityFilterChain secureSecurityFilterChain(
 		HttpSecurity http,
-		SecureProfileSecurityProperties properties
+		SecureProfileSecurityProperties properties,
+		SecurityDiagnosticsHandlers securityDiagnosticsHandlers
 	) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.formLogin(AbstractHttpConfigurer::disable)
 			.httpBasic(Customizer.withDefaults())
 			.logout(AbstractHttpConfigurer::disable)
+			.exceptionHandling(exceptionHandling -> exceptionHandling
+				.authenticationEntryPoint(securityDiagnosticsHandlers.authenticationEntryPoint())
+				.accessDeniedHandler(securityDiagnosticsHandlers.accessDeniedHandler())
+			)
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers(HttpMethod.PATCH, "/api/admin/rules/**")
 				.hasAnyRole(uniqueRoles(properties.getAdminRole(), properties.getPlatformAdminRole()))
