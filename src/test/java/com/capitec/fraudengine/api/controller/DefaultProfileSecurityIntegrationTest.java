@@ -29,6 +29,18 @@ class DefaultProfileSecurityIntegrationTest {
 	}
 
 	@Test
+	void shouldAllowSwaggerUiWithoutAuthenticationInDefaultProfile() throws Exception {
+		mockMvc.perform(get("/swagger-ui.html"))
+			.andExpect(status().is3xxRedirection());
+	}
+
+	@Test
+	void shouldAllowActuatorMetricsWithoutAuthenticationInDefaultProfile() throws Exception {
+		mockMvc.perform(get("/actuator/metrics"))
+			.andExpect(status().isOk());
+	}
+
+	@Test
 	void shouldAllowGovernanceMutationPathWithoutAuthenticationInDefaultProfile() throws Exception {
 		mockMvc.perform(patch("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/state")
 				.contentType(MediaType.APPLICATION_JSON)

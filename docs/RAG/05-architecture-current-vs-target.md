@@ -13,7 +13,10 @@
   - limited actuator exposure for local inspection
 - Security is now profile-aware:
   - `default` profile remains permissive for reviewer usability
-  - `secure` profile enforces HTTP Basic with env-backed in-memory credentials
+  - `secure` profile enforces HTTP Basic with env-backed credentials
+  - secure identity provider is configurable (`IN_MEMORY` or `JDBC`)
+  - governance mutation endpoints require admin role in `secure` profile
+  - Swagger/OpenAPI and actuator exposure are explicitly profile-driven
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 - Rule governance groundwork now exists:
   - persisted metadata identity (`ruleCode + version`)

@@ -63,6 +63,12 @@
 - Sprint 3.1 keeps retrieval sorting explicit with:
   - `NEWEST_FIRST`
   - `OLDEST_FIRST`
+- Sprint 3.2 hardens profile-based security by:
+  - requiring admin role for governance mutation endpoints in `secure` profile
+  - keeping `default` profile intentionally open and now explicitly test-verified
+  - introducing configurable secure identity-provider strategy (`IN_MEMORY` default, optional `JDBC`)
+  - supporting pre-encoded secure credentials for non-local secret workflows
+  - making Swagger/OpenAPI and actuator exposure explicitly profile-driven
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

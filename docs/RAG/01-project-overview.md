@@ -24,7 +24,11 @@
 - Runtime persistence: Flyway-managed PostgreSQL schema with fraud evaluation and rule-result tables
 - Persistence posture: evaluation rows retain business completion time plus row-level audit timestamps
 - Operational posture: request correlation, focused evaluation metrics, and limited actuator exposure now exist for local inspection
-- Security posture: profile-aware baseline now exists (`default` open, `secure` HTTP Basic with env-backed credentials)
+- Security posture is now profile-aware and policy-explicit:
+  - `default` remains open for reviewer usability
+  - `secure` enforces HTTP Basic
+  - secure identity source is configurable (`IN_MEMORY` or `JDBC`)
+  - Swagger/OpenAPI and actuator exposure are profile-driven
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
   - admin rule-governance read visibility endpoints are now implemented

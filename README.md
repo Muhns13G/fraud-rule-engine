@@ -366,6 +366,8 @@ Security is now profile-aware:
 - `default` profile:
   - intentionally open for local/reviewer usability
   - `/api/**`, Swagger/OpenAPI, and exposed actuator endpoints are reachable without auth
+  - Swagger/OpenAPI exposure defaults to enabled
+  - actuator exposure defaults to `health,info,metrics`
 - `secure` profile:
   - HTTP Basic authentication enabled
   - protected surface:
@@ -374,6 +376,8 @@ Security is now profile-aware:
     - `/swagger-ui/**`
     - `/v3/api-docs/**`
     - `/actuator/**`
+  - Swagger/OpenAPI exposure defaults to disabled (can be re-enabled by secure-profile env overrides)
+  - actuator exposure defaults to `health,info` (can be widened by secure-profile env overrides)
   - credentials come from env-backed `app.security.secure-profile.*` properties
   - identity provider is configurable:
     - `IN_MEMORY` (default) for local/reviewer secure mode
@@ -393,7 +397,7 @@ This remains a pragmatic take-home baseline, not full enterprise identity integr
 - retrieval remains intentionally bounded and is not intended to become a generic reporting surface
 - no CI pipeline exists yet
 - security is profile-aware with configurable identity provider, but enterprise IAM integration is still out of scope
-- SpringDoc remains enabled by default for the current slice
+- SpringDoc and actuator exposure are now explicitly profile-driven
 
 ## Future Improvements
 

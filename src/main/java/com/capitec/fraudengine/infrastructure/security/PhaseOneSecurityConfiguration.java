@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -36,12 +38,18 @@ public class PhaseOneSecurityConfiguration {
 					"/swagger-ui.html",
 					"/swagger-ui/**",
 					"/v3/api-docs/**",
-					"/actuator/health"
+					"/actuator/**"
 				).permitAll()
 				.anyRequest().permitAll()
 			)
 			.headers(Customizer.withDefaults());
 
 		return http.build();
+	}
+
+	@Bean
+	public UserDetailsService phaseOneUserDetailsService() {
+		// Explicit empty user store prevents Spring Security from creating a generated default user.
+		return new InMemoryUserDetailsManager();
 	}
 }

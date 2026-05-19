@@ -73,3 +73,8 @@ Supported sort values:
 - rule activation or mutation endpoints (read visibility only currently)
 - customer-facing APIs
 - broader search filters such as rule-hit lookup
+
+## Security Exposure Notes (Sprint 3.2)
+- `default` profile keeps API, Swagger/OpenAPI, and configured actuator endpoints open for local review workflows.
+- `secure` profile requires authentication for API and actuator routes, and requires admin role for governance mutation endpoints.
+- Swagger/OpenAPI and actuator exposure are now explicitly profile-driven through configuration.

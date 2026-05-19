@@ -1,4 +1,4 @@
-# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.1)
+# Technical Debt Registry (Phase 2 Close-Out, Updated Through Sprint 3.2)
 
 ## Baseline and Scope
 This registry is the canonical debt register at Phase 2 close-out. It is built from:
@@ -28,11 +28,11 @@ Audit mode:
 | TD-001 | Retrieval endpoint has no pagination | Recorded+Observed | 2.2 | Closed | High | `docs/01-completion-reports/phase-02/sprint-2.2-completion-report.md`, `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java` |
 | TD-002 | Single-bound time filtering (`from` only / `to` only) is not applied | Observed | N/A | Closed | Medium | `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java` |
 | TD-003 | Default profile remains intentionally open for API surface | Recorded+Observed | 1.4 | Open | Medium | `docs/01-completion-reports/phase-01/sprint-1.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
-| TD-004 | Secure profile uses in-memory user store only | Recorded+Observed | 2.4 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java` |
-| TD-005 | No enterprise secret management/rotation for secure credentials | Recorded+Observed | 2.4 | Open | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/resources/application.yaml` |
-| TD-006 | Default-profile openness behavior is not explicitly tested | Recorded | 2.4 | Open | Low | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md` |
-| TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/resources/application.yaml` |
-| TD-008 | SpringDoc production-exposure warning remains unresolved | Recorded+Observed | 1.5 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `README.md` |
+| TD-004 | Secure profile uses in-memory user store only | Recorded+Observed | 2.4 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java` |
+| TD-005 | No enterprise secret management/rotation for secure credentials | Recorded+Observed | 2.4 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/main/resources/application.yaml` |
+| TD-006 | Default-profile openness behavior is not explicitly tested | Recorded | 2.4 | Closed | Low | `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/DefaultProfileSecurityIntegrationTest.java` |
+| TD-007 | Generated Spring Security password warning still appears in logs | Recorded+Observed | 1.5 | Partially addressed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java` |
+| TD-008 | SpringDoc production-exposure warning remains unresolved | Recorded+Observed | 1.5 | Closed | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`, `src/main/resources/application.yaml`, `README.md` |
 | TD-009 | Mockito Java 25 dynamic-agent warning remains unresolved | Recorded | 1.5 | Open | Low | `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md` |
 | TD-010 | Observability tests are incomplete (metrics/correlation/actuator contract) | Recorded+Observed | 2.3 | Partially addressed | Medium | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java` |
 | TD-011 | Metrics coverage is evaluation-focused; retrieval/error metrics remain limited | Recorded+Observed | 2.3 | Open | Low | `docs/01-completion-reports/phase-02/sprint-2.3-completion-report.md`, `src/main/java/com/capitec/fraudengine/application/service/FraudEvaluationService.java` |
@@ -93,64 +93,70 @@ Audit mode:
 ### TD-004
 - Debt ID: `TD-004`
 - Title: Secure profile uses in-memory user store only
-- Status: `Open`
+- Status: `Partially addressed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`
   - `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecurityConfiguration.java`
 - Why it matters: No persistent identity source, no user lifecycle, and limited operational realism.
+- Resolution note: Sprint `3.2.2` introduced configurable secure identity provider (`IN_MEMORY` or `JDBC`), but enterprise-grade identity integration is still deferred.
 - Suggested resolution direction: Move secure profile identity source to externalized/persistent backing.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
 ### TD-005
 - Debt ID: `TD-005`
 - Title: No enterprise secret management/rotation for secure credentials
-- Status: `Open`
+- Status: `Partially addressed`
 - Severity: `Medium`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`
   - `src/main/resources/application.yaml`
 - Why it matters: Environment variables are practical locally but incomplete for stronger operational controls.
+- Resolution note: Sprint `3.2.2` added pre-encoded credential support and clearer secret-source configuration paths, but centralized secret-rotation workflows remain unresolved.
 - Suggested resolution direction: Introduce profile-based secret provider integration for non-local environments.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
 ### TD-006
 - Debt ID: `TD-006`
 - Title: Default-profile openness behavior is not explicitly tested
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Low`
 - Source: `Recorded`
 - Evidence:
   - `docs/01-completion-reports/phase-02/sprint-2.4-completion-report.md`
 - Why it matters: Important security-behavior contract is implicit rather than asserted by dedicated tests.
+- Resolution note: Closed in Sprint `3.2.3` with explicit default-profile integration coverage.
 - Suggested resolution direction: Add profile-targeted integration tests for default-open matrix.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
 ### TD-007
 - Debt ID: `TD-007`
 - Title: Generated Spring Security password warning still appears in logs
-- Status: `Open`
+- Status: `Partially addressed`
 - Severity: `Low`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`
-  - `src/main/resources/application.yaml`
+  - `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java`
 - Why it matters: Noise in verification output and reviewer confusion around active security posture.
+- Resolution note: Sprint `3.2.4` replaced exclusion-based handling with explicit profile beans to remove generated-user confusion paths; retain as partial until all startup contexts are consistently warning-free.
 - Suggested resolution direction: Revisit auto-configuration exclusions and profile-specific security defaults.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
 ### TD-008
 - Debt ID: `TD-008`
 - Title: SpringDoc production-exposure warning remains unresolved
-- Status: `Open`
+- Status: `Closed`
 - Severity: `Low`
 - Source: `Recorded+Observed`
 - Evidence:
   - `docs/01-completion-reports/phase-01/sprint-1.5-completion-report.md`
+  - `src/main/resources/application.yaml`
   - `README.md`
 - Why it matters: Acceptable for review mode but unresolved for tighter non-local defaults.
+- Resolution note: Closed in Sprint `3.2.4` with explicit profile-driven Swagger/OpenAPI exposure defaults and documented override strategy.
 - Suggested resolution direction: Add profile-specific docs endpoint exposure policy.
 - Target phase/sprint candidate: `Phase 3 / Sprint 3.2`
 
