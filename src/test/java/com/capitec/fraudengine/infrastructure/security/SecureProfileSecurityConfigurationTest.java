@@ -97,6 +97,52 @@ class SecureProfileSecurityConfigurationTest {
 	}
 
 	@Test
+	void shouldAllowRotationCandidateWhenConfiguredWithDistinctUsername() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationEnabled(true);
+		properties.setRotationUsername("secure-user-rotating");
+		properties.setRotationPassword("change-me-rotating");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertDoesNotThrow(() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder));
+	}
+
+	@Test
+	void shouldRejectRotationCandidateWhenUsernameMatchesPrimaryUsername() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationEnabled(true);
+		properties.setRotationUsername("secure-user");
+		properties.setRotationPassword("change-me-rotating");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+	}
+
+	@Test
+	void shouldRejectRotationCandidateWhenBothRawAndEncodedPasswordsAreConfigured() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationEnabled(true);
+		properties.setRotationUsername("secure-user-rotating");
+		properties.setRotationPassword("change-me-rotating");
+		properties.setRotationPasswordEncoded("$2a$10$abcdefghijklmnopqrstuv");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+	}
+
+	@Test
 	void shouldUseDefaultJdbcQueriesWhenNoneAreConfigured() {
 		SecureProfileSecurityProperties properties = new SecureProfileSecurityProperties();
 		properties.setIdentityProvider(SecureProfileSecurityProperties.IdentityProvider.JDBC);

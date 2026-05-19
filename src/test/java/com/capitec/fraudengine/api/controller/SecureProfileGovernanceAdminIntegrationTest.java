@@ -23,6 +23,8 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
+	"app.security.secure-profile.username=secure-user",
+	"app.security.secure-profile.password=change-me-secure",
 	"app.security.secure-profile.role=GOVERNANCE_ADMIN",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })

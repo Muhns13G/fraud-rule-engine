@@ -2,6 +2,8 @@ package com.capitec.fraudengine.infrastructure.security;
 
 import javax.sql.DataSource;
 import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -101,7 +103,7 @@ public class SecureProfileSecurityConfiguration {
 	) {
 		ResolvedInMemorySecrets resolvedSecrets = resolveInMemorySecrets(properties, secretSupplierProvider);
 
-		UserDetails secureUser = User.withUsername(resolvedSecrets.username())
+		UserDetails primaryUser = User.withUsername(resolvedSecrets.username())
 			.password(resolveStoredPassword(
 				resolvedSecrets.password(),
 				resolvedSecrets.passwordEncoded(),
@@ -110,7 +112,23 @@ public class SecureProfileSecurityConfiguration {
 			.roles(properties.getRole())
 			.build();
 
-		return new InMemoryUserDetailsManager(secureUser);
+		List<UserDetails> secureUsers = new ArrayList<>();
+		secureUsers.add(primaryUser);
+
+		RotationCandidateSecrets rotationCandidate = resolveRotationCandidate(properties, resolvedSecrets.username());
+		if (rotationCandidate != null) {
+			UserDetails rotationUser = User.withUsername(rotationCandidate.username())
+				.password(resolveStoredPassword(
+					rotationCandidate.password(),
+					rotationCandidate.passwordEncoded(),
+					passwordEncoder
+				))
+				.roles(properties.getRole())
+				.build();
+			secureUsers.add(rotationUser);
+		}
+
+		return new InMemoryUserDetailsManager(secureUsers);
 	}
 
 	@Bean
@@ -333,7 +351,48 @@ public class SecureProfileSecurityConfiguration {
 		return new ResolvedInMemorySecrets(username, rawPassword, encodedPassword);
 	}
 
+	private static RotationCandidateSecrets resolveRotationCandidate(
+		SecureProfileSecurityProperties properties,
+		String primaryUsername
+	) {
+		if (!properties.isRotationEnabled()) {
+			return null;
+		}
+
+		String rotationUsername = normalize(properties.getRotationUsername());
+		String rotationPassword = normalize(properties.getRotationPassword());
+		String rotationPasswordEncoded = normalize(properties.getRotationPasswordEncoded());
+
+		if (rotationUsername == null) {
+			throw new IllegalStateException(
+				"Secure profile rotation requires rotation-username when rotation-enabled=true."
+			);
+		}
+
+		if (rotationUsername.equals(primaryUsername)) {
+			throw new IllegalStateException(
+				"Secure profile rotation-username must differ from the primary username."
+			);
+		}
+
+		if ((rotationPassword == null && rotationPasswordEncoded == null)
+			|| (rotationPassword != null && rotationPasswordEncoded != null)) {
+			throw new IllegalStateException(
+				"Secure profile rotation credentials must provide exactly one of rotation-password or rotation-password-encoded."
+			);
+		}
+
+		return new RotationCandidateSecrets(rotationUsername, rotationPassword, rotationPasswordEncoded);
+	}
+
 	private record ResolvedInMemorySecrets(
+		String username,
+		String password,
+		String passwordEncoded
+	) {
+	}
+
+	private record RotationCandidateSecrets(
 		String username,
 		String password,
 		String passwordEncoded

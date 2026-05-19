@@ -29,6 +29,10 @@ public class SecureProfileSecurityProperties {
 	private IdentityProvider identityProvider = IdentityProvider.IN_MEMORY;
 	private SecretSource secretSource = SecretSource.ENV;
 	private String externalSecretRef;
+	private boolean rotationEnabled;
+	private String rotationUsername;
+	private String rotationPassword;
+	private String rotationPasswordEncoded;
 	private String usersByUsernameQuery;
 	private String authoritiesByUsernameQuery;
 
@@ -110,6 +114,38 @@ public class SecureProfileSecurityProperties {
 
 	public void setExternalSecretRef(String externalSecretRef) {
 		this.externalSecretRef = externalSecretRef;
+	}
+
+	public boolean isRotationEnabled() {
+		return rotationEnabled;
+	}
+
+	public void setRotationEnabled(boolean rotationEnabled) {
+		this.rotationEnabled = rotationEnabled;
+	}
+
+	public String getRotationUsername() {
+		return rotationUsername;
+	}
+
+	public void setRotationUsername(String rotationUsername) {
+		this.rotationUsername = rotationUsername;
+	}
+
+	public String getRotationPassword() {
+		return rotationPassword;
+	}
+
+	public void setRotationPassword(String rotationPassword) {
+		this.rotationPassword = rotationPassword;
+	}
+
+	public String getRotationPasswordEncoded() {
+		return rotationPasswordEncoded;
+	}
+
+	public void setRotationPasswordEncoded(String rotationPasswordEncoded) {
+		this.rotationPasswordEncoded = rotationPasswordEncoded;
 	}
 
 	public String getUsersByUsernameQuery() {

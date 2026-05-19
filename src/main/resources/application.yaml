@@ -43,6 +43,12 @@ app:
       password-encoded: ${FRAUD_ENGINE_SECURE_PASSWORD_ENCODED:}
       # Optional external secret reference for EXTERNAL_MANAGER strategy.
       external-secret-ref: ${FRAUD_ENGINE_SECURE_EXTERNAL_SECRET_REF:}
+      # Rotation readiness hook (IN_MEMORY mode):
+      # enable an overlap window with a secondary credential identity so callers can migrate safely.
+      rotation-enabled: ${FRAUD_ENGINE_SECURE_ROTATION_ENABLED:false}
+      rotation-username: ${FRAUD_ENGINE_SECURE_ROTATION_USER:}
+      rotation-password: ${FRAUD_ENGINE_SECURE_ROTATION_PASSWORD:}
+      rotation-password-encoded: ${FRAUD_ENGINE_SECURE_ROTATION_PASSWORD_ENCODED:}
       # Baseline authenticated API role.
       role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
       # Read-only operations role (governance reads + actuator surface).
