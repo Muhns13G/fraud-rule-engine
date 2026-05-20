@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpMethod;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,6 +35,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableConfigurationProperties(SecureProfileSecurityProperties.class)
 public class SecureProfileSecurityConfiguration {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SecureProfileSecurityConfiguration.class);
 	private static final String DEFAULT_USERS_BY_USERNAME_QUERY =
 		"select username, password, enabled from users where username = ?";
 	private static final String DEFAULT_AUTHORITIES_BY_USERNAME_QUERY =
@@ -389,17 +392,32 @@ public class SecureProfileSecurityConfiguration {
 		SecureProfileSecurityProperties properties,
 		String primaryUsername
 	) {
-		if (!properties.isRotationEnabled()) {
+		SecureProfileSecurityProperties.RotationPhase rotationPhase = resolveRotationPhase(properties);
+		if (rotationPhase == null) {
 			return null;
 		}
 
 		String rotationUsername = normalize(properties.getRotationUsername());
 		String rotationPassword = normalize(properties.getRotationPassword());
 		String rotationPasswordEncoded = normalize(properties.getRotationPasswordEncoded());
+		boolean hasRotationUsername = rotationUsername != null;
+		boolean hasRotationPassword = rotationPassword != null;
+		boolean hasRotationPasswordEncoded = rotationPasswordEncoded != null;
+
+		if (rotationPhase == SecureProfileSecurityProperties.RotationPhase.PREPARE
+			|| rotationPhase == SecureProfileSecurityProperties.RotationPhase.RETIRE) {
+			if (hasRotationUsername || hasRotationPassword || hasRotationPasswordEncoded) {
+				throw new IllegalStateException(
+					"Secure profile rotation phase " + rotationPhase
+						+ " does not allow rotation credential fields."
+				);
+			}
+			return null;
+		}
 
 		if (rotationUsername == null) {
 			throw new IllegalStateException(
-				"Secure profile rotation requires rotation-username when rotation-enabled=true."
+				"Secure profile rotation phase " + rotationPhase + " requires rotation-username."
 			);
 		}
 
@@ -412,11 +430,30 @@ public class SecureProfileSecurityConfiguration {
 		if ((rotationPassword == null && rotationPasswordEncoded == null)
 			|| (rotationPassword != null && rotationPasswordEncoded != null)) {
 			throw new IllegalStateException(
-				"Secure profile rotation credentials must provide exactly one of rotation-password or rotation-password-encoded."
+				"Secure profile rotation phase " + rotationPhase
+					+ " must provide exactly one of rotation-password or rotation-password-encoded."
 			);
 		}
 
 		return new RotationCandidateSecrets(rotationUsername, rotationPassword, rotationPasswordEncoded);
+	}
+
+	private static SecureProfileSecurityProperties.RotationPhase resolveRotationPhase(
+		SecureProfileSecurityProperties properties
+	) {
+		SecureProfileSecurityProperties.RotationPhase configuredPhase = properties.getRotationPhase();
+		if (configuredPhase != null) {
+			return configuredPhase;
+		}
+
+		if (properties.isRotationEnabled()) {
+			LOGGER.warn(
+				"secure_profile_rotation_legacy_mode message='rotation-enabled=true without rotation-phase configured. Defaulting to OVERLAP for backward compatibility.' recommendation='Set app.security.secure-profile.rotation-phase explicitly (PREPARE, OVERLAP, CUTOVER, RETIRE).'"
+			);
+			return SecureProfileSecurityProperties.RotationPhase.OVERLAP;
+		}
+
+		return null;
 	}
 
 	private record ResolvedInMemorySecrets(

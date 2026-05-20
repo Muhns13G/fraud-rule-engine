@@ -19,6 +19,13 @@ public class SecureProfileSecurityProperties {
 		EXTERNAL_MANAGER
 	}
 
+	public enum RotationPhase {
+		PREPARE,
+		OVERLAP,
+		CUTOVER,
+		RETIRE
+	}
+
 	private String username;
 	private String password;
 	private String passwordEncoded;
@@ -30,6 +37,7 @@ public class SecureProfileSecurityProperties {
 	private SecretSource secretSource = SecretSource.ENV;
 	private String externalSecretRef;
 	private boolean rotationEnabled;
+	private RotationPhase rotationPhase;
 	private String rotationUsername;
 	private String rotationPassword;
 	private String rotationPasswordEncoded;
@@ -122,6 +130,14 @@ public class SecureProfileSecurityProperties {
 
 	public void setRotationEnabled(boolean rotationEnabled) {
 		this.rotationEnabled = rotationEnabled;
+	}
+
+	public RotationPhase getRotationPhase() {
+		return rotationPhase;
+	}
+
+	public void setRotationPhase(RotationPhase rotationPhase) {
+		this.rotationPhase = rotationPhase;
 	}
 
 	public String getRotationUsername() {

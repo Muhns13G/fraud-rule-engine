@@ -577,12 +577,21 @@ Security is now profile-aware:
     - provide secret payload in the referenced env var as JSON or key/value entries containing:
       - `username`
       - exactly one of `password` or `passwordEncoded`
-  - credential rotation readiness hook (IN_MEMORY mode):
-    - optional overlap window via `rotation-enabled=true`
-    - secondary credential fields:
-      - `rotation-username`
-      - `rotation-password` or `rotation-password-encoded`
-    - both primary and rotation credentials authenticate during overlap; remove rotation fields after cutover
+  - credential rotation lifecycle contract (IN_MEMORY mode):
+    - `rotation-phase=PREPARE`:
+      - primary credential only
+      - rotation fields must be absent
+    - `rotation-phase=OVERLAP`:
+      - primary + rotation credentials both active
+      - requires `rotation-username` and exactly one of `rotation-password` / `rotation-password-encoded`
+    - `rotation-phase=CUTOVER`:
+      - validates overlap-ready primary + rotation credentials before promotion
+      - requires the same rotation field contract as `OVERLAP`
+    - `rotation-phase=RETIRE`:
+      - primary credential only after cutover cleanup
+      - rotation fields must be absent
+    - legacy compatibility:
+      - if `rotation-phase` is omitted and `rotation-enabled=true`, runtime defaults to `OVERLAP` and logs a deprecation warning
   - health details are restricted with `management.endpoint.health.show-details=when_authorized`
 
 This remains a pragmatic take-home baseline, not full enterprise identity integration.
@@ -598,11 +607,13 @@ SPRING_PROFILES_ACTIVE=secure ./mvnw spring-boot:run
 
 ### Secure Credential Rotation Workflow (IN_MEMORY)
 
-1. Configure primary secure credential as usual.
-2. Set `rotation-enabled=true` and provide a distinct `rotation-username` plus one rotation password field.
-3. Deploy and migrate callers to the rotation credential during the overlap window.
-4. Promote the rotated credential to primary configuration.
-5. Disable rotation (`rotation-enabled=false`) and remove rotation fields.
+1. `PREPARE`: configure primary secure credential and set `rotation-phase=PREPARE`.
+2. `OVERLAP`: set `rotation-phase=OVERLAP` and provide distinct rotation credentials.
+3. Migrate callers to rotation credential while overlap is active.
+4. `CUTOVER`: set `rotation-phase=CUTOVER` and promote rotated credential to become primary.
+5. `RETIRE`: remove rotation fields and set `rotation-phase=RETIRE`.
+
+Safe sequence: `PREPARE -> OVERLAP -> CUTOVER -> RETIRE`.
 
 ## Known Simplifications
 

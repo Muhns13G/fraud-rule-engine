@@ -24,28 +24,26 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @TestPropertySource(properties = {
 	"app.security.secure-profile.username=secure-user-primary",
 	"app.security.secure-profile.password=change-me-secure-primary",
-	"app.security.secure-profile.rotation-phase=OVERLAP",
-	"app.security.secure-profile.rotation-username=secure-user-rotating",
-	"app.security.secure-profile.rotation-password=change-me-secure-rotating",
+	"app.security.secure-profile.rotation-phase=RETIRE",
 	"app.security.secure-profile.role=API_CLIENT",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })
-class SecureProfileCredentialRotationIntegrationTest {
+class SecureProfileCredentialRetireIntegrationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Test
-	void shouldAllowApiAuthenticationWithPrimaryCredentialDuringRotationWindow() throws Exception {
+	void shouldAllowApiAuthenticationWithPrimaryCredentialDuringRetirePhase() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
 				.with(httpBasic("secure-user-primary", "change-me-secure-primary")))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
-	void shouldAllowApiAuthenticationWithRotationCredentialDuringRotationWindow() throws Exception {
+	void shouldDenyApiAuthenticationWithRetiredRotationCredential() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
 				.with(httpBasic("secure-user-rotating", "change-me-secure-rotating")))
-			.andExpect(status().isNotFound());
+			.andExpect(status().isUnauthorized());
 	}
 }

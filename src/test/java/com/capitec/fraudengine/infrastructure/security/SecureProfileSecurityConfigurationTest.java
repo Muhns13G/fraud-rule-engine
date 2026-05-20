@@ -124,7 +124,7 @@ class SecureProfileSecurityConfigurationTest {
 	@Test
 	void shouldAllowRotationCandidateWhenConfiguredWithDistinctUsername() {
 		SecureProfileSecurityProperties properties = baseInMemoryProperties();
-		properties.setRotationEnabled(true);
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.OVERLAP);
 		properties.setRotationUsername("secure-user-rotating");
 		properties.setRotationPassword("change-me-rotating");
 
@@ -137,7 +137,7 @@ class SecureProfileSecurityConfigurationTest {
 	@Test
 	void shouldRejectRotationCandidateWhenUsernameMatchesPrimaryUsername() {
 		SecureProfileSecurityProperties properties = baseInMemoryProperties();
-		properties.setRotationEnabled(true);
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.OVERLAP);
 		properties.setRotationUsername("secure-user");
 		properties.setRotationPassword("change-me-rotating");
 
@@ -153,7 +153,7 @@ class SecureProfileSecurityConfigurationTest {
 	@Test
 	void shouldRejectRotationCandidateWhenBothRawAndEncodedPasswordsAreConfigured() {
 		SecureProfileSecurityProperties properties = baseInMemoryProperties();
-		properties.setRotationEnabled(true);
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.OVERLAP);
 		properties.setRotationUsername("secure-user-rotating");
 		properties.setRotationPassword("change-me-rotating");
 		properties.setRotationPasswordEncoded("$2a$10$abcdefghijklmnopqrstuv");
@@ -169,6 +169,81 @@ class SecureProfileSecurityConfigurationTest {
 			exception.getMessage().contains("must provide exactly one of rotation-password or rotation-password-encoded"),
 			"Expected explicit guidance for invalid rotation credential combination."
 		);
+	}
+
+	@Test
+	void shouldAllowPreparePhaseWithoutRotationCredentials() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.PREPARE);
+		properties.setRotationUsername(null);
+		properties.setRotationPassword(null);
+		properties.setRotationPasswordEncoded(null);
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertDoesNotThrow(() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder));
+	}
+
+	@Test
+	void shouldRejectPreparePhaseWhenRotationCredentialsArePresent() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.PREPARE);
+		properties.setRotationUsername("secure-user-rotating");
+		properties.setRotationPassword("change-me-rotating");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+	}
+
+	@Test
+	void shouldRejectRetirePhaseWhenRotationCredentialsArePresent() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.RETIRE);
+		properties.setRotationUsername("secure-user-rotating");
+		properties.setRotationPassword("change-me-rotating");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+	}
+
+	@Test
+	void shouldRequireRotationUsernameInCutoverPhase() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.CUTOVER);
+		properties.setRotationUsername(null);
+		properties.setRotationPassword("change-me-rotating");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+	}
+
+	@Test
+	void shouldAllowLegacyRotationEnabledWithoutRotationPhase() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationEnabled(true);
+		properties.setRotationUsername("secure-user-rotating");
+		properties.setRotationPassword("change-me-rotating");
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertDoesNotThrow(() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder));
 	}
 
 	@Test

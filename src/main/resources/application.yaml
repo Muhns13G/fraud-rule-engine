@@ -63,6 +63,10 @@ app:
       # Rotation readiness hook (IN_MEMORY mode):
       # enable an overlap window with a secondary credential identity so callers can migrate safely.
       rotation-enabled: ${FRAUD_ENGINE_SECURE_ROTATION_ENABLED:false}
+      # Explicit rotation lifecycle contract:
+      # PREPARE -> OVERLAP -> CUTOVER -> RETIRE
+      # If omitted and rotation-enabled=true, legacy behavior defaults to OVERLAP with a warning.
+      rotation-phase: ${FRAUD_ENGINE_SECURE_ROTATION_PHASE:}
       rotation-username: ${FRAUD_ENGINE_SECURE_ROTATION_USER:}
       rotation-password: ${FRAUD_ENGINE_SECURE_ROTATION_PASSWORD:}
       rotation-password-encoded: ${FRAUD_ENGINE_SECURE_ROTATION_PASSWORD_ENCODED:}
