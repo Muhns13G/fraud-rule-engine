@@ -1,10 +1,10 @@
-# Technical Debt Registry v2 (Active Items Only, Post-Phase 5.1)
+# Technical Debt Registry v2 (Active Items Only, Post-Phase 5.2)
 
 ## Scope
-This `v2` registry includes only **active** technical debt after Sprint 5.1 close-out.
+This `v2` registry includes only **active** technical debt after Sprint 5.2 close-out.
 - Ingested sources:
   - `docs/03-technical-debt/technical-debt-registry-v1.md`
-  - all completion reports from Phase 1 to Phase 5.1
+  - all completion reports from Phase 1 to Phase 5.2
 - Exclusion rule:
   - items already marked `Closed` in `v1` are not carried into `v2`
 
@@ -30,13 +30,14 @@ This `v2` registry includes only **active** technical debt after Sprint 5.1 clos
 19. `docs/01-completion-reports/phase-04/sprint-4.4-completion-report.md`
 20. `docs/01-completion-reports/phase-04/phase-04-summary.md`
 21. `docs/01-completion-reports/phase-05/sprint-5.1-completion-report.md`
+22. `docs/01-completion-reports/phase-05/sprint-5.2-completion-report.md`
 
 ## Active Debt Table
 
 | Debt ID | Title | Status | Severity | Source | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | TD-003 | Default profile remains intentionally open for API surface | Partially addressed | Medium | Recorded+Observed | `src/main/java/com/capitec/fraudengine/infrastructure/security/PhaseOneSecurityConfiguration.java`, `src/main/java/com/capitec/fraudengine/infrastructure/security/DefaultProfileSecurityGuardrails.java`, `docs/01-completion-reports/phase-05/sprint-5.1-completion-report.md` |
-| TD-005 | No enterprise secret management/rotation orchestration for secure credentials | Partially addressed | Medium | Recorded+Observed | `src/main/resources/application.yaml`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecretSupplier.java`, `docs/01-completion-reports/phase-04/sprint-4.2-completion-report.md` |
+| TD-005 | No enterprise secret management/rotation orchestration for secure credentials | Partially addressed | Medium | Recorded+Observed | `src/main/resources/application.yaml`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecretSupplier.java`, `src/main/java/com/capitec/fraudengine/infrastructure/security/EnvExternalManagerSecretSupplier.java`, `docs/operations/runbooks/secure-credential-rotation-runbook.md`, `docs/01-completion-reports/phase-05/sprint-5.2-completion-report.md` |
 | TD-012 | Rule governance workflow maturity remains limited (beyond basic mutation endpoints) | Partially addressed | Medium | Recorded+Observed | `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMutationService.java` |
 | TD-014 | Promotion/deprecation operational workflow and history/audit depth are incomplete | Partially addressed | Medium | Recorded | `src/main/java/com/capitec/fraudengine/domain/policy/RuleGovernancePolicy.java`, `docs/01-completion-reports/phase-02/sprint-2.5-completion-report.md` |
 | TD-018 | Retrieval still lacks rule-hit lookup filter for investigation workflows | Partially addressed | Low | Recorded | `docs/RAG/03-api-scope.md`, `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md` |
@@ -59,8 +60,9 @@ This `v2` registry includes only **active** technical debt after Sprint 5.1 clos
 - Target phase candidate: `Phase 5`.
 
 ### TD-005
-- Why it matters: secret-source strategy exists, but centralized enterprise rotation and secret-manager operations are not fully integrated.
-- Suggested resolution direction: implement a concrete secret provider adapter and operational rotation runbook with overlap validation.
+- Why it matters: secure secret and rotation posture is now substantially improved, but centralized enterprise secret-manager and organization-level rotation orchestration are still not fully integrated.
+- Current state: concrete env-backed external secret adapter, explicit rotation phases, diagnostics, and runbook are implemented.
+- Suggested resolution direction: complete enterprise-managed integration (provider-native secret retrieval, policy-driven rotation orchestration, and org-level rollout controls).
 - Target phase candidate: `Phase 5`.
 
 ### TD-012
@@ -124,3 +126,5 @@ This `v2` registry includes only **active** technical debt after Sprint 5.1 clos
   - `TD-021` moved to `Partially addressed` (hardened JWT/OIDC path implemented)
   - `TD-025` is now explicitly tracked as `Closed` for visible audit history
   - `TD-027` added for issuer/audience enforcement carry-forward
+- Sprint 5.2 reconciliation updates:
+  - `TD-005` remains `Partially addressed` but now includes concrete adapter, phase contract, diagnostics, integration coverage, and runbook evidence

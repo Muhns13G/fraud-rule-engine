@@ -19,6 +19,9 @@
   - `hardened` and `production` profiles enforce JWT resource-server authentication
   - secure identity provider is configurable (`IN_MEMORY` or `JDBC`)
   - secure in-memory credentials now support explicit secret-source modes and rotation overlap hooks
+  - secure secret-source implementation now includes a concrete env-backed external adapter path
+  - secure credential rotation is now phase-driven (`PREPARE`, `OVERLAP`, `CUTOVER`, `RETIRE`) with fail-fast misconfiguration validation
+  - secure credential/rotation posture is now exposed through redacted actuator info diagnostics for authorized secure roles
   - secure JDBC identity mode now applies validated query contracts with safe defaults
   - governance mutation endpoints require governance-admin scope in `secure` profile
   - governance read/ops diagnostics routes now follow an explicit least-privilege role matrix
@@ -33,6 +36,7 @@
   - explicit test-runtime alignment for Mockito on JDK 25 via Surefire Java agent configuration
 - Phase 4 operational resilience architecture now includes:
   - fail-fast secure-profile guardrails for identity, secret-source, role contract, and actuator exposure configuration
+  - dedicated secure credential rotation runbook now defines bootstrap, rotation, and rollback procedures
   - resilience-focused integration checks for datasource failure behavior and secure-profile misconfiguration paths
 - Rule governance groundwork now exists:
   - persisted metadata identity (`ruleCode + version`)

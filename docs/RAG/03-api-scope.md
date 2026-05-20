@@ -108,6 +108,14 @@ Supported sort values:
 - Startup fails fast for hardened/production when JWT `jwk-set-uri` is missing.
 - Reviewer-hosted mode remains `secure` profile when external IdP wiring is unavailable; actuator endpoints still require authentication.
 
+## Secure Secret and Rotation Notes (Sprint 5.2)
+- No business API endpoint contract changed in Sprint 5.2.
+- Secure operational contract now includes:
+  - explicit secret-source modes (`ENV`, `PRE_ENCODED`, `EXTERNAL_MANAGER`)
+  - explicit credential rotation phases (`PREPARE`, `OVERLAP`, `CUTOVER`, `RETIRE`)
+  - legacy fallback mode represented as `LEGACY_OVERLAP` in diagnostics when `rotation-enabled=true` and no explicit phase is set
+  - redacted secure credential posture diagnostics in `/actuator/info` for authorized secure roles
+
 ## Phase 4 Regression Notes (Sprint 4.4)
 - No new public API surface was added in Sprint `4.4`.
 - Operational confidence is now gated by a dedicated Phase 4 security/ops regression suite:

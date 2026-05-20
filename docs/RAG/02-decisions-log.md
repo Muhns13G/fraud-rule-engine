@@ -132,6 +132,12 @@
   - keep hosted reviewer guidance centered on `secure` profile when external IdP configuration is not available
   - preserve default-profile local-only guardrail behavior and explicit warning posture
   - document profile migration path (`default` -> `secure` -> `hardened`/`production`) and add matrix verification commands as first-class handoff guidance
+- Sprint 5.2 secret and rotation operationalization decisions:
+  - keep secure secret-manager integration provider-neutral while implementing a concrete env-backed external adapter
+  - formalize rotation as explicit lifecycle phases (`PREPARE`, `OVERLAP`, `CUTOVER`, `RETIRE`) with startup fail-fast validation
+  - preserve legacy compatibility (`rotation-enabled=true` without explicit phase) only as a temporary fallback with warning
+  - expose secure credential health via redacted `/actuator/info` diagnostics and aligned startup logs
+  - formalize secure bootstrap/rotation/rollback workflow in a dedicated operations runbook
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

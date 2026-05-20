@@ -182,6 +182,7 @@ Reference templates are available under:
 - `docs/operations/env/local-reviewer.env.template`
 - `docs/operations/env/secure.env.template`
 - `docs/operations/env/production.env.template`
+- `docs/operations/runbooks/secure-credential-rotation-runbook.md`
 
 These templates define the baseline property contracts for local/reviewer, secure, and production-style runs.
 
@@ -619,6 +620,9 @@ SPRING_PROFILES_ACTIVE=secure ./mvnw spring-boot:run
 5. `RETIRE`: remove rotation fields and set `rotation-phase=RETIRE`.
 
 Safe sequence: `PREPARE -> OVERLAP -> CUTOVER -> RETIRE`.
+
+For operational bootstrap, rollback paths, and external-secret bootstrap examples, use:
+- `docs/operations/runbooks/secure-credential-rotation-runbook.md`
 
 ## Known Simplifications
 
