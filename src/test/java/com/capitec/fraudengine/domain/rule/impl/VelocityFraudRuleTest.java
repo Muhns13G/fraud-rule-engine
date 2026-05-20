@@ -102,7 +102,7 @@ class VelocityFraudRuleTest {
 	}
 
 	@Test
-	void shouldTreatLaterTransactionsWithinWindowAsMatchingBecauseAgeUsesAbsoluteDifference() {
+	void shouldIgnoreFutureDatedTransactionsWhenComputingVelocityWindow() {
 		TransactionEvent currentTransaction = transaction("txn-1", "account-1", "2026-05-12T10:00:00+02:00");
 		TransactionEvent laterTransactionOne = transaction("txn-2", "account-1", "2026-05-12T10:02:00+02:00");
 		TransactionEvent laterTransactionTwo = transaction("txn-3", "account-1", "2026-05-12T10:04:00+02:00");
@@ -114,8 +114,8 @@ class VelocityFraudRuleTest {
 			)
 		);
 
-		assertTrue(result.triggered());
-		assertEquals(RuleSeverity.REVIEW, result.severity());
+		assertFalse(result.triggered());
+		assertEquals(RuleSeverity.INFO, result.severity());
 	}
 
 	private TransactionEvent transaction(String transactionId, String accountId, String offsetDateTime) {

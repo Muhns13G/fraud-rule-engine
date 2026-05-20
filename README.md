@@ -326,6 +326,12 @@ CI baseline:
 - Phase 5 production-hardening gate is wired in CI and can be run locally via:
   - `./scripts/run-phase5-production-hardening-gates.sh`
   - includes hygiene + targeted security/ops regression execution path
+- Performance/reliability smoke checks can be run locally via:
+  - `./scripts/run-performance-reliability-smoke.sh`
+  - current regression thresholds:
+    - evaluation latency p95 <= `1500ms`
+    - retrieval latency p95 <= `800ms`
+    - velocity temporal correctness rejects future-dated events in window counts
 
 Phase status:
 - Phase 4 (Security and Operations) is now closed through Sprint `4.4`, including profile policy hardening, resilience validation, and cross-sprint regression gating.

@@ -38,7 +38,10 @@ public class VelocityFraudRule extends AbstractFraudRule {
 			.filter(previousTransaction -> previousTransaction.accountId().equals(currentTransaction.accountId()))
 			.filter(previousTransaction -> !previousTransaction.transactionId().equals(currentTransaction.transactionId()))
 			.filter(previousTransaction -> {
-				Duration age = Duration.between(previousTransaction.eventTimestamp(), currentTimestamp).abs();
+				if (previousTransaction.eventTimestamp().isAfter(currentTimestamp)) {
+					return false;
+				}
+				Duration age = Duration.between(previousTransaction.eventTimestamp(), currentTimestamp);
 				return age.compareTo(velocityWindow) <= 0;
 			})
 			.count();
