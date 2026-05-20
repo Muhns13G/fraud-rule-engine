@@ -23,7 +23,9 @@ import com.capitec.fraudengine.domain.model.enums.RuleExecutionSource;
 import com.capitec.fraudengine.domain.model.enums.RuleLifecycleStatus;
 import com.capitec.fraudengine.domain.policy.RuleGovernancePolicy;
 import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceMetadataEntity;
+import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceHistoryEntity;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.RuleGovernanceMetadataPersistenceMapper;
+import com.capitec.fraudengine.infrastructure.persistence.repository.RuleGovernanceHistoryJpaRepository;
 import com.capitec.fraudengine.infrastructure.persistence.repository.RuleGovernanceMetadataJpaRepository;
 
 /**
@@ -35,6 +37,7 @@ public class RuleGovernanceMutationService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RuleGovernanceMutationService.class);
 
 	private final RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository;
+	private final RuleGovernanceHistoryJpaRepository ruleGovernanceHistoryJpaRepository;
 	private final RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
 	private final RuleGovernancePolicy ruleGovernancePolicy;
 	private final RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService;
@@ -42,12 +45,14 @@ public class RuleGovernanceMutationService {
 
 	public RuleGovernanceMutationService(
 		RuleGovernanceMetadataJpaRepository ruleGovernanceMetadataJpaRepository,
+		RuleGovernanceHistoryJpaRepository ruleGovernanceHistoryJpaRepository,
 		RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper,
 		RuleGovernancePolicy ruleGovernancePolicy,
 		RuleGovernanceConfigurationReadModelService ruleGovernanceConfigurationReadModelService,
 		MeterRegistry meterRegistry
 	) {
 		this.ruleGovernanceMetadataJpaRepository = ruleGovernanceMetadataJpaRepository;
+		this.ruleGovernanceHistoryJpaRepository = ruleGovernanceHistoryJpaRepository;
 		this.ruleGovernanceMetadataPersistenceMapper = ruleGovernanceMetadataPersistenceMapper;
 		this.ruleGovernancePolicy = ruleGovernancePolicy;
 		this.ruleGovernanceConfigurationReadModelService = ruleGovernanceConfigurationReadModelService;
@@ -67,6 +72,15 @@ public class RuleGovernanceMutationService {
 		String ruleCode,
 		String version,
 		RuleLifecycleState lifecycleState
+	) {
+		return transitionStateInternal(ruleCode, version, lifecycleState, "STATE_TRANSITION");
+	}
+
+	private RuleGovernanceMetadataResponseDto transitionStateInternal(
+		String ruleCode,
+		String version,
+		RuleLifecycleState lifecycleState,
+		String actionType
 	) {
 		String actor = resolveActorIdentity();
 		String requestId = resolveRequestId();
@@ -90,6 +104,17 @@ public class RuleGovernanceMutationService {
 		ruleGovernanceMetadataPersistenceMapper.updateEntity(targetMetadata, existingEntity);
 		RuleGovernanceMetadataEntity updatedEntity = ruleGovernanceMetadataJpaRepository.save(existingEntity);
 		RuleGovernanceMetadata updatedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(updatedEntity);
+		persistGovernanceHistory(
+			updatedMetadata.identity().ruleCode(),
+			updatedMetadata.identity().version(),
+			actionType,
+			actor,
+			requestId,
+			existingMetadata.lifecycleState().lifecycleStatus(),
+			existingMetadata.lifecycleState().activationState(),
+			updatedMetadata.lifecycleState().lifecycleStatus(),
+			updatedMetadata.lifecycleState().activationState()
+		);
 		recordMutationMetric("transition_state", "success");
 		recordLifecycleTransitionMetric(existingMetadata, updatedMetadata);
 		LOGGER.info(
@@ -133,11 +158,6 @@ public class RuleGovernanceMutationService {
 			throw new InvalidRuleGovernanceStateException("Governance workflow action must be provided.");
 		}
 
-		RuleGovernanceMetadataEntity existingEntity = ruleGovernanceMetadataJpaRepository
-			.findByRuleCodeAndRuleVersion(ruleCode, version)
-			.orElseThrow(() -> new RuleGovernanceMetadataNotFoundException(ruleCode, version));
-		RuleGovernanceMetadata existingMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(existingEntity);
-
 		RuleLifecycleState targetLifecycleState = switch (action) {
 			case PROMOTE, REACTIVATE -> new RuleLifecycleState(
 				RuleLifecycleStatus.ACTIVE,
@@ -153,7 +173,12 @@ public class RuleGovernanceMutationService {
 			);
 		};
 
-		RuleGovernanceMetadataResponseDto response = transitionState(ruleCode, version, targetLifecycleState);
+		RuleGovernanceMetadataResponseDto response = transitionStateInternal(
+			ruleCode,
+			version,
+			targetLifecycleState,
+			"WORKFLOW_" + action.name()
+		);
 		recordMutationMetric("workflow_action", "success");
 		return response;
 	}
@@ -206,6 +231,17 @@ public class RuleGovernanceMutationService {
 			ruleGovernanceMetadataPersistenceMapper.toEntity(newVersionMetadata)
 		);
 		RuleGovernanceMetadata savedMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(savedEntity);
+		persistGovernanceHistory(
+			savedMetadata.identity().ruleCode(),
+			savedMetadata.identity().version(),
+			"VERSION_REGISTERED",
+			actor,
+			requestId,
+			null,
+			null,
+			savedMetadata.lifecycleState().lifecycleStatus(),
+			savedMetadata.lifecycleState().activationState()
+		);
 		recordMutationMetric("register_version", "success");
 		recordVersionRegistrationMetric(savedMetadata);
 		LOGGER.info(
@@ -285,5 +321,29 @@ public class RuleGovernanceMutationService {
 			return "no-request-id";
 		}
 		return requestId;
+	}
+
+	private void persistGovernanceHistory(
+		String ruleCode,
+		String ruleVersion,
+		String actionType,
+		String actor,
+		String requestId,
+		RuleLifecycleStatus fromLifecycleStatus,
+		RuleActivationState fromActivationState,
+		RuleLifecycleStatus toLifecycleStatus,
+		RuleActivationState toActivationState
+	) {
+		RuleGovernanceHistoryEntity historyEntity = new RuleGovernanceHistoryEntity();
+		historyEntity.setRuleCode(ruleCode);
+		historyEntity.setRuleVersion(ruleVersion);
+		historyEntity.setActionType(actionType);
+		historyEntity.setActor(actor);
+		historyEntity.setRequestId(requestId);
+		historyEntity.setFromLifecycleStatus(fromLifecycleStatus);
+		historyEntity.setFromActivationState(fromActivationState);
+		historyEntity.setToLifecycleStatus(toLifecycleStatus);
+		historyEntity.setToActivationState(toActivationState);
+		ruleGovernanceHistoryJpaRepository.save(historyEntity);
 	}
 }

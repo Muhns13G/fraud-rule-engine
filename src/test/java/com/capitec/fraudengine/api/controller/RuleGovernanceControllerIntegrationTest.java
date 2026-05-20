@@ -25,6 +25,7 @@ import com.capitec.fraudengine.domain.model.enums.RuleActivationState;
 import com.capitec.fraudengine.domain.model.enums.RuleExecutionSource;
 import com.capitec.fraudengine.domain.model.enums.RuleLifecycleStatus;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.RuleGovernanceMetadataPersistenceMapper;
+import com.capitec.fraudengine.infrastructure.persistence.repository.RuleGovernanceHistoryJpaRepository;
 import com.capitec.fraudengine.infrastructure.persistence.repository.RuleGovernanceMetadataJpaRepository;
 
 @SpringBootTest
@@ -41,9 +42,13 @@ class RuleGovernanceControllerIntegrationTest {
 	@Autowired
 	private RuleGovernanceMetadataPersistenceMapper ruleGovernanceMetadataPersistenceMapper;
 
+	@Autowired
+	private RuleGovernanceHistoryJpaRepository ruleGovernanceHistoryJpaRepository;
+
 	@BeforeEach
 	void setUp() {
 		ruleGovernanceMetadataJpaRepository.deleteAll();
+		ruleGovernanceHistoryJpaRepository.deleteAll();
 	}
 
 	@Test
@@ -136,6 +141,15 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(jsonPath("$.lifecycleStatus", is("DEPRECATED")))
 			.andExpect(jsonPath("$.activationState", is("INACTIVE")))
 			.andExpect(jsonPath("$.executionSource", is("CODE_DEFINED")));
+
+		var history = ruleGovernanceHistoryJpaRepository
+			.findByRuleCodeAndRuleVersionOrderByCreatedAtAscGovernanceHistoryIdAsc("HIGH_AMOUNT", "1.0.0");
+		org.assertj.core.api.Assertions.assertThat(history).hasSize(1);
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getActionType()).isEqualTo("STATE_TRANSITION");
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getActor()).isNotBlank();
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getRequestId()).isNotBlank();
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getFromLifecycleStatus().name()).isEqualTo("ACTIVE");
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getToLifecycleStatus().name()).isEqualTo("DEPRECATED");
 	}
 
 	@Test
@@ -205,6 +219,13 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(jsonPath("$.lifecycleStatus", is("DEPRECATED")))
 			.andExpect(jsonPath("$.activationState", is("INACTIVE")))
 			.andExpect(jsonPath("$.executionSource", is("CODE_DEFINED")));
+
+		var history = ruleGovernanceHistoryJpaRepository
+			.findByRuleCodeAndRuleVersionOrderByCreatedAtAscGovernanceHistoryIdAsc("HIGH_AMOUNT", "1.1.0");
+		org.assertj.core.api.Assertions.assertThat(history).hasSize(1);
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getActionType()).isEqualTo("VERSION_REGISTERED");
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getFromLifecycleStatus()).isNull();
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getToLifecycleStatus().name()).isEqualTo("DEPRECATED");
 	}
 
 	@Test
@@ -323,6 +344,13 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(jsonPath("$.version", is("1.0.0")))
 			.andExpect(jsonPath("$.lifecycleStatus", is("ACTIVE")))
 			.andExpect(jsonPath("$.activationState", is("ACTIVE")));
+
+		var history = ruleGovernanceHistoryJpaRepository
+			.findByRuleCodeAndRuleVersionOrderByCreatedAtAscGovernanceHistoryIdAsc("WORKFLOW_RULE", "1.0.0");
+		org.assertj.core.api.Assertions.assertThat(history).hasSize(1);
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getActionType()).isEqualTo("WORKFLOW_PROMOTE");
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getFromLifecycleStatus().name()).isEqualTo("DRAFT");
+		org.assertj.core.api.Assertions.assertThat(history.getFirst().getToLifecycleStatus().name()).isEqualTo("ACTIVE");
 	}
 
 	@Test
