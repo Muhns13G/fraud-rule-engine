@@ -41,6 +41,7 @@
 - Rule governance groundwork now exists:
   - persisted metadata identity (`ruleCode + version`)
   - admin read and constrained mutation endpoints for governed rule metadata
+  - paged governance audit reads for versions and lifecycle history
   - deterministic lifecycle/activation boundary validation with DB constraints
   - lifecycle/version mutation observability with structured audit logs and dedicated metrics
 - Retrieval layer is now review-oriented and scalable:

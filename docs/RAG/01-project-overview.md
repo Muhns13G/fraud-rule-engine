@@ -65,7 +65,8 @@
 - API status:
   - Phase 1 evaluation and retrieval endpoints are implemented
   - admin rule-governance read visibility endpoints are now implemented
-  - admin governance mutation endpoints now support lifecycle/activation transitions and controlled version registration
+  - admin governance mutation endpoints now support lifecycle/activation transitions, controlled version registration, and semantic workflow actions
+  - governance history is now durably persisted and retrievable through paged version/history admin reads
   - retrieval now supports paged responses, one-sided time filtering, review-oriented filters, and explicit summary sorting
   - location anomaly rule is now implemented with deterministic explainability
   - secure-profile governance mutation endpoints now have explicit admin/non-admin authorization regression coverage

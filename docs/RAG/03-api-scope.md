@@ -37,10 +37,16 @@ Return paged and filtered fraud evaluations for review workflows.
 ## Phase 2.5 Admin Rule Governance Endpoints
 
 ### `GET /api/admin/rules`
-Return governed rule metadata for admin visibility. Defaults to active rules with optional `activeOnly=false` for full visibility.
+Return governed rule metadata for admin visibility. Supports pagination (`page`, `size`) and defaults to active rules with optional `activeOnly=false` for full visibility.
 
 ### `GET /api/admin/rules/{ruleCode}/versions/{version}`
 Return one governed rule metadata entry by identity (`ruleCode + version`).
+
+### `GET /api/admin/rules/{ruleCode}/versions`
+Return paged governed metadata versions for one rule code.
+
+### `GET /api/admin/rules/{ruleCode}/versions/{version}/history`
+Return paged lifecycle history evidence for one governed rule identity.
 
 ## Phase 3.1 Admin Rule Governance Mutation Endpoints
 
@@ -121,6 +127,14 @@ Supported sort values:
 - Governance lifecycle contract is now explicitly documented in:
   - `docs/operations/runbooks/governance-workflow-lifecycle-contract.md`
 - Contract-level semantic actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`) are mapped to currently allowed lifecycle transitions and existing lifecycle/activation invariants.
+
+## Governance Workflow + Auditability Notes (Sprint 5.3.2-5.3.5)
+- Governance workflow actions are now available via:
+  - `POST /api/admin/rules/{ruleCode}/versions/{version}/actions`
+- Lifecycle history is now durable and retrievable through paged admin surfaces.
+- Governance read/mutation authorization matrix remains role-segmented:
+  - reads (`GET /api/admin/rules...`): `OPS_READER` or stronger
+  - mutations (`PATCH/POST /api/admin/rules...`): `GOVERNANCE_ADMIN` or `PLATFORM_ADMIN`
 
 ## Phase 4 Regression Notes (Sprint 4.4)
 - No new public API surface was added in Sprint `4.4`.

@@ -634,6 +634,11 @@ This contract defines:
 - allowed lifecycle transitions
 - semantic workflow actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`)
 - alignment to current state-based governance mutation endpoints
+- durable lifecycle-history evidence (`actor`, `requestId`, `timestamp`) for each workflow action
+- paged governance audit read surfaces:
+  - `GET /api/admin/rules`
+  - `GET /api/admin/rules/{ruleCode}/versions`
+  - `GET /api/admin/rules/{ruleCode}/versions/{version}/history`
 
 ## Known Simplifications
 

@@ -143,6 +143,12 @@
   - keep lifecycle transitions aligned to enforced policy: `DRAFT -> ACTIVE/RETIRED`, `ACTIVE -> DEPRECATED/RETIRED`, `DEPRECATED -> ACTIVE/RETIRED`, `RETIRED` terminal
   - keep lifecycle/activation invariants explicit (`ACTIVE` requires activation `ACTIVE`; `DRAFT`/`RETIRED` require activation `INACTIVE`)
   - define semantic workflow actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`) as contract-level mappings for upcoming implementation work
+- Sprint 5.3.2-5.3.5 governance workflow hardening decisions:
+  - add explicit workflow action mutation surface (`/actions`) while keeping governed execution source constrained to `CODE_DEFINED`
+  - persist durable governance lifecycle history with actor/request-id/timestamp evidence for every workflow action
+  - expose paged governance audit retrieval surfaces for versions and lifecycle history to avoid unbounded admin responses
+  - enforce least-privilege governance-read authorization for version/history retrieval (`OPS_READER` or stronger in secure profile)
+  - treat workflow transition validity, history integrity, and authorization regression as closure-gate tests for sprint completion
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

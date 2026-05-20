@@ -86,6 +86,20 @@ class SecureProfileGovernanceAdminIntegrationTest {
 	}
 
 	@Test
+	void shouldAllowGovernanceVersionReadEndpointForAdminUser() throws Exception {
+		mockMvc.perform(get("/api/admin/rules/DOES_NOT_EXIST/versions")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void shouldAllowGovernanceHistoryReadEndpointForAdminUser() throws Exception {
+		mockMvc.perform(get("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/history")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
 	void shouldAllowActuatorEndpointForAdminUser() throws Exception {
 		mockMvc.perform(get("/actuator/health")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
