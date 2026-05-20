@@ -624,6 +624,17 @@ Safe sequence: `PREPARE -> OVERLAP -> CUTOVER -> RETIRE`.
 For operational bootstrap, rollback paths, and external-secret bootstrap examples, use:
 - `docs/operations/runbooks/secure-credential-rotation-runbook.md`
 
+### Governance Workflow Lifecycle Contract
+
+Governance lifecycle promotion/deprecation semantics are now explicitly documented in:
+- `docs/operations/runbooks/governance-workflow-lifecycle-contract.md`
+
+This contract defines:
+- lifecycle states and activation invariants
+- allowed lifecycle transitions
+- semantic workflow actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`)
+- alignment to current state-based governance mutation endpoints
+
 ## Known Simplifications
 
 - rules are code-defined, not database-authored

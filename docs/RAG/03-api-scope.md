@@ -116,6 +116,12 @@ Supported sort values:
   - legacy fallback mode represented as `LEGACY_OVERLAP` in diagnostics when `rotation-enabled=true` and no explicit phase is set
   - redacted secure credential posture diagnostics in `/actuator/info` for authorized secure roles
 
+## Governance Workflow Contract Notes (Sprint 5.3.1)
+- No new endpoint was added in `5.3.1`; this step defines contract semantics only.
+- Governance lifecycle contract is now explicitly documented in:
+  - `docs/operations/runbooks/governance-workflow-lifecycle-contract.md`
+- Contract-level semantic actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`) are mapped to currently allowed lifecycle transitions and existing lifecycle/activation invariants.
+
 ## Phase 4 Regression Notes (Sprint 4.4)
 - No new public API surface was added in Sprint `4.4`.
 - Operational confidence is now gated by a dedicated Phase 4 security/ops regression suite:

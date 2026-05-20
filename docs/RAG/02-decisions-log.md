@@ -138,6 +138,11 @@
   - preserve legacy compatibility (`rotation-enabled=true` without explicit phase) only as a temporary fallback with warning
   - expose secure credential health via redacted `/actuator/info` diagnostics and aligned startup logs
   - formalize secure bootstrap/rotation/rollback workflow in a dedicated operations runbook
+- Sprint 5.3.1 governance workflow contract decisions:
+  - formalize promotion/deprecation workflow semantics as an explicit lifecycle contract before introducing new workflow APIs
+  - keep lifecycle transitions aligned to enforced policy: `DRAFT -> ACTIVE/RETIRED`, `ACTIVE -> DEPRECATED/RETIRED`, `DEPRECATED -> ACTIVE/RETIRED`, `RETIRED` terminal
+  - keep lifecycle/activation invariants explicit (`ACTIVE` requires activation `ACTIVE`; `DRAFT`/`RETIRED` require activation `INACTIVE`)
+  - define semantic workflow actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`) as contract-level mappings for upcoming implementation work
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category
