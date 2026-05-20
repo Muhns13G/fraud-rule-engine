@@ -56,6 +56,12 @@ class SecureProfileSecurityIntegrationTest {
 	}
 
 	@Test
+	void shouldRejectActuatorInfoWithoutAuthentication() throws Exception {
+		mockMvc.perform(get("/actuator/info"))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	void shouldAllowApiRequestWithValidBasicAuth() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
@@ -65,6 +71,13 @@ class SecureProfileSecurityIntegrationTest {
 	@Test
 	void shouldAllowActuatorHealthWithValidBasicAuth() throws Exception {
 		mockMvc.perform(get("/actuator/health")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void shouldRejectActuatorInfoForSecureUserWithoutOpsRole() throws Exception {
+		mockMvc.perform(get("/actuator/info")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
 			.andExpect(status().isForbidden());
 	}

@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,21 @@ class SecureProfileGovernanceAuthorizationIntegrationTest {
 		mockMvc.perform(get("/actuator/health")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
 			.andExpect(status().isOk());
+	}
+
+	@Test
+	void shouldExposeRedactedSecureCredentialDiagnosticsInActuatorInfoForOpsReaderUser() throws Exception {
+		mockMvc.perform(get("/actuator/info")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.activeProfile").value("secure"))
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.identityProvider").value("IN_MEMORY"))
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.secretSource").value("ENV"))
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.rotationPhase").exists())
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.password").doesNotExist())
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.passwordEncoded").doesNotExist())
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.username").doesNotExist())
+			.andExpect(jsonPath("$.secureCredentialDiagnostics.externalSecretRef").doesNotExist());
 	}
 
 	@Test

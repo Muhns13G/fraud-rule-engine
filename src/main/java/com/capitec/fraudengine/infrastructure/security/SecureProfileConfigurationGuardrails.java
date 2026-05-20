@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
  * Fail-fast startup validation for secure-profile security and observability posture.
  */
@@ -38,6 +40,16 @@ public class SecureProfileConfigurationGuardrails implements ApplicationRunner {
 			properties.getIdentityProvider(),
 			properties.getSecretSource(),
 			environment.getProperty("management.endpoints.web.exposure.include")
+		);
+
+		Map<String, Object> diagnostics = SecureProfileCredentialDiagnostics.build(properties, environment);
+		LOGGER.info(
+			"secure_profile_credential_diagnostics phase={} rotationEnabled={} primaryCredentialMode={} externalSecretRefConfigured={} diagnosticsVersion={}",
+			diagnostics.get("rotationPhase"),
+			diagnostics.get("rotationEnabled"),
+			diagnostics.get("primaryCredentialMode"),
+			diagnostics.get("externalSecretRefConfigured"),
+			diagnostics.get("diagnosticsVersion")
 		);
 	}
 

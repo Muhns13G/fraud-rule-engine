@@ -557,6 +557,11 @@ Security is now profile-aware:
     - `GET /api/admin/rules/**` requires `OPS_READER` or stronger
     - `/actuator/**` requires `OPS_READER` or stronger
     - `/api/fraud-evaluations...` requires `API_CLIENT` or stronger
+  - `/actuator/info` now includes redacted `secureCredentialDiagnostics` for operations:
+    - identity/secret source mode
+    - rotation phase/status
+    - configuration presence flags
+    - never includes usernames, passwords, password hashes, or raw secret references
   - Swagger/OpenAPI exposure defaults to disabled (can be re-enabled by secure-profile env overrides)
   - actuator exposure defaults to `health,info` (can be widened by secure-profile env overrides)
   - credentials come from env-backed `app.security.secure-profile.*` properties
