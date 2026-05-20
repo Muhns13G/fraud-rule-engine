@@ -234,6 +234,23 @@ class SecureProfileSecurityConfigurationTest {
 	}
 
 	@Test
+	void shouldRequireRotationPasswordInCutoverPhase() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationPhase(SecureProfileSecurityProperties.RotationPhase.CUTOVER);
+		properties.setRotationUsername("secure-user-rotating");
+		properties.setRotationPassword(null);
+		properties.setRotationPasswordEncoded(null);
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
+	}
+
+	@Test
 	void shouldAllowLegacyRotationEnabledWithoutRotationPhase() {
 		SecureProfileSecurityProperties properties = baseInMemoryProperties();
 		properties.setRotationEnabled(true);
@@ -244,6 +261,23 @@ class SecureProfileSecurityConfigurationTest {
 		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
 
 		assertDoesNotThrow(() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder));
+	}
+
+	@Test
+	void shouldRejectLegacyRotationEnabledWithoutRotationCredentials() {
+		SecureProfileSecurityProperties properties = baseInMemoryProperties();
+		properties.setRotationEnabled(true);
+		properties.setRotationUsername(null);
+		properties.setRotationPassword(null);
+		properties.setRotationPasswordEncoded(null);
+
+		ObjectProvider<SecureProfileSecretSupplier> secretSupplierProvider = mock(ObjectProvider.class);
+		when(secretSupplierProvider.getIfAvailable()).thenReturn(null);
+
+		assertThrows(
+			IllegalStateException.class,
+			() -> configuration.userDetailsService(properties, secretSupplierProvider, passwordEncoder)
+		);
 	}
 
 	@Test
