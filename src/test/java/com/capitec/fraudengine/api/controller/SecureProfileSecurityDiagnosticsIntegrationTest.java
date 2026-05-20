@@ -1,7 +1,6 @@
 package com.capitec.fraudengine.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,16 +27,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.username=secure-user",
-	"app.security.secure-profile.password=change-me-secure",
+	SecureProfileTestCredentials.USERNAME_PROPERTY,
+	SecureProfileTestCredentials.PASSWORD_PROPERTY,
 	"app.security.secure-profile.role=API_CLIENT",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })
 @ExtendWith(OutputCaptureExtension.class)
 class SecureProfileSecurityDiagnosticsIntegrationTest {
-
-	private static final String SECURE_USERNAME = "secure-user";
-	private static final String SECURE_PASSWORD = "change-me-secure";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -79,7 +75,7 @@ class SecureProfileSecurityDiagnosticsIntegrationTest {
 		);
 
 		mockMvc.perform(patch("/api/admin/rules/HIGH_AMOUNT/versions/1.0.0/state")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{

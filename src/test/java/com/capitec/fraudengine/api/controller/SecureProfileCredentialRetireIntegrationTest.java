@@ -1,6 +1,5 @@
 package com.capitec.fraudengine.api.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,8 +21,8 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.username=secure-user-primary",
-	"app.security.secure-profile.password=change-me-secure-primary",
+	SecureProfileTestCredentials.PRIMARY_USERNAME_PROPERTY,
+	SecureProfileTestCredentials.PRIMARY_PASSWORD_PROPERTY,
 	"app.security.secure-profile.rotation-phase=RETIRE",
 	"app.security.secure-profile.role=API_CLIENT",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
@@ -36,14 +35,14 @@ class SecureProfileCredentialRetireIntegrationTest {
 	@Test
 	void shouldAllowApiAuthenticationWithPrimaryCredentialDuringRetirePhase() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
-				.with(httpBasic("secure-user-primary", "change-me-secure-primary")))
+				.with(SecureProfileTestCredentials.primaryBasicAuth()))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void shouldDenyApiAuthenticationWithRetiredRotationCredential() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
-				.with(httpBasic("secure-user-rotating", "change-me-secure-rotating")))
+				.with(SecureProfileTestCredentials.rotationBasicAuth()))
 			.andExpect(status().isUnauthorized());
 	}
 }

@@ -1,10 +1,10 @@
-# Technical Debt Registry v2 (Post-Phase 5.3 Reconciled)
+# Technical Debt Registry v2 (Post-Phase 5.4 Reconciled)
 
 ## Scope
-This `v2` registry is reconciled through Sprint 5.3 close-out.
+This `v2` registry is reconciled through Sprint 5.4 close-out.
 - Ingested sources:
   - `docs/03-technical-debt/technical-debt-registry-v1.md`
-  - all completion reports from Phase 1 to Phase 5.3
+  - all completion reports from Phase 1 to Phase 5.4
 - Exclusion rule:
   - items already marked `Closed` in `v1` are not carried into `v2`
 
@@ -32,6 +32,7 @@ This `v2` registry is reconciled through Sprint 5.3 close-out.
 21. `docs/01-completion-reports/phase-05/sprint-5.1-completion-report.md`
 22. `docs/01-completion-reports/phase-05/sprint-5.2-completion-report.md`
 23. `docs/01-completion-reports/phase-05/sprint-5.3-completion-report.md`
+24. `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md`
 
 ## Active Debt Table
 
@@ -41,13 +42,13 @@ This `v2` registry is reconciled through Sprint 5.3 close-out.
 | TD-005 | No enterprise secret management/rotation orchestration for secure credentials | Partially addressed | Medium | Recorded+Observed | `src/main/resources/application.yaml`, `src/main/java/com/capitec/fraudengine/infrastructure/security/SecureProfileSecretSupplier.java`, `src/main/java/com/capitec/fraudengine/infrastructure/security/EnvExternalManagerSecretSupplier.java`, `docs/operations/runbooks/secure-credential-rotation-runbook.md`, `docs/01-completion-reports/phase-05/sprint-5.2-completion-report.md` |
 | TD-012 | Rule governance workflow maturity remains limited (beyond basic mutation endpoints) | Closed | Medium | Recorded+Observed | `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceMutationService.java`, `docs/01-completion-reports/phase-05/sprint-5.3-completion-report.md` |
 | TD-014 | Promotion/deprecation operational workflow and history/audit depth are incomplete | Closed | Medium | Recorded+Observed | `src/main/java/com/capitec/fraudengine/infrastructure/persistence/entity/RuleGovernanceHistoryEntity.java`, `src/main/resources/db/migration/V5__create_rule_governance_history.sql`, `docs/01-completion-reports/phase-05/sprint-5.3-completion-report.md` |
-| TD-018 | Retrieval still lacks rule-hit lookup filter for investigation workflows | Partially addressed | Low | Recorded | `docs/RAG/03-api-scope.md`, `docs/01-completion-reports/phase-01/sprint-1.1-completion-report.md` |
+| TD-018 | Retrieval still lacks rule-hit lookup filter for investigation workflows | Closed | Low | Recorded+Observed | `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java`, `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java`, `src/main/resources/db/migration/V6__add_rule_hit_lookup_indexes.sql`, `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md` |
 | TD-021 | Enterprise IAM/JWT/OAuth2 integration remains deferred | Partially addressed | Medium | Recorded+Observed | `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityConfiguration.java`, `docs/01-completion-reports/phase-05/sprint-5.1-completion-report.md` |
 | TD-022 | Governance list endpoint has no pagination | Closed | Medium | Observed | `src/main/java/com/capitec/fraudengine/api/controller/RuleGovernanceController.java`, `src/main/java/com/capitec/fraudengine/application/service/RuleGovernanceRetrievalService.java`, `docs/01-completion-reports/phase-05/sprint-5.3-completion-report.md` |
-| TD-023 | Velocity rule counts future-dated transactions due to absolute time-difference logic | Open | Medium | Observed | `src/main/java/com/capitec/fraudengine/domain/rule/impl/VelocityFraudRule.java`, `src/test/java/com/capitec/fraudengine/domain/rule/impl/VelocityFraudRuleTest.java` |
-| TD-024 | Repository includes `.DS_Store` artifacts in source/docs trees | Open | Low | Observed | `docs/.DS_Store`, `docs/00-blueprints/.DS_Store`, `docs/01-completion-reports/.DS_Store`, `src/main/java/.DS_Store`, `src/main/resources/.DS_Store`, `src/test/java/.DS_Store` |
+| TD-023 | Velocity rule counts future-dated transactions due to absolute time-difference logic | Closed | Medium | Observed | `src/main/java/com/capitec/fraudengine/domain/rule/impl/VelocityFraudRule.java`, `src/test/java/com/capitec/fraudengine/domain/rule/impl/VelocityFraudRuleTest.java`, `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md` |
+| TD-024 | Repository includes `.DS_Store` artifacts in source/docs trees | Closed | Low | Observed | `.gitignore`, `scripts/run-repo-hygiene-checks.sh`, `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md` |
 | TD-025 | OpenAPI metadata still describes a "Phase 1 API" despite expanded scope | Closed | Low | Observed | `src/main/java/com/capitec/fraudengine/infrastructure/config/OpenApiConfiguration.java`, `docs/01-completion-reports/phase-05/sprint-5.1-completion-report.md` |
-| TD-026 | Secure-profile test credentials are duplicated across multiple integration tests | Open | Low | Observed | `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAuthorizationIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileDatasourceResilienceIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAdminIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfilePlatformAdminIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityDiagnosticsIntegrationTest.java` |
+| TD-026 | Secure-profile test credentials are duplicated across multiple integration tests | Closed | Low | Observed | `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileTestCredentials.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAuthorizationIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAdminIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfilePlatformAdminIntegrationTest.java`, `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md` |
 | TD-027 | Hardened JWT path does not yet enforce issuer/audience validation | Open | Medium | Observed | `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityConfiguration.java`, `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityProperties.java` |
 
 ---
@@ -83,9 +84,12 @@ This `v2` registry is reconciled through Sprint 5.3 close-out.
   - `docs/01-completion-reports/phase-05/sprint-5.3-completion-report.md`
 
 ### TD-018
-- Why it matters: investigation workflows still cannot filter summaries by specific rule-hit criteria.
-- Suggested resolution direction: add rule-hit-based retrieval filter with query-performance guardrails and coverage.
-- Target phase candidate: `Phase 5`.
+- Why it mattered: investigation workflows lacked direct lookup by triggered rule code(s).
+- Current state: closed in Sprint `5.4` via `ruleHit`/`ruleHitMatch` retrieval filters plus query/index hardening.
+- Resolution evidence:
+  - `src/main/java/com/capitec/fraudengine/api/controller/FraudEvaluationController.java`
+  - `src/main/java/com/capitec/fraudengine/infrastructure/persistence/repository/FraudEvaluationSpecifications.java`
+  - `src/main/resources/db/migration/V6__add_rule_hit_lookup_indexes.sql`
 
 ### TD-021
 - Why it matters: enterprise identity posture is partially implemented; hardened JWT path exists, but full enterprise rollout still depends on IdP integration and stricter token validation policy.
@@ -102,14 +106,18 @@ This `v2` registry is reconciled through Sprint 5.3 close-out.
   - `docs/01-completion-reports/phase-05/sprint-5.3-completion-report.md`
 
 ### TD-023
-- Why it matters: velocity semantics should generally consider prior transactions only; current `.abs()` logic allows later/future-dated events to count, which can over-trigger review decisions under timestamp skew.
-- Suggested resolution direction: count only transactions where `previousTimestamp <= currentTimestamp` and age is within the configured window.
-- Target phase candidate: `Phase 5`.
+- Why it mattered: velocity semantics should only count prior transactions; absolute timestamp difference over-counted under clock skew/future-dated events.
+- Current state: closed in Sprint `5.4` by ignoring future-dated events in velocity-window evaluation and adding regression coverage.
+- Resolution evidence:
+  - `src/main/java/com/capitec/fraudengine/domain/rule/impl/VelocityFraudRule.java`
+  - `src/test/java/com/capitec/fraudengine/domain/rule/impl/VelocityFraudRuleTest.java`
 
 ### TD-024
-- Why it matters: committed `.DS_Store` artifacts create noisy diffs and reduce submission polish.
-- Suggested resolution direction: remove tracked `.DS_Store` files and extend `.gitignore` rules to prevent re-introduction.
-- Target phase candidate: `Phase 5`.
+- Why it mattered: committed `.DS_Store` artifacts created noisy diffs and reduced reviewer confidence.
+- Current state: closed in Sprint `5.4` by enforcing hygiene checks, blocking `.DS_Store` regressions, and cleaning tracked artifacts.
+- Resolution evidence:
+  - `.gitignore`
+  - `scripts/run-repo-hygiene-checks.sh`
 
 ### TD-025
 - Why it mattered: reviewer-facing API metadata understated implemented scope and could create confusion during API inspection.
@@ -117,9 +125,14 @@ This `v2` registry is reconciled through Sprint 5.3 close-out.
 - Resolution evidence: `src/main/java/com/capitec/fraudengine/infrastructure/config/OpenApiConfiguration.java`.
 
 ### TD-026
-- Why it matters: duplicated secure-profile test credentials increase maintenance overhead and drift risk across integration suites.
-- Suggested resolution direction: centralize shared secure-test credentials into a reusable test fixture/helper.
-- Target phase candidate: `Phase 5`.
+- Why it mattered: duplicated secure-profile test credentials increased maintenance overhead and drift risk.
+- Current state: closed in Sprint `5.4` by centralizing secure-profile credentials in a shared test fixture consumed by integration suites.
+- Resolution evidence:
+  - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileTestCredentials.java`
+  - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java`
+  - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAuthorizationIntegrationTest.java`
+  - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAdminIntegrationTest.java`
+  - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfilePlatformAdminIntegrationTest.java`
 
 ### TD-027
 - Why it matters: hardened JWT configuration currently enforces `jwk-set-uri` presence but does not yet validate `issuer` and `audience` claims, which weakens production token trust boundaries.
@@ -142,3 +155,8 @@ This `v2` registry is reconciled through Sprint 5.3 close-out.
   - `TD-012` closed via explicit governance workflow action implementation and regression coverage
   - `TD-014` closed via durable lifecycle-history persistence and retrieval
   - `TD-022` closed via paginated governance list/read contracts
+- Sprint 5.4 reconciliation updates:
+  - `TD-018` closed via rule-hit retrieval filters and query/index hardening
+  - `TD-023` closed via velocity temporal-correctness fix and regression coverage
+  - `TD-024` closed via hygiene enforcement and `.DS_Store` cleanup
+  - `TD-026` closed via shared secure-profile credential test fixture

@@ -68,6 +68,7 @@
   - admin governance mutation endpoints now support lifecycle/activation transitions, controlled version registration, and semantic workflow actions
   - governance history is now durably persisted and retrievable through paged version/history admin reads
   - retrieval now supports paged responses, one-sided time filtering, review-oriented filters, and explicit summary sorting
+  - retrieval now supports rule-hit filtering (`ruleHit`, `ruleHitMatch`) for investigation workflows
   - location anomaly rule is now implemented with deterministic explainability
   - secure-profile governance mutation endpoints now have explicit admin/non-admin authorization regression coverage
   - secure-profile role matrix coverage now includes `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, and `PLATFORM_ADMIN`
@@ -93,8 +94,8 @@
   - velocity
   - risky merchant category
   - unusual time
-- Deferred unless time allows:
-  - rule-hit retrieval filter
+- Extended in later phases:
+  - rule-hit retrieval filter (implemented in Sprint `5.4`)
 
 ## Why This Shape
 - It matches the project brief directly.

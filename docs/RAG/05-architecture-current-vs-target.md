@@ -32,6 +32,8 @@
 - Delivery and verification architecture now includes:
   - GitHub Actions CI baseline for compile, test, and package gates
   - dedicated Phase 4 security/operations regression gate (`scripts/run-phase4-security-ops-regression.sh`) wired into CI
+  - repository hygiene gate (`scripts/run-repo-hygiene-checks.sh`) with `.DS_Store`/workspace-clean assertions
+  - performance/reliability smoke gate (`scripts/run-performance-reliability-smoke.sh`) with p95 threshold checks
   - governance regression tests that assert end-to-end state mutation, role-aware authorization behavior, and post-mutation retrieval consistency
   - explicit test-runtime alignment for Mockito on JDK 25 via Surefire Java agent configuration
 - Phase 4 operational resilience architecture now includes:
@@ -48,6 +50,9 @@
   - paged list responses for `GET /api/fraud-evaluations`
   - one-sided time filtering (`from`-only / `to`-only) and bounded ranges
   - additional low-risk filters (`merchantCategory`, `channel`)
+  - rule-hit lookup filters (`ruleHit`, `ruleHitMatch`) for investigation workflows
+- Velocity temporal correctness is now explicit:
+  - future-dated events are excluded from velocity-window counting
 - Fraud capability now includes deterministic location anomaly evaluation with explainable evidence in rule results.
 
 ## Target Phase 1 Shape

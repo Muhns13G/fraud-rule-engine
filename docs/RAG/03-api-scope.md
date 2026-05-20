@@ -81,7 +81,14 @@ Supported sort values:
 - asynchronous processing
 - rule activation or mutation endpoints outside governed admin controls
 - customer-facing APIs
-- broader search filters such as rule-hit lookup
+- broader search filters beyond implemented review/investigation contract
+
+## Retrieval Hardening Notes (Sprint 5.4)
+- Retrieval now includes rule-hit lookup support:
+  - `ruleHit` (repeatable)
+  - `ruleHitMatch` (`ANY`/`ALL`)
+- Query path is specification-based with supporting index migration:
+  - `V6__add_rule_hit_lookup_indexes.sql`
 
 ## Rule Evaluation Surface Notes (Sprint 3.3)
 - The rule set now includes `LOCATION_ANOMALY` in addition to:

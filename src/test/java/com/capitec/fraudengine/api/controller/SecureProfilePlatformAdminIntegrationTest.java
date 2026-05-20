@@ -1,6 +1,5 @@
 package com.capitec.fraudengine.api.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,8 +22,8 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.username=secure-user",
-	"app.security.secure-profile.password=change-me-secure",
+	SecureProfileTestCredentials.USERNAME_PROPERTY,
+	SecureProfileTestCredentials.PASSWORD_PROPERTY,
 	"app.security.secure-profile.role=PLATFORM_ADMIN",
 	"app.security.secure-profile.ops-reader-role=OPS_READER",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN",
@@ -32,23 +31,20 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 })
 class SecureProfilePlatformAdminIntegrationTest {
 
-	private static final String SECURE_USERNAME = "secure-user";
-	private static final String SECURE_PASSWORD = "change-me-secure";
-
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Test
 	void shouldAllowGovernanceReadEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(get("/api/admin/rules")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isOk());
 	}
 
 	@Test
 	void shouldAllowGovernanceStateTransitionEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(patch("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/state")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{
@@ -62,7 +58,7 @@ class SecureProfilePlatformAdminIntegrationTest {
 	@Test
 	void shouldAllowGovernanceVersionRegistrationEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(post("/api/admin/rules/DOES_NOT_EXIST/versions")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{
@@ -77,14 +73,14 @@ class SecureProfilePlatformAdminIntegrationTest {
 	@Test
 	void shouldAllowActuatorEndpointForPlatformAdminUser() throws Exception {
 		mockMvc.perform(get("/actuator/health")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isOk());
 	}
 
 	@Test
 	void shouldAllowFraudEvaluationApiForPlatformAdminUser() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isOk());
 	}
 }

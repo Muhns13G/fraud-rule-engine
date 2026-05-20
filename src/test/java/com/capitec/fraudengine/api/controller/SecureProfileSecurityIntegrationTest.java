@@ -1,9 +1,9 @@
 package com.capitec.fraudengine.api.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
 import java.util.UUID;
 
@@ -24,15 +24,12 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.username=secure-user",
-	"app.security.secure-profile.password=change-me-secure",
+	SecureProfileTestCredentials.USERNAME_PROPERTY,
+	SecureProfileTestCredentials.PASSWORD_PROPERTY,
 	"app.security.secure-profile.role=API_CLIENT",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })
 class SecureProfileSecurityIntegrationTest {
-
-	private static final String SECURE_USERNAME = "secure-user";
-	private static final String SECURE_PASSWORD = "change-me-secure";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -64,42 +61,42 @@ class SecureProfileSecurityIntegrationTest {
 	@Test
 	void shouldAllowApiRequestWithValidBasicAuth() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void shouldAllowActuatorHealthWithValidBasicAuth() throws Exception {
 		mockMvc.perform(get("/actuator/health")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isForbidden());
 	}
 
 	@Test
 	void shouldRejectActuatorInfoForSecureUserWithoutOpsRole() throws Exception {
 		mockMvc.perform(get("/actuator/info")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isForbidden());
 	}
 
 	@Test
 	void shouldRejectGovernanceReadWhenSecureUserLacksOpsRole() throws Exception {
 		mockMvc.perform(get("/api/admin/rules")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isForbidden());
 	}
 
 	@Test
 	void shouldRejectApiRequestWithInvalidCredentials() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations")
-				.with(httpBasic(SECURE_USERNAME, "wrong-password")))
+				.with(httpBasic(SecureProfileTestCredentials.USERNAME, "wrong-password")))
 			.andExpect(status().isUnauthorized());
 	}
 
 	@Test
 	void shouldRejectGovernanceMutationWhenSecureUserLacksAdminRole() throws Exception {
 		mockMvc.perform(patch("/api/admin/rules/HIGH_AMOUNT/versions/1.0.0/state")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{

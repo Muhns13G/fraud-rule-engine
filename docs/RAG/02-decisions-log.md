@@ -149,6 +149,12 @@
   - expose paged governance audit retrieval surfaces for versions and lifecycle history to avoid unbounded admin responses
   - enforce least-privilege governance-read authorization for version/history retrieval (`OPS_READER` or stronger in secure profile)
   - treat workflow transition validity, history integrity, and authorization regression as closure-gate tests for sprint completion
+- Sprint 5.4 close-out decisions:
+  - close the investigation lookup gap with rule-hit retrieval filters (`ruleHit`, `ruleHitMatch`) while preserving existing retrieval compatibility
+  - harden retrieval query behavior with explicit indexing and bounded specification-based filtering
+  - expand hardening gates with repo hygiene and security/ops regression paths as first-class CI checks
+  - add repeatable p95 latency smoke thresholds for evaluation/retrieval and keep velocity semantics strictly prior-event only
+  - reduce integration-test drift by centralizing shared secure-profile test credentials in one fixture
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

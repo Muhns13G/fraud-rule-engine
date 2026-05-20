@@ -1,6 +1,5 @@
 package com.capitec.fraudengine.api.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,15 +22,12 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.username=secure-user",
-	"app.security.secure-profile.password=change-me-secure",
+	SecureProfileTestCredentials.USERNAME_PROPERTY,
+	SecureProfileTestCredentials.PASSWORD_PROPERTY,
 	"app.security.secure-profile.role=GOVERNANCE_ADMIN",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })
 class SecureProfileGovernanceAdminIntegrationTest {
-
-	private static final String SECURE_USERNAME = "secure-user";
-	private static final String SECURE_PASSWORD = "change-me-secure";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -39,7 +35,7 @@ class SecureProfileGovernanceAdminIntegrationTest {
 	@Test
 	void shouldAllowGovernanceStateTransitionEndpointForAdminUser() throws Exception {
 		mockMvc.perform(patch("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/state")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{
@@ -53,7 +49,7 @@ class SecureProfileGovernanceAdminIntegrationTest {
 	@Test
 	void shouldAllowGovernanceVersionRegistrationEndpointForAdminUser() throws Exception {
 		mockMvc.perform(post("/api/admin/rules/DOES_NOT_EXIST/versions")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{
@@ -68,7 +64,7 @@ class SecureProfileGovernanceAdminIntegrationTest {
 	@Test
 	void shouldAllowGovernanceWorkflowActionEndpointForAdminUser() throws Exception {
 		mockMvc.perform(post("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/actions")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.with(SecureProfileTestCredentials.secureBasicAuth())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 					{
@@ -81,35 +77,35 @@ class SecureProfileGovernanceAdminIntegrationTest {
 	@Test
 	void shouldAllowGovernanceReadEndpointForAdminUser() throws Exception {
 		mockMvc.perform(get("/api/admin/rules")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isOk());
 	}
 
 	@Test
 	void shouldAllowGovernanceVersionReadEndpointForAdminUser() throws Exception {
 		mockMvc.perform(get("/api/admin/rules/DOES_NOT_EXIST/versions")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void shouldAllowGovernanceHistoryReadEndpointForAdminUser() throws Exception {
 		mockMvc.perform(get("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/history")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void shouldAllowActuatorEndpointForAdminUser() throws Exception {
 		mockMvc.perform(get("/actuator/health")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isOk());
 	}
 
 	@Test
 	void shouldAllowFraudEvaluationApiForAdminUser() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations")
-				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
+				.with(SecureProfileTestCredentials.secureBasicAuth()))
 			.andExpect(status().isOk());
 	}
 }

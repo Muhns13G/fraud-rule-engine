@@ -1,6 +1,5 @@
 package com.capitec.fraudengine.api.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,11 +21,11 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("secure")
 @TestPropertySource(properties = {
-	"app.security.secure-profile.username=secure-user-primary",
-	"app.security.secure-profile.password=change-me-secure-primary",
+	SecureProfileTestCredentials.PRIMARY_USERNAME_PROPERTY,
+	SecureProfileTestCredentials.PRIMARY_PASSWORD_PROPERTY,
 	"app.security.secure-profile.rotation-phase=OVERLAP",
-	"app.security.secure-profile.rotation-username=secure-user-rotating",
-	"app.security.secure-profile.rotation-password=change-me-secure-rotating",
+	SecureProfileTestCredentials.ROTATION_USERNAME_PROPERTY,
+	SecureProfileTestCredentials.ROTATION_PASSWORD_PROPERTY,
 	"app.security.secure-profile.role=API_CLIENT",
 	"app.security.secure-profile.admin-role=GOVERNANCE_ADMIN"
 })
@@ -38,14 +37,14 @@ class SecureProfileCredentialRotationIntegrationTest {
 	@Test
 	void shouldAllowApiAuthenticationWithPrimaryCredentialDuringRotationWindow() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
-				.with(httpBasic("secure-user-primary", "change-me-secure-primary")))
+				.with(SecureProfileTestCredentials.primaryBasicAuth()))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void shouldAllowApiAuthenticationWithRotationCredentialDuringRotationWindow() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations/{evaluationId}", UUID.randomUUID())
-				.with(httpBasic("secure-user-rotating", "change-me-secure-rotating")))
+				.with(SecureProfileTestCredentials.rotationBasicAuth()))
 			.andExpect(status().isNotFound());
 	}
 }
