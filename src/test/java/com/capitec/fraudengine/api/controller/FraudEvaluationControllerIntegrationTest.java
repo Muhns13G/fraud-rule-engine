@@ -320,6 +320,34 @@ class FraudEvaluationControllerIntegrationTest {
 	}
 
 	@Test
+	void shouldAcceptRuleHitContractFiltersWithoutBreakingExistingRetrievalFilters() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-rule-hit-contract-001",
+				"account-rule-hit-contract-001",
+				"customer-rule-hit-contract-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T13:30:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T13:31:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("customerId", "customer-rule-hit-contract-001")
+				.param("ruleHit", "UNUSUAL_TIME")
+				.param("ruleHit", "HIGH_AMOUNT")
+				.param("ruleHitMatch", "ANY"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-rule-hit-contract-001")))
+			.andExpect(jsonPath("$.page", is(0)))
+			.andExpect(jsonPath("$.size", is(20)));
+	}
+
+	@Test
 	void shouldReturnNewestEvaluationsFirstByDefault() throws Exception {
 		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
 			fraudEvaluation(

@@ -2,6 +2,7 @@ package com.capitec.fraudengine.api.controller;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,6 +23,7 @@ import com.capitec.fraudengine.api.dto.FraudEvaluationSummaryPageResponseDto;
 import com.capitec.fraudengine.api.error.FraudEvaluationNotFoundException;
 import com.capitec.fraudengine.application.mapper.FraudEvaluationApplicationMapper;
 import com.capitec.fraudengine.application.service.FraudEvaluationRetrievalService;
+import com.capitec.fraudengine.application.service.FraudEvaluationRuleHitMatchMode;
 import com.capitec.fraudengine.application.service.FraudEvaluationService;
 import com.capitec.fraudengine.application.service.FraudEvaluationSummarySortOrder;
 import com.capitec.fraudengine.domain.model.FraudEvaluation;
@@ -150,7 +152,7 @@ public class FraudEvaluationController {
 	@GetMapping
 	@Operation(
 		summary = "List fraud evaluations",
-		description = "Returns persisted fraud evaluations using the current review filters: decision, accountId, customerId, transactionId, merchantCategory, channel, evaluatedAt time range (including one-sided bounds), and explicit summary sorting."
+		description = "Returns persisted fraud evaluations using review filters: decision, accountId, customerId, transactionId, merchantCategory, channel, optional rule-hit filter contract (`ruleHit`, `ruleHitMatch`), evaluatedAt time range (including one-sided bounds), and explicit summary sorting."
 	)
 	@ApiResponses({
 		@ApiResponse(
@@ -182,6 +184,16 @@ public class FraudEvaluationController {
 		@RequestParam(required = false) MerchantCategory merchantCategory,
 		@Parameter(description = "Optional transaction channel filter.", example = "ONLINE")
 		@RequestParam(required = false) TransactionChannel channel,
+		@Parameter(
+			description = "Optional triggered-rule filter list. Repeat `ruleHit` to supply multiple rule codes.",
+			example = "HIGH_AMOUNT"
+		)
+		@RequestParam(required = false, name = "ruleHit") List<String> ruleHit,
+		@Parameter(
+			description = "Rule-hit match semantics. `ANY` requires at least one requested rule to be triggered; `ALL` requires all requested rules.",
+			example = "ANY"
+		)
+		@RequestParam(defaultValue = "ANY") FraudEvaluationRuleHitMatchMode ruleHitMatch,
 		@Parameter(description = "Optional summary sort order. Defaults to newest evaluations first.", example = "NEWEST_FIRST")
 		@RequestParam(defaultValue = "NEWEST_FIRST") FraudEvaluationSummarySortOrder sort,
 		@Parameter(description = "Optional inclusive evaluated-at range start in ISO-8601 format.", example = "2026-05-12T09:00:00+02:00")
@@ -200,6 +212,8 @@ public class FraudEvaluationController {
 			transactionId,
 			merchantCategory,
 			channel,
+			ruleHit,
+			ruleHitMatch,
 			sort,
 			from,
 			to,

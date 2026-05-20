@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -92,12 +93,16 @@ public class FraudEvaluationRetrievalService {
 		String transactionId,
 		MerchantCategory merchantCategory,
 		TransactionChannel channel,
+		List<String> ruleHit,
+		FraudEvaluationRuleHitMatchMode ruleHitMatch,
 		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
 		OffsetDateTime to,
 		int page,
 		int size
 	) {
+		List<String> normalizedRuleHits = normalizeRuleHitFilter(ruleHit);
+
 		Page<FraudEvaluationSummaryResponseDto> responses = findDomainEvaluations(
 			decision,
 			accountId,
@@ -105,6 +110,8 @@ public class FraudEvaluationRetrievalService {
 			transactionId,
 			merchantCategory,
 			channel,
+			normalizedRuleHits,
+			ruleHitMatch,
 			sortOrder,
 			from,
 			to,
@@ -113,13 +120,15 @@ public class FraudEvaluationRetrievalService {
 		).map(fraudEvaluationApplicationMapper::toSummaryResponse);
 
 		LOGGER.info(
-			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} merchantCategoryPresent={} channelPresent={} fromPresent={} toPresent={} sort={} page={} size={} pageResultCount={} totalElements={} totalPages={}",
+			"fraud_evaluation_summary_query decision={} accountIdPresent={} customerIdPresent={} transactionIdPresent={} merchantCategoryPresent={} channelPresent={} ruleHitCount={} ruleHitMatch={} fromPresent={} toPresent={} sort={} page={} size={} pageResultCount={} totalElements={} totalPages={}",
 			decision,
 			accountId != null,
 			customerId != null,
 			transactionId != null,
 			merchantCategory != null,
 			channel != null,
+			normalizedRuleHits.size(),
+			ruleHitMatch,
 			from != null,
 			to != null,
 			sortOrder,
@@ -147,6 +156,8 @@ public class FraudEvaluationRetrievalService {
 		String transactionId,
 		MerchantCategory merchantCategory,
 		TransactionChannel channel,
+		List<String> normalizedRuleHits,
+		FraudEvaluationRuleHitMatchMode ruleHitMatch,
 		FraudEvaluationSummarySortOrder sortOrder,
 		OffsetDateTime from,
 		OffsetDateTime to,
@@ -161,11 +172,26 @@ public class FraudEvaluationRetrievalService {
 				transactionId,
 				merchantCategory,
 				channel,
+				normalizedRuleHits,
+				ruleHitMatch,
 				from,
 				to
 			),
 			PageRequest.of(page, size, toSort(sortOrder))
 		).map(fraudEvaluationPersistenceMapper::toDomain);
+	}
+
+	private List<String> normalizeRuleHitFilter(List<String> ruleHit) {
+		if (ruleHit == null) {
+			return List.of();
+		}
+
+		return ruleHit.stream()
+			.map(value -> value == null ? "" : value.trim())
+			.filter(value -> !value.isBlank())
+			.map(String::toUpperCase)
+			.distinct()
+			.collect(Collectors.toList());
 	}
 
 	private Sort toSort(FraudEvaluationSummarySortOrder sortOrder) {

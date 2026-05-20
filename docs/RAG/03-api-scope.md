@@ -33,6 +33,9 @@ Return one persisted fraud evaluation including the original normalized transact
 
 ### `GET /api/fraud-evaluations`
 Return paged and filtered fraud evaluations for review workflows.
+Supports optional rule-hit contract filters:
+- `ruleHit` (repeatable): requested triggered rule code(s)
+- `ruleHitMatch`: `ANY` (default) or `ALL`
 
 ## Phase 2.5 Admin Rule Governance Endpoints
 

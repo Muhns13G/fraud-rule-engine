@@ -48,6 +48,10 @@ Current retrieval filters:
 - `accountId`
 - `customerId`
 - `transactionId`
+- `merchantCategory`
+- `channel`
+- `ruleHit` (repeatable)
+- `ruleHitMatch` (`ANY` default, `ALL`)
 - `from`
 - `to`
 - `sort`
@@ -429,6 +433,10 @@ Supported filters:
 - `accountId`
 - `customerId`
 - `transactionId`
+- `merchantCategory`
+- `channel`
+- `ruleHit` (repeatable)
+- `ruleHitMatch` (`ANY` default, `ALL`)
 - `from`
 - `to`
 - `sort`

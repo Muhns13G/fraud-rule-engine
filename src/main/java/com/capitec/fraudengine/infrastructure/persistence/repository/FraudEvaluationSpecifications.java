@@ -1,9 +1,11 @@
 package com.capitec.fraudengine.infrastructure.persistence.repository;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import com.capitec.fraudengine.application.service.FraudEvaluationRuleHitMatchMode;
 import com.capitec.fraudengine.domain.model.enums.FraudDecision;
 import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.TransactionChannel;
@@ -24,6 +26,8 @@ public final class FraudEvaluationSpecifications {
 		String transactionId,
 		MerchantCategory merchantCategory,
 		TransactionChannel channel,
+		List<String> normalizedRuleHits,
+		FraudEvaluationRuleHitMatchMode ruleHitMatch,
 		OffsetDateTime from,
 		OffsetDateTime to
 	) {
@@ -79,6 +83,13 @@ public final class FraudEvaluationSpecifications {
 			specification = specification.and((root, query, criteriaBuilder) ->
 				criteriaBuilder.lessThanOrEqualTo(root.get("evaluatedAt"), to)
 			);
+		}
+
+		// 5.4.1 contract-only step:
+		// `ruleHit` and `ruleHitMatch` are now part of the retrieval contract and normalized upstream.
+		// Join-based rule-hit filtering behavior is implemented in 5.4.2.
+		if (!normalizedRuleHits.isEmpty()) {
+			specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
 		}
 
 		return specification;
