@@ -3,6 +3,7 @@ package com.capitec.fraudengine.infrastructure.persistence.repository;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.capitec.fraudengine.application.service.FraudEvaluationRuleHitMatchMode;
@@ -10,6 +11,7 @@ import com.capitec.fraudengine.domain.model.enums.FraudDecision;
 import com.capitec.fraudengine.domain.model.enums.MerchantCategory;
 import com.capitec.fraudengine.domain.model.enums.TransactionChannel;
 import com.capitec.fraudengine.infrastructure.persistence.entity.FraudEvaluationEntity;
+import com.capitec.fraudengine.infrastructure.persistence.entity.FraudRuleResultEntity;
 
 /**
  * Specification helpers for fraud-evaluation retrieval filters.
@@ -85,11 +87,44 @@ public final class FraudEvaluationSpecifications {
 			);
 		}
 
-		// 5.4.1 contract-only step:
-		// `ruleHit` and `ruleHitMatch` are now part of the retrieval contract and normalized upstream.
-		// Join-based rule-hit filtering behavior is implemented in 5.4.2.
 		if (!normalizedRuleHits.isEmpty()) {
-			specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
+			specification = specification.and(ruleHitMatch == FraudEvaluationRuleHitMatchMode.ALL
+				? withAllTriggeredRules(normalizedRuleHits)
+				: withAnyTriggeredRule(normalizedRuleHits));
+		}
+
+		return specification;
+	}
+
+	private static Specification<FraudEvaluationEntity> withAnyTriggeredRule(List<String> normalizedRuleHits) {
+		return (root, query, criteriaBuilder) -> {
+			Subquery<Long> ruleHitSubquery = query.subquery(Long.class);
+			var ruleResultRoot = ruleHitSubquery.from(FraudRuleResultEntity.class);
+			ruleHitSubquery.select(criteriaBuilder.literal(1L))
+				.where(
+					criteriaBuilder.equal(ruleResultRoot.get("fraudEvaluation"), root),
+					criteriaBuilder.isTrue(ruleResultRoot.get("triggered")),
+					ruleResultRoot.get("ruleCode").in(normalizedRuleHits)
+				);
+			return criteriaBuilder.exists(ruleHitSubquery);
+		};
+	}
+
+	private static Specification<FraudEvaluationEntity> withAllTriggeredRules(List<String> normalizedRuleHits) {
+		Specification<FraudEvaluationEntity> specification = Specification.unrestricted();
+
+		for (String requestedRuleCode : normalizedRuleHits) {
+			specification = specification.and((root, query, criteriaBuilder) -> {
+				Subquery<Long> allRulesSubquery = query.subquery(Long.class);
+				var ruleResultRoot = allRulesSubquery.from(FraudRuleResultEntity.class);
+				allRulesSubquery.select(criteriaBuilder.literal(1L))
+					.where(
+						criteriaBuilder.equal(ruleResultRoot.get("fraudEvaluation"), root),
+						criteriaBuilder.isTrue(ruleResultRoot.get("triggered")),
+						criteriaBuilder.equal(ruleResultRoot.get("ruleCode"), requestedRuleCode)
+					);
+				return criteriaBuilder.exists(allRulesSubquery);
+			});
 		}
 
 		return specification;

@@ -348,6 +348,97 @@ class FraudEvaluationControllerIntegrationTest {
 	}
 
 	@Test
+	void shouldFilterEvaluationSummariesByAnyTriggeredRuleHit() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-rule-hit-any-001",
+				"account-rule-hit-any-001",
+				"customer-rule-hit-any-001",
+				FraudDecision.REVIEW,
+				40,
+				OffsetDateTime.parse("2026-05-12T14:10:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T14:11:00+02:00"),
+				List.of(ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40))
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-rule-hit-any-002",
+				"account-rule-hit-any-002",
+				"customer-rule-hit-any-002",
+				FraudDecision.BLOCK,
+				100,
+				OffsetDateTime.parse("2026-05-12T14:12:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T14:13:00+02:00"),
+				List.of(ruleResult("HIGH_AMOUNT", true, RuleSeverity.BLOCK, 100))
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-rule-hit-any-003",
+				"account-rule-hit-any-003",
+				"customer-rule-hit-any-003",
+				FraudDecision.ALLOW,
+				0,
+				OffsetDateTime.parse("2026-05-12T14:14:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T14:15:00+02:00"),
+				List.of(ruleResult("RISKY_MERCHANT_CATEGORY", false, RuleSeverity.REVIEW, 0))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("ruleHit", "HIGH_AMOUNT")
+				.param("ruleHit", "UNUSUAL_TIME")
+				.param("ruleHitMatch", "ANY"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(2)));
+	}
+
+	@Test
+	void shouldFilterEvaluationSummariesByAllTriggeredRuleHits() throws Exception {
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-rule-hit-all-001",
+				"account-rule-hit-all-001",
+				"customer-rule-hit-all-001",
+				FraudDecision.BLOCK,
+				140,
+				OffsetDateTime.parse("2026-05-12T14:20:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T14:21:00+02:00"),
+				List.of(
+					ruleResult("HIGH_AMOUNT", true, RuleSeverity.BLOCK, 100),
+					ruleResult("UNUSUAL_TIME", true, RuleSeverity.REVIEW, 40)
+				)
+			)
+		));
+		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
+			fraudEvaluation(
+				UUID.randomUUID(),
+				"txn-rule-hit-all-002",
+				"account-rule-hit-all-002",
+				"customer-rule-hit-all-002",
+				FraudDecision.BLOCK,
+				100,
+				OffsetDateTime.parse("2026-05-12T14:22:00+02:00"),
+				OffsetDateTime.parse("2026-05-12T14:23:00+02:00"),
+				List.of(ruleResult("HIGH_AMOUNT", true, RuleSeverity.BLOCK, 100))
+			)
+		));
+
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.param("ruleHit", "high_amount")
+				.param("ruleHit", "UNUSUAL_TIME")
+				.param("ruleHitMatch", "ALL"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].transactionId", is("txn-rule-hit-all-001")));
+	}
+
+	@Test
 	void shouldReturnNewestEvaluationsFirstByDefault() throws Exception {
 		fraudEvaluationJpaRepository.save(fraudEvaluationPersistenceMapper.toEntity(
 			fraudEvaluation(

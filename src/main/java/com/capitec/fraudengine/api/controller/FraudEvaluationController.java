@@ -39,6 +39,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 
 /**
  * REST controller for evaluating transactions and retrieving stored fraud evaluations.
@@ -188,7 +189,7 @@ public class FraudEvaluationController {
 			description = "Optional triggered-rule filter list. Repeat `ruleHit` to supply multiple rule codes.",
 			example = "HIGH_AMOUNT"
 		)
-		@RequestParam(required = false, name = "ruleHit") List<String> ruleHit,
+		@RequestParam(required = false, name = "ruleHit") @Size(max = 10) List<String> ruleHit,
 		@Parameter(
 			description = "Rule-hit match semantics. `ANY` requires at least one requested rule to be triggered; `ALL` requires all requested rules.",
 			example = "ANY"
