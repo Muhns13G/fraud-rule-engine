@@ -2,6 +2,8 @@ package com.capitec.fraudengine.infrastructure.persistence.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceHistoryEntity;
@@ -21,5 +23,19 @@ public interface RuleGovernanceHistoryJpaRepository extends JpaRepository<RuleGo
 	List<RuleGovernanceHistoryEntity> findByRuleCodeAndRuleVersionOrderByCreatedAtAscGovernanceHistoryIdAsc(
 		String ruleCode,
 		String ruleVersion
+	);
+
+	/**
+	 * Paged governance history for one rule identity.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param ruleVersion semantic rule version
+	 * @param pageable requested page
+	 * @return paged history entries
+	 */
+	Page<RuleGovernanceHistoryEntity> findByRuleCodeAndRuleVersion(
+		String ruleCode,
+		String ruleVersion,
+		Pageable pageable
 	);
 }

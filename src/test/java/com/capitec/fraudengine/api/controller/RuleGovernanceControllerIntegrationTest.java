@@ -66,9 +66,13 @@ class RuleGovernanceControllerIntegrationTest {
 
 		mockMvc.perform(get("/api/admin/rules"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(1)))
-			.andExpect(jsonPath("$[0].ruleCode", is("ACTIVE_RULE")))
-			.andExpect(jsonPath("$[0].activationState", is("ACTIVE")));
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].ruleCode", is("ACTIVE_RULE")))
+			.andExpect(jsonPath("$.content[0].activationState", is("ACTIVE")))
+			.andExpect(jsonPath("$.page", is(0)))
+			.andExpect(jsonPath("$.size", is(20)))
+			.andExpect(jsonPath("$.totalElements", is(1)))
+			.andExpect(jsonPath("$.totalPages", is(1)));
 	}
 
 	@Test
@@ -87,7 +91,33 @@ class RuleGovernanceControllerIntegrationTest {
 		mockMvc.perform(get("/api/admin/rules")
 				.param("activeOnly", "false"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(2)));
+			.andExpect(jsonPath("$.content", hasSize(2)))
+			.andExpect(jsonPath("$.totalElements", is(2)));
+	}
+
+	@Test
+	void shouldListGovernedVersionsForOneRuleCodeWithPagination() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.0.0", "High Amount Rule", RuleLifecycleStatus.ACTIVE, RuleActivationState.ACTIVE)
+			)
+		);
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HIGH_AMOUNT", "1.1.0", "High Amount Rule", RuleLifecycleStatus.DEPRECATED, RuleActivationState.INACTIVE)
+			)
+		);
+
+		mockMvc.perform(get("/api/admin/rules/HIGH_AMOUNT/versions")
+				.param("page", "0")
+				.param("size", "1"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].ruleCode", is("HIGH_AMOUNT")))
+			.andExpect(jsonPath("$.page", is(0)))
+			.andExpect(jsonPath("$.size", is(1)))
+			.andExpect(jsonPath("$.totalElements", is(2)))
+			.andExpect(jsonPath("$.totalPages", is(2)));
 	}
 
 	@Test
@@ -319,7 +349,7 @@ class RuleGovernanceControllerIntegrationTest {
 
 		mockMvc.perform(get("/api/admin/rules").param("activeOnly", "false"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$", hasSize(2)));
+			.andExpect(jsonPath("$.content", hasSize(2)));
 	}
 
 	@Test
@@ -351,6 +381,43 @@ class RuleGovernanceControllerIntegrationTest {
 		org.assertj.core.api.Assertions.assertThat(history.getFirst().getActionType()).isEqualTo("WORKFLOW_PROMOTE");
 		org.assertj.core.api.Assertions.assertThat(history.getFirst().getFromLifecycleStatus().name()).isEqualTo("DRAFT");
 		org.assertj.core.api.Assertions.assertThat(history.getFirst().getToLifecycleStatus().name()).isEqualTo("ACTIVE");
+	}
+
+	@Test
+	void shouldReturnPagedLifecycleHistoryForGovernedRuleIdentity() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("HISTORY_RULE", "1.0.0", "History Rule", RuleLifecycleStatus.DRAFT, RuleActivationState.INACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			post("/api/admin/rules/HISTORY_RULE/versions/1.0.0/actions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "action": "PROMOTE"
+					}
+					""")
+		)
+			.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/admin/rules/HISTORY_RULE/versions/1.0.0/history")
+				.param("page", "0")
+				.param("size", "10"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].ruleCode", is("HISTORY_RULE")))
+			.andExpect(jsonPath("$.content[0].version", is("1.0.0")))
+			.andExpect(jsonPath("$.content[0].actionType", is("WORKFLOW_PROMOTE")))
+			.andExpect(jsonPath("$.content[0].actor").isNotEmpty())
+			.andExpect(jsonPath("$.content[0].requestId").isNotEmpty())
+			.andExpect(jsonPath("$.content[0].fromLifecycleStatus", is("DRAFT")))
+			.andExpect(jsonPath("$.content[0].toLifecycleStatus", is("ACTIVE")))
+			.andExpect(jsonPath("$.page", is(0)))
+			.andExpect(jsonPath("$.size", is(10)))
+			.andExpect(jsonPath("$.totalElements", is(1)))
+			.andExpect(jsonPath("$.totalPages", is(1)));
 	}
 
 	@Test

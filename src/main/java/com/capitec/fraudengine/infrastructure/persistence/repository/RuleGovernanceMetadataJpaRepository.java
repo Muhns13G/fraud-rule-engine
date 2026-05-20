@@ -3,6 +3,8 @@ package com.capitec.fraudengine.infrastructure.persistence.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.capitec.fraudengine.domain.model.enums.RuleActivationState;
@@ -46,6 +48,14 @@ public interface RuleGovernanceMetadataJpaRepository extends JpaRepository<RuleG
 	List<RuleGovernanceMetadataEntity> findAllByOrderByRuleCodeAscRuleVersionAsc();
 
 	/**
+	 * Lists rule metadata entries with pagination.
+	 *
+	 * @param pageable requested page and sort
+	 * @return paged rule metadata entities
+	 */
+	Page<RuleGovernanceMetadataEntity> findAllBy(Pageable pageable);
+
+	/**
 	 * Lists rule metadata entries filtered by activation state and sorted for stable admin visibility.
 	 *
 	 * @param activationState activation state filter
@@ -54,4 +64,25 @@ public interface RuleGovernanceMetadataJpaRepository extends JpaRepository<RuleG
 	List<RuleGovernanceMetadataEntity> findByActivationStateOrderByRuleCodeAscRuleVersionAsc(
 		RuleActivationState activationState
 	);
+
+	/**
+	 * Lists filtered rule metadata entries by activation state with pagination.
+	 *
+	 * @param activationState activation state filter
+	 * @param pageable requested page and sort
+	 * @return paged matching rule metadata entities
+	 */
+	Page<RuleGovernanceMetadataEntity> findByActivationState(
+		RuleActivationState activationState,
+		Pageable pageable
+	);
+
+	/**
+	 * Lists all governed versions for one rule code with pagination.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param pageable requested page
+	 * @return paged governed versions for the rule
+	 */
+	Page<RuleGovernanceMetadataEntity> findByRuleCodeOrderByRuleVersionAsc(String ruleCode, Pageable pageable);
 }

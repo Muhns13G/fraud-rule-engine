@@ -1,7 +1,5 @@
 package com.capitec.fraudengine.api.controller;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.capitec.fraudengine.api.dto.RuleGovernanceHistoryPageResponseDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceMetadataResponseDto;
+import com.capitec.fraudengine.api.dto.RuleGovernanceMetadataPageResponseDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceStateTransitionRequestDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceVersionRegistrationRequestDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceWorkflowActionRequestDto;
@@ -70,10 +70,12 @@ public class RuleGovernanceController {
 			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
 		)
 	})
-	public List<RuleGovernanceMetadataResponseDto> findRules(
-		@RequestParam(defaultValue = "true") boolean activeOnly
+	public RuleGovernanceMetadataPageResponseDto findRules(
+		@RequestParam(defaultValue = "true") boolean activeOnly,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size
 	) {
-		return ruleGovernanceRetrievalService.findRules(activeOnly);
+		return ruleGovernanceRetrievalService.findRules(activeOnly, page, size);
 	}
 
 	/**
@@ -111,6 +113,50 @@ public class RuleGovernanceController {
 	) {
 		return ruleGovernanceRetrievalService.findRule(ruleCode, version)
 			.orElseThrow(() -> new RuleGovernanceMetadataNotFoundException(ruleCode, version));
+	}
+
+	/**
+	 * Lists all governed versions for one rule code with pagination.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param page zero-based page index
+	 * @param size requested page size
+	 * @return paged governed versions for the supplied rule code
+	 */
+	@GetMapping("/{ruleCode}/versions")
+	@Operation(
+		summary = "List governed versions by rule code",
+		description = "Returns paged governed metadata versions for one rule code."
+	)
+	public RuleGovernanceMetadataPageResponseDto findRuleVersions(
+		@PathVariable String ruleCode,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size
+	) {
+		return ruleGovernanceRetrievalService.findRuleVersions(ruleCode, page, size);
+	}
+
+	/**
+	 * Lists lifecycle history trail entries for one governed rule identity.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param version semantic rule version
+	 * @param page zero-based page index
+	 * @param size requested page size
+	 * @return paged lifecycle history entries
+	 */
+	@GetMapping("/{ruleCode}/versions/{version}/history")
+	@Operation(
+		summary = "List governed lifecycle history",
+		description = "Returns paged lifecycle history trail entries for one governed rule version."
+	)
+	public RuleGovernanceHistoryPageResponseDto findRuleHistory(
+		@PathVariable String ruleCode,
+		@PathVariable String version,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size
+	) {
+		return ruleGovernanceRetrievalService.findRuleHistory(ruleCode, version, page, size);
 	}
 
 	/**
