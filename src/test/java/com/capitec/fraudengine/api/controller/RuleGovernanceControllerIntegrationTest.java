@@ -301,6 +301,69 @@ class RuleGovernanceControllerIntegrationTest {
 			.andExpect(jsonPath("$", hasSize(2)));
 	}
 
+	@Test
+	void shouldApplyPromoteWorkflowActionWhenTransitionIsValid() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("WORKFLOW_RULE", "1.0.0", "Workflow Rule", RuleLifecycleStatus.DRAFT, RuleActivationState.INACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			post("/api/admin/rules/WORKFLOW_RULE/versions/1.0.0/actions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "action": "PROMOTE"
+					}
+					""")
+		)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.ruleCode", is("WORKFLOW_RULE")))
+			.andExpect(jsonPath("$.version", is("1.0.0")))
+			.andExpect(jsonPath("$.lifecycleStatus", is("ACTIVE")))
+			.andExpect(jsonPath("$.activationState", is("ACTIVE")));
+	}
+
+	@Test
+	void shouldRejectWorkflowActionWhenTransitionIsInvalid() throws Exception {
+		ruleGovernanceMetadataJpaRepository.save(
+			ruleGovernanceMetadataPersistenceMapper.toEntity(
+				ruleMetadata("WORKFLOW_RULE", "1.0.0", "Workflow Rule", RuleLifecycleStatus.RETIRED, RuleActivationState.INACTIVE)
+			)
+		);
+
+		mockMvc.perform(
+			post("/api/admin/rules/WORKFLOW_RULE/versions/1.0.0/actions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "action": "REACTIVATE"
+					}
+					""")
+		)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status", is(400)))
+			.andExpect(jsonPath("$.message", is("Rule governance state transition is invalid.")))
+			.andExpect(jsonPath("$.details[0]", is("Lifecycle transition from RETIRED to ACTIVE is not permitted.")));
+	}
+
+	@Test
+	void shouldReturnNotFoundWhenWorkflowActionTargetDoesNotExist() throws Exception {
+		mockMvc.perform(
+			post("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/actions")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "action": "RETIRE"
+					}
+					""")
+		)
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status", is(404)))
+			.andExpect(jsonPath("$.message", is("Rule governance metadata not found for ruleCode 'DOES_NOT_EXIST' and version '1.0.0'.")));
+	}
+
 	private RuleGovernanceMetadata ruleMetadata(
 		String ruleCode,
 		String version,

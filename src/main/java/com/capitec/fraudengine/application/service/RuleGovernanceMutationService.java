@@ -16,8 +16,11 @@ import com.capitec.fraudengine.common.error.InvalidRuleGovernanceStateException;
 import com.capitec.fraudengine.domain.model.RuleGovernanceMetadata;
 import com.capitec.fraudengine.domain.model.RuleIdentity;
 import com.capitec.fraudengine.domain.model.RuleLifecycleState;
+import com.capitec.fraudengine.domain.model.enums.RuleActivationState;
+import com.capitec.fraudengine.domain.model.enums.RuleGovernanceWorkflowAction;
 import com.capitec.fraudengine.infrastructure.config.RequestCorrelationFilter;
 import com.capitec.fraudengine.domain.model.enums.RuleExecutionSource;
+import com.capitec.fraudengine.domain.model.enums.RuleLifecycleStatus;
 import com.capitec.fraudengine.domain.policy.RuleGovernancePolicy;
 import com.capitec.fraudengine.infrastructure.persistence.entity.RuleGovernanceMetadataEntity;
 import com.capitec.fraudengine.infrastructure.persistence.mapper.RuleGovernanceMetadataPersistenceMapper;
@@ -110,6 +113,49 @@ public class RuleGovernanceMutationService {
 			updatedMetadata.executionSource(),
 			ruleGovernanceConfigurationReadModelService.describe(updatedMetadata.identity().ruleCode())
 		);
+	}
+
+	/**
+	 * Applies a semantic governance workflow action to one governed rule identity.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param version semantic rule version
+	 * @param action semantic workflow action
+	 * @return updated metadata projection
+	 */
+	@Transactional
+	public RuleGovernanceMetadataResponseDto applyWorkflowAction(
+		String ruleCode,
+		String version,
+		RuleGovernanceWorkflowAction action
+	) {
+		if (action == null) {
+			throw new InvalidRuleGovernanceStateException("Governance workflow action must be provided.");
+		}
+
+		RuleGovernanceMetadataEntity existingEntity = ruleGovernanceMetadataJpaRepository
+			.findByRuleCodeAndRuleVersion(ruleCode, version)
+			.orElseThrow(() -> new RuleGovernanceMetadataNotFoundException(ruleCode, version));
+		RuleGovernanceMetadata existingMetadata = ruleGovernanceMetadataPersistenceMapper.toDomain(existingEntity);
+
+		RuleLifecycleState targetLifecycleState = switch (action) {
+			case PROMOTE, REACTIVATE -> new RuleLifecycleState(
+				RuleLifecycleStatus.ACTIVE,
+				RuleActivationState.ACTIVE
+			);
+			case DEPRECATE -> new RuleLifecycleState(
+				RuleLifecycleStatus.DEPRECATED,
+				RuleActivationState.INACTIVE
+			);
+			case RETIRE -> new RuleLifecycleState(
+				RuleLifecycleStatus.RETIRED,
+				RuleActivationState.INACTIVE
+			);
+		};
+
+		RuleGovernanceMetadataResponseDto response = transitionState(ruleCode, version, targetLifecycleState);
+		recordMutationMetric("workflow_action", "success");
+		return response;
 	}
 
 	/**

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.capitec.fraudengine.api.dto.RuleGovernanceMetadataResponseDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceStateTransitionRequestDto;
 import com.capitec.fraudengine.api.dto.RuleGovernanceVersionRegistrationRequestDto;
+import com.capitec.fraudengine.api.dto.RuleGovernanceWorkflowActionRequestDto;
 import com.capitec.fraudengine.api.error.RuleGovernanceMetadataNotFoundException;
 import com.capitec.fraudengine.application.service.RuleGovernanceMutationService;
 import com.capitec.fraudengine.application.service.RuleGovernanceRetrievalService;
@@ -201,6 +202,53 @@ public class RuleGovernanceController {
 			ruleCode,
 			request.version(),
 			new RuleLifecycleState(request.lifecycleStatus(), request.activationState())
+		);
+	}
+
+	/**
+	 * Applies an explicit semantic governance workflow action to one governed rule identity.
+	 *
+	 * @param ruleCode stable machine-readable rule code
+	 * @param version semantic rule version
+	 * @param request semantic workflow action
+	 * @return updated rule metadata
+	 */
+	@PostMapping("/{ruleCode}/versions/{version}/actions")
+	@Operation(
+		summary = "Apply governed workflow action",
+		description = "Applies an explicit governance workflow action (PROMOTE, DEPRECATE, REACTIVATE, RETIRE) to one governed rule version."
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "Workflow action applied successfully.",
+			content = @Content(schema = @Schema(implementation = RuleGovernanceMetadataResponseDto.class))
+		),
+		@ApiResponse(
+			responseCode = "400",
+			description = "Supplied workflow action violates governance constraints.",
+			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "No rule metadata exists for the supplied rule code and version.",
+			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
+		),
+		@ApiResponse(
+			responseCode = "500",
+			description = "An unexpected server error occurred.",
+			content = @Content(schema = @Schema(implementation = com.capitec.fraudengine.api.error.ApiErrorResponse.class))
+		)
+	})
+	public RuleGovernanceMetadataResponseDto applyWorkflowAction(
+		@PathVariable String ruleCode,
+		@PathVariable String version,
+		@Valid @RequestBody RuleGovernanceWorkflowActionRequestDto request
+	) {
+		return ruleGovernanceMutationService.applyWorkflowAction(
+			ruleCode,
+			version,
+			request.action()
 		);
 	}
 }

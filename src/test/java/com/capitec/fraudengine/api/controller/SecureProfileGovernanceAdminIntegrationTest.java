@@ -66,6 +66,19 @@ class SecureProfileGovernanceAdminIntegrationTest {
 	}
 
 	@Test
+	void shouldAllowGovernanceWorkflowActionEndpointForAdminUser() throws Exception {
+		mockMvc.perform(post("/api/admin/rules/DOES_NOT_EXIST/versions/1.0.0/actions")
+				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "action": "RETIRE"
+					}
+					"""))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
 	void shouldAllowGovernanceReadEndpointForAdminUser() throws Exception {
 		mockMvc.perform(get("/api/admin/rules")
 				.with(httpBasic(SECURE_USERNAME, SECURE_PASSWORD)))
