@@ -155,6 +155,12 @@
   - expand hardening gates with repo hygiene and security/ops regression paths as first-class CI checks
   - add repeatable p95 latency smoke thresholds for evaluation/retrieval and keep velocity semantics strictly prior-event only
   - reduce integration-test drift by centralizing shared secure-profile test credentials in one fixture
+- Sprint 6.1 reviewer-safe hardening decisions:
+  - keep `secure` as the canonical hosted reviewer mode; do not require external IdP for normal take-home verification
+  - enforce hardened JWT trust boundaries with fail-fast `issuer-uri`, `jwk-set-uri`, and `audience` requirements
+  - add explicit issuer/audience validator coverage and negative claim-path regression checks
+  - standardize Phase 6 validation evidence on `curl + Maven` with local and hosted scriptable packs
+  - keep `TD-021` and `TD-027` as partially addressed unless live external IdP rollout is implemented and verified end-to-end
 
 ## Still Flexible
 - Exact enum values and naming for transaction type, channel, and merchant category

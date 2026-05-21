@@ -289,6 +289,7 @@ Local verification path:
 Notes:
 - Hardened/production tests use mocked JWT authentication in integration tests; no live external IdP is required for local verification.
 - Live hosted `production` requires valid `issuer-uri`, `jwk-set-uri`, and audience values from your IdP.
+- Hardened/production startup now fails fast if `issuer-uri`, `jwk-set-uri`, or `audience` is missing.
 
 ## Running Tests
 
@@ -332,6 +333,18 @@ CI baseline:
     - evaluation latency p95 <= `1500ms`
     - retrieval latency p95 <= `800ms`
     - velocity temporal correctness rejects future-dated events in window counts
+- Phase 6 reviewer-safe validation pack:
+  - local-only: `./scripts/run-phase6-reviewer-validation-local.sh`
+  - hosted-only: `SECURE_USER=<reviewer-user> SECURE_PASSWORD=<reviewer-password> ./scripts/run-phase6-reviewer-validation-hosted.sh`
+  - combined runner: `./scripts/run-phase6-reviewer-validation.sh`
+  - role-matrix override knobs (for environments where reviewer creds include ops-read):
+    - `EXPECTED_GOVERNANCE_READ_STATUS` (default `403`)
+    - `EXPECTED_GOVERNANCE_MUTATION_STATUS` (default `403`)
+  - hosted validation uses deterministic `phase6-hosted-*` transaction IDs and covers:
+    - auth matrix (unauth / wrong creds / valid creds)
+    - evaluation creation + retrieval filters
+    - governance read/mutation authorization expectations
+    - secure actuator expectations (`/actuator/info=200`, `/actuator/metrics=404`)
 
 Phase status:
 - Phase 4 (Security and Operations) is now closed through Sprint `4.4`, including profile policy hardening, resilience validation, and cross-sprint regression gating.

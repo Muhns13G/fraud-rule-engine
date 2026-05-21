@@ -52,6 +52,8 @@
     - `principal-claim`
     - `roles-claim`
     - `clock-skew-seconds`
+  - hardened/production startup now requires `issuer-uri`, `jwk-set-uri`, and `audience`
+  - hardened JWT validation now enforces issuer/audience trust boundaries
   - reviewer-hosted deployments without external IdP are now explicitly documented to run on `secure` profile with authenticated actuator access
 - Security and operations posture is now Phase 4 close-out complete:
   - secure-profile startup guardrails fail fast on unsafe identity/secret/role and actuator configurations
@@ -74,6 +76,7 @@
   - secure-profile role matrix coverage now includes `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, and `PLATFORM_ADMIN`
   - secure-profile identity contract coverage now includes secret-source validation, JDBC query contract validation, and rotation-window authentication checks
   - secure-profile integration coverage now includes external secret resolution plus overlap/cutover/retire rotation flows
+  - reviewer-safe validation scripts now cover local + hosted secure-profile verification matrices
   - Swagger UI and OpenAPI spec are exposed for local review
 - Delivery artifacts now exist:
   - runnable multi-stage `Dockerfile`

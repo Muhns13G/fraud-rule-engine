@@ -124,6 +124,14 @@ Supported sort values:
 - Startup fails fast for hardened/production when JWT `jwk-set-uri` is missing.
 - Reviewer-hosted mode remains `secure` profile when external IdP wiring is unavailable; actuator endpoints still require authentication.
 
+## Hardened Trust-Boundary Notes (Sprint 6.1)
+- Hardened/production JWT startup contract requires:
+  - `issuer-uri`
+  - `jwk-set-uri`
+  - `audience`
+- Hardened token acceptance is validator-bound to expected issuer and audience claims.
+- Reviewer-hosted validation contract remains `secure` profile; hardened/production external IdP rollout is still environment-dependent.
+
 ## Secure Secret and Rotation Notes (Sprint 5.2)
 - No business API endpoint contract changed in Sprint 5.2.
 - Secure operational contract now includes:

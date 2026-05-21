@@ -17,8 +17,16 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.StringUtils;
+import java.time.Duration;
+import java.util.List;
 
 /**
  * Hardened profile security baseline for token-based authentication.
@@ -113,14 +121,55 @@ public class HardenedProfileSecurityConfiguration {
 	 */
 	@Bean
 	public JwtDecoder jwtDecoder(HardenedProfileSecurityProperties properties) {
+		String issuerUri = properties.getIssuerUri();
 		String jwkSetUri = properties.getJwkSetUri();
+		String audience = properties.getAudience();
+		if (!StringUtils.hasText(issuerUri)) {
+			throw new IllegalStateException(
+				"Hardened profile requires app.security.hardened-profile.issuer-uri for JWT validation."
+			);
+		}
 		if (!StringUtils.hasText(jwkSetUri)) {
 			throw new IllegalStateException(
 				"Hardened profile requires app.security.hardened-profile.jwk-set-uri for JWT validation."
 			);
 		}
+		if (!StringUtils.hasText(audience)) {
+			throw new IllegalStateException(
+				"Hardened profile requires app.security.hardened-profile.audience for JWT validation."
+			);
+		}
 
-		return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+		NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+		decoder.setJwtValidator(jwtValidator(issuerUri, audience, properties.getClockSkewSeconds()));
+		return decoder;
+	}
+
+	OAuth2TokenValidator<Jwt> jwtValidator(String issuerUri, String audience, int clockSkewSeconds) {
+		JwtTimestampValidator timestampValidator = clockSkewSeconds > 0
+			? new JwtTimestampValidator(Duration.ofSeconds(clockSkewSeconds))
+			: new JwtTimestampValidator();
+
+		return new DelegatingOAuth2TokenValidator<>(
+			JwtValidators.createDefaultWithIssuer(issuerUri),
+			audienceValidator(audience),
+			timestampValidator
+		);
+	}
+
+	private OAuth2TokenValidator<Jwt> audienceValidator(String audience) {
+		return jwt -> {
+			List<String> audiences = jwt.getAudience();
+			if (audiences != null && audiences.contains(audience)) {
+				return OAuth2TokenValidatorResult.success();
+			}
+
+			return OAuth2TokenValidatorResult.failure(new OAuth2Error(
+				"invalid_token",
+				"JWT audience claim does not include required audience.",
+				null
+			));
+		};
 	}
 
 	private static String[] uniqueRoles(String... roles) {

@@ -28,12 +28,17 @@
   - Swagger/OpenAPI and actuator exposure are explicitly profile-driven
   - production profile now enforces health-only actuator exposure with hidden health details and no docs surface
   - hardened token contract is configuration-backed through issuer/jwk/audience/claim properties
+  - hardened token decoder validation now enforces issuer and audience trust boundaries
   - secured endpoints include API, Swagger/OpenAPI, and actuator routes
 - Delivery and verification architecture now includes:
   - GitHub Actions CI baseline for compile, test, and package gates
   - dedicated Phase 4 security/operations regression gate (`scripts/run-phase4-security-ops-regression.sh`) wired into CI
   - repository hygiene gate (`scripts/run-repo-hygiene-checks.sh`) with `.DS_Store`/workspace-clean assertions
   - performance/reliability smoke gate (`scripts/run-performance-reliability-smoke.sh`) with p95 threshold checks
+  - reviewer-safe validation pack:
+    - `scripts/run-phase6-reviewer-validation-local.sh`
+    - `scripts/run-phase6-reviewer-validation-hosted.sh`
+    - `scripts/run-phase6-reviewer-validation.sh`
   - governance regression tests that assert end-to-end state mutation, role-aware authorization behavior, and post-mutation retrieval consistency
   - explicit test-runtime alignment for Mockito on JDK 25 via Surefire Java agent configuration
 - Phase 4 operational resilience architecture now includes:

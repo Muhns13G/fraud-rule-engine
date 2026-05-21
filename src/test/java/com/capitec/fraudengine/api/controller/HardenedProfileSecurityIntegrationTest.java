@@ -26,6 +26,8 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("hardened")
 @TestPropertySource(properties = {
+	"app.security.hardened-profile.issuer-uri=https://issuer.example",
+	"app.security.hardened-profile.audience=fraud-api",
 	"app.security.hardened-profile.jwk-set-uri=https://issuer.example/.well-known/jwks.json"
 })
 class HardenedProfileSecurityIntegrationTest {
@@ -92,5 +94,12 @@ class HardenedProfileSecurityIntegrationTest {
 					}
 					"""))
 			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void shouldRejectApiRequestWhenJwtRolesClaimIsMissing() throws Exception {
+		mockMvc.perform(get("/api/fraud-evaluations")
+				.with(jwt().jwt(jwt -> jwt.claims(claims -> claims.remove("roles")))))
+			.andExpect(status().isForbidden());
 	}
 }

@@ -49,7 +49,7 @@ This `v2` registry is reconciled through Sprint 5.4 close-out.
 | TD-024 | Repository includes `.DS_Store` artifacts in source/docs trees | Closed | Low | Observed | `.gitignore`, `scripts/run-repo-hygiene-checks.sh`, `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md` |
 | TD-025 | OpenAPI metadata still describes a "Phase 1 API" despite expanded scope | Closed | Low | Observed | `src/main/java/com/capitec/fraudengine/infrastructure/config/OpenApiConfiguration.java`, `docs/01-completion-reports/phase-05/sprint-5.1-completion-report.md` |
 | TD-026 | Secure-profile test credentials are duplicated across multiple integration tests | Closed | Low | Observed | `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileTestCredentials.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileSecurityIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAuthorizationIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfileGovernanceAdminIntegrationTest.java`, `src/test/java/com/capitec/fraudengine/api/controller/SecureProfilePlatformAdminIntegrationTest.java`, `docs/01-completion-reports/phase-05/sprint-5.4-completion-report.md` |
-| TD-027 | Hardened JWT path does not yet enforce issuer/audience validation | Open | Medium | Observed | `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityConfiguration.java`, `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityProperties.java` |
+| TD-027 | Hardened JWT path does not yet enforce issuer/audience validation | Partially addressed | Medium | Observed | `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityConfiguration.java`, `src/main/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityProperties.java`, `src/test/java/com/capitec/fraudengine/infrastructure/security/HardenedProfileSecurityConfigurationTest.java` |
 
 ---
 
@@ -135,9 +135,10 @@ This `v2` registry is reconciled through Sprint 5.4 close-out.
   - `src/test/java/com/capitec/fraudengine/api/controller/SecureProfilePlatformAdminIntegrationTest.java`
 
 ### TD-027
-- Why it matters: hardened JWT configuration currently enforces `jwk-set-uri` presence but does not yet validate `issuer` and `audience` claims, which weakens production token trust boundaries.
-- Suggested resolution direction: enforce issuer/audience validation in hardened JWT decoder setup and add negative integration tests for invalid issuer/audience tokens.
-- Target phase candidate: `Phase 5`.
+- Why it matters: production token trust boundaries depend on strict issuer and audience validation.
+- Current state: partially addressed via hardened decoder fail-fast requirements (`issuer-uri`, `jwk-set-uri`, `audience`) and validator-level regression coverage for invalid issuer/audience claims.
+- Suggested resolution direction: complete live external IdP rollout verification in hosted production-mode environments.
+- Target phase candidate: `Phase 6+`.
 
 ---
 
@@ -160,3 +161,6 @@ This `v2` registry is reconciled through Sprint 5.4 close-out.
   - `TD-023` closed via velocity temporal-correctness fix and regression coverage
   - `TD-024` closed via hygiene enforcement and `.DS_Store` cleanup
   - `TD-026` closed via shared secure-profile credential test fixture
+- Phase 6 policy lock:
+  - `TD-021` and `TD-027` remain intentionally `Partially addressed` until live external IdP rollout is implemented and verified end-to-end.
+  - Reviewer-hosted verification continues to target `secure` profile; hardened/production trust-boundary hardening is validated locally via code+tests.
