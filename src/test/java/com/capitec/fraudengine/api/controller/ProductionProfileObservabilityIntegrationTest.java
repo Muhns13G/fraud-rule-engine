@@ -21,6 +21,8 @@ import com.capitec.fraudengine.TestcontainersConfiguration;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("production")
 @TestPropertySource(properties = {
+	"app.security.hardened-profile.issuer-uri=https://issuer.example/",
+	"app.security.hardened-profile.audience=fraud-rule-engine-api",
 	"app.security.hardened-profile.jwk-set-uri=https://issuer.example/.well-known/jwks.json"
 })
 class ProductionProfileObservabilityIntegrationTest {

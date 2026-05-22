@@ -103,7 +103,7 @@ public class FraudEvaluationApplicationMapper {
 
 	private MerchantCategory toMerchantCategory(String value) {
 		try {
-			return MerchantCategory.valueOf(normalizeEnumValue(value));
+			return MerchantCategory.valueOf(normalizeMerchantCategoryValue(value));
 		}
 		catch (IllegalArgumentException exception) {
 			throw new InvalidRequestValueException("Unsupported merchantCategory value '" + value + "'.");
@@ -112,7 +112,7 @@ public class FraudEvaluationApplicationMapper {
 
 	private TransactionType toTransactionType(String value) {
 		try {
-			return TransactionType.valueOf(normalizeEnumValue(value));
+			return TransactionType.valueOf(normalizeTransactionTypeValue(value));
 		}
 		catch (IllegalArgumentException exception) {
 			throw new InvalidRequestValueException("Unsupported transactionType value '" + value + "'.");
@@ -121,11 +121,44 @@ public class FraudEvaluationApplicationMapper {
 
 	private TransactionChannel toTransactionChannel(String value) {
 		try {
-			return TransactionChannel.valueOf(normalizeEnumValue(value));
+			return TransactionChannel.valueOf(normalizeTransactionChannelValue(value));
 		}
 		catch (IllegalArgumentException exception) {
 			throw new InvalidRequestValueException("Unsupported channel value '" + value + "'.");
 		}
+	}
+
+	private String normalizeTransactionChannelValue(String value) {
+		String normalizedValue = normalizeEnumValue(value);
+		if ("POS".equals(normalizedValue)) {
+			return TransactionChannel.CARD_PRESENT.name();
+		}
+		if ("ECOM".equals(normalizedValue)) {
+			return TransactionChannel.ONLINE.name();
+		}
+
+		return normalizedValue;
+	}
+
+	private String normalizeTransactionTypeValue(String value) {
+		String normalizedValue = normalizeEnumValue(value);
+		if ("CARD_PAYMENT".equals(normalizedValue)) {
+			return TransactionType.PAYMENT.name();
+		}
+		if ("CASH_WITHDRAWAL".equals(normalizedValue)) {
+			return TransactionType.WITHDRAWAL.name();
+		}
+
+		return normalizedValue;
+	}
+
+	private String normalizeMerchantCategoryValue(String value) {
+		String normalizedValue = normalizeEnumValue(value);
+		if ("MONEYTRANSFER".equals(normalizedValue)) {
+			return MerchantCategory.MONEY_TRANSFER.name();
+		}
+
+		return normalizedValue;
 	}
 
 	private String normalizeEnumValue(String value) {

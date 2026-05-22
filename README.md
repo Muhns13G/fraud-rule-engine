@@ -4,6 +4,28 @@ Spring Boot service for evaluating categorized transaction events against a dete
 
 This project was built as a Capitec take-home submission. The goal of the current slice is not to model a full fraud platform, but to deliver a production-grade, explainable vertical slice that is easy to run, test, and discuss.
 
+## Reviewer Quick Start (2 Minutes)
+
+Live demo (hosted `secure` profile):
+
+- Base URL: `https://fraud.oitw.site`
+- Username: `reviewer`
+- Password: `CapitecReview2026!`
+
+Run:
+
+```bash
+curl -u reviewer:CapitecReview2026! https://fraud.oitw.site/actuator/health
+curl -u reviewer:CapitecReview2026! https://fraud.oitw.site/actuator/info
+curl -u reviewer:CapitecReview2026! https://fraud.oitw.site/actuator/metrics
+```
+
+Expected:
+
+- `/actuator/health`: `200`
+- `/actuator/info`: `200`
+- `/actuator/metrics`: `404` (not exposed in secure profile default contract)
+
 ## Tech Stack
 
 - Java 25
@@ -217,10 +239,12 @@ For this take-home deployment, the live hosted environment runs in `secure` prof
 
 ```bash
 SPRING_PROFILES_ACTIVE=secure
-FRAUD_ENGINE_SECURE_USER=<reviewer-username>
-FRAUD_ENGINE_SECURE_PASSWORD=<reviewer-password>
+FRAUD_ENGINE_SECURE_USER=reviewer
+FRAUD_ENGINE_SECURE_PASSWORD=CapitecReview2026!
 FRAUD_ENGINE_SECURE_ROLE=API_CLIENT
 ```
+
+These are take-home demo credentials for reviewer convenience and should be rotated/removed after the review window.
 
 Why a browser may show a Whitelabel `401` page:
 - In `secure` profile, actuator endpoints require authentication.
@@ -229,25 +253,36 @@ Why a browser may show a Whitelabel `401` page:
 Reviewer verification examples (hosted):
 
 ```bash
-curl -u <reviewer-username>:<reviewer-password> \
+curl -u reviewer:CapitecReview2026! \
   https://fraud.oitw.site/actuator/health
 ```
 
 ```bash
-curl -u <reviewer-username>:<reviewer-password> \
+curl -u reviewer:CapitecReview2026! \
   https://fraud.oitw.site/actuator/info
 ```
+
+```bash
+curl -u reviewer:CapitecReview2026! \
+  https://fraud.oitw.site/actuator/metrics
+```
+
+Expected response notes for `secure` hosted mode:
+- `/actuator/health`: `200`
+- `/actuator/info`: `200`
+- `/actuator/metrics`: `404` (not exposed in secure profile default contract)
 
 Reviewer access template (for submission message):
 
 ```text
 Live Demo: https://fraud.oitw.site
 Profile: secure
-Username: <reviewer-username>
-Password: <share-via-private-channel>
+Username: reviewer
+Password: CapitecReview2026!
 Notes:
 - /actuator/health requires authentication in secure profile.
 - /actuator/info requires authentication in secure profile.
+- /actuator/metrics is expected to return 404 in secure profile.
 ```
 
 `production` profile remains implemented and available for environments that provide hardened JWT/OIDC configuration (`issuer-uri`, `jwk-set-uri`, and audience).
@@ -290,6 +325,8 @@ Notes:
 - Hardened/production tests use mocked JWT authentication in integration tests; no live external IdP is required for local verification.
 - Live hosted `production` requires valid `issuer-uri`, `jwk-set-uri`, and audience values from your IdP.
 - Hardened/production startup now fails fast if `issuer-uri`, `jwk-set-uri`, or `audience` is missing.
+
+For full authorization and observability details, see `Security Posture` and `Operational Runbook Baseline` below.
 
 ## Running Tests
 
@@ -349,6 +386,16 @@ CI baseline:
 Phase status:
 - Phase 4 (Security and Operations) is now closed through Sprint `4.4`, including profile policy hardening, resilience validation, and cross-sprint regression gating.
 
+## Verification Snapshot
+
+Most recent local verification for the current security matrix slice:
+
+- `./mvnw -Dtest=SecureProfileSecurityIntegrationTest,SecureProfileGovernanceAuthorizationIntegrationTest,SecureProfileGovernanceAdminIntegrationTest,SecureProfilePlatformAdminIntegrationTest,DefaultProfileSecurityIntegrationTest test`
+  - passed
+  - `27` tests
+- `docker build -t fraud-rule-engine:local .`
+  - passed
+
 ## Docker
 
 Build the application image:
@@ -365,11 +412,75 @@ docker compose up -d postgres
 
 The application `Dockerfile` is multi-stage and uses pinned Eclipse Temurin Java 25 images for both build and runtime.
 
+## Postman Quick Start
+
+Import these files from `docs/operations/postman`:
+
+- `fraud-rule-engine-reviewer.postman_collection.json`
+- `fraud-rule-engine-local.postman_environment.json` (for local testing)
+- `fraud-rule-engine-reviewer.postman_environment.json` (for hosted reviewer testing)
+
+Recommended run order:
+
+1. Select environment (`local` or `reviewer`).
+2. Run `Actuator` requests (`Health`, `Info`, `Metrics`).
+3. Run `Fraud Evaluations` requests (`Create`, `Get by Id`, `List`).
+
+Hosted reviewer auth:
+
+- Use basic auth `reviewer:CapitecReview2026!` for reviewer-hosted actuator checks.
+
+Timestamp reminders:
+
+- `eventTimestamp` must be ISO-8601 with timezone offset (`Z` or `+02:00`).
+- For query filters (`from`, `to`), URL-encode `+` as `%2B`.
+
 ## API Summary
 
 ### Create evaluation
 
 `POST /api/fraud-evaluations`
+
+Merchant category values:
+
+- `GROCERY`
+- `RETAIL`
+- `TRAVEL`
+- `GAMBLING`
+- `CRYPTO`
+- `MONEY_TRANSFER`
+- `OTHER`
+
+Transaction type values:
+
+- `PURCHASE`
+- `WITHDRAWAL`
+- `TRANSFER`
+- `DEPOSIT`
+- `PAYMENT`
+- `OTHER`
+
+Channel values:
+
+- `CARD_PRESENT`
+- `ONLINE`
+- `ATM`
+- `TRANSFER`
+- `MOBILE_APP`
+- `OTHER`
+
+Compatibility alias:
+
+- `POS` is accepted and normalized to `CARD_PRESENT`.
+- `ECOM` is accepted and normalized to `ONLINE`.
+- `CARD_PAYMENT` is accepted and normalized to `PAYMENT`.
+- `CASH_WITHDRAWAL` is accepted and normalized to `WITHDRAWAL`.
+- `MONEYTRANSFER` is accepted and normalized to `MONEY_TRANSFER`.
+
+Timestamp format:
+
+- `eventTimestamp` must be ISO-8601 with timezone offset, for example `2026-05-12T10:00:00+02:00` or `2026-05-12T08:00:00Z`.
+- For query filters (`from`, `to`) URL-encode `+` as `%2B`.
 
 Example request:
 
@@ -687,18 +798,8 @@ This contract defines:
 - evolve secured mode beyond in-memory Basic Auth when enterprise identity requirements are in scope
 - introduce richer observability and metrics
 - expand retrieval filters and audit support
-- add governed rule lifecycle management
+- expand governance automation and policy controls
 - revisit `location anomaly` once a clean heuristic and data strategy are agreed
-
-## Verification Snapshot
-
-Most recent local verification for the current security matrix slice:
-
-- `./mvnw -Dtest=SecureProfileSecurityIntegrationTest,SecureProfileGovernanceAuthorizationIntegrationTest,SecureProfileGovernanceAdminIntegrationTest,SecureProfilePlatformAdminIntegrationTest,DefaultProfileSecurityIntegrationTest test`
-  - passed
-  - `27` tests
-- `docker build -t fraud-rule-engine:local .`
-  - passed
 
 ## Notes
 

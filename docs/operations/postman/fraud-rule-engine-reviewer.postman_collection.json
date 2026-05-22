@@ -1,0 +1,364 @@
+{
+  "info": {
+    "_postman_id": "b180d205-bca8-4ae9-9cfd-f98f4fde78b5",
+    "name": "Fraud Rule Engine - Reviewer Checks",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Reviewer-friendly smoke checks for actuator visibility and fraud evaluation API behavior. Uses normalized enums with aliases: channel POS->CARD_PRESENT, ECOM->ONLINE; transactionType CARD_PAYMENT->PAYMENT, CASH_WITHDRAWAL->WITHDRAWAL; merchantCategory MONEYTRANSFER->MONEY_TRANSFER. eventTimestamp must include timezone offset."
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{reviewer_user}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{reviewer_password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Actuator",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Health responds 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Health status is UP', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "info"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Info responds 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "metrics"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Metrics responds 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fraud Evaluations",
+      "item": [
+        {
+          "name": "Create High-Risk Evaluation (Expect BLOCK)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"txn-reviewer-block-{{$timestamp}}\",\n  \"accountId\": \"account-reviewer-001\",\n  \"customerId\": \"customer-reviewer-001\",\n  \"amount\": 26000.00,\n  \"currency\": \"ZAR\",\n  \"merchantId\": \"merchant-123\",\n  \"merchantCategory\": \"RETAIL\",\n  \"transactionType\": \"PURCHASE\",\n  \"channel\": \"ONLINE\",\n  \"eventTimestamp\": \"{{$isoTimestamp}}\",\n  \"location\": {\n    \"countryCode\": \"ZA\",\n    \"city\": \"Cape Town\"\n  },\n  \"reference\": \"reviewer-block\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fraud-evaluations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fraud-evaluations"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Create returns 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('evaluationId', body.evaluationId);",
+                  "pm.environment.set('transactionId', body.transactionId);",
+                  "pm.test('Decision is BLOCK', function () {",
+                  "  pm.expect(body.decision).to.eql('BLOCK');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Low-Risk Evaluation (Expect ALLOW, POS alias)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"txn-reviewer-allow-{{$timestamp}}\",\n  \"accountId\": \"account-reviewer-002\",\n  \"customerId\": \"customer-reviewer-002\",\n  \"amount\": 1200.00,\n  \"currency\": \"ZAR\",\n  \"merchantId\": \"merchant-321\",\n  \"merchantCategory\": \"moneytransfer\",\n  \"transactionType\": \"cash-withdrawal\",\n  \"channel\": \"POS\",\n  \"eventTimestamp\": \"{{$isoTimestamp}}\",\n  \"location\": {\n    \"countryCode\": \"ZA\",\n    \"city\": \"Johannesburg\"\n  },\n  \"reference\": \"reviewer-allow\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fraud-evaluations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fraud-evaluations"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Create returns 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('evaluationId', body.evaluationId);",
+                  "pm.environment.set('transactionId', body.transactionId);",
+                  "pm.test('Decision is ALLOW', function () {",
+                  "  pm.expect(body.decision).to.eql('ALLOW');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Invalid Timestamp (Expect 400)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"txn-reviewer-invalid-ts-{{$timestamp}}\",\n  \"accountId\": \"account-reviewer-003\",\n  \"customerId\": \"customer-reviewer-003\",\n  \"amount\": 1200.00,\n  \"currency\": \"ZAR\",\n  \"merchantId\": \"merchant-999\",\n  \"merchantCategory\": \"RETAIL\",\n  \"transactionType\": \"PURCHASE\",\n  \"channel\": \"ONLINE\",\n  \"eventTimestamp\": \"2026-05-12T10:00:00\",\n  \"location\": {\n    \"countryCode\": \"ZA\",\n    \"city\": \"Cape Town\"\n  },\n  \"reference\": \"reviewer-invalid-timestamp\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fraud-evaluations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fraud-evaluations"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid timestamp returns 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error explains timestamp offset requirement', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.message).to.eql('Request payload could not be parsed.');",
+                  "  pm.expect(Array.isArray(body.details)).to.eql(true);",
+                  "  pm.expect(body.details.join(' ')).to.include('eventTimestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Evaluation By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fraud-evaluations/{{evaluationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fraud-evaluations",
+                "{{evaluationId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Get by id returns 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Body has evaluationId', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.evaluationId).to.eql(pm.environment.get('evaluationId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Evaluations (Encoded Time Filters)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fraud-evaluations?from=2026-05-22T06:00:00%2B02:00&to=2026-05-22T23:59:59%2B02:00&sort=NEWEST_FIRST",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fraud-evaluations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-05-22T06:00:00%2B02:00"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-05-22T23:59:59%2B02:00"
+                },
+                {
+                  "key": "sort",
+                  "value": "NEWEST_FIRST"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('List returns 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('List response has content array', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('content');",
+                  "  pm.expect(Array.isArray(body.content)).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": []
+}

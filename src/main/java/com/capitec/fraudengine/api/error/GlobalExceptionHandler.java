@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -87,6 +89,46 @@ public class GlobalExceptionHandler {
 		LOGGER.warn("request_payload_value_rejected reason={}", exception.getMessage());
 		recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
 		return buildResponse(HttpStatus.BAD_REQUEST, "Request payload contains an unsupported value.", List.of(exception.getMessage()));
+	}
+
+	/**
+	 * Handles request-body parse failures (for example malformed JSON or datetime format mismatches).
+	 *
+	 * @param exception request-body parse exception
+	 * @return structured bad-request response
+	 */
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException exception) {
+		if (isEventTimestampParseError(exception)) {
+			String detail = "eventTimestamp must be an ISO-8601 datetime with timezone offset (for example 2026-05-12T10:00:00+02:00 or 2026-05-12T08:00:00Z).";
+			LOGGER.warn("request_payload_parse_failed field=eventTimestamp reason={}", exception.getMostSpecificCause().getMessage());
+			recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
+			return buildResponse(HttpStatus.BAD_REQUEST, "Request payload could not be parsed.", List.of(detail));
+		}
+
+		LOGGER.warn("request_payload_parse_failed reason={}", exception.getMostSpecificCause().getMessage());
+		recordErrorMetric(HttpStatus.BAD_REQUEST, exception);
+		return buildResponse(
+			HttpStatus.BAD_REQUEST,
+			"Request payload could not be parsed.",
+			List.of(
+				"Malformed request payload.",
+				"eventTimestamp must be an ISO-8601 datetime with timezone offset (for example 2026-05-12T10:00:00+02:00 or 2026-05-12T08:00:00Z)."
+			)
+		);
+	}
+
+	private boolean isEventTimestampParseError(HttpMessageNotReadableException exception) {
+		if (exception.getCause() instanceof InvalidFormatException invalidFormatException
+			&& invalidFormatException.getPath() != null
+			&& invalidFormatException.getPath().stream().anyMatch(reference -> "eventTimestamp".equals(reference.getFieldName()))) {
+			return true;
+		}
+
+		String mostSpecificMessage = exception.getMostSpecificCause() != null ? exception.getMostSpecificCause().getMessage() : "";
+		String message = exception.getMessage() != null ? exception.getMessage() : "";
+		return mostSpecificMessage.contains("eventTimestamp")
+			|| message.contains("eventTimestamp");
 	}
 
 	/**

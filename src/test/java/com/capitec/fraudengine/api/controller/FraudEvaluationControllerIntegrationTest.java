@@ -1,6 +1,7 @@
 package com.capitec.fraudengine.api.controller;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -151,6 +152,122 @@ class FraudEvaluationControllerIntegrationTest {
 			.andExpect(jsonPath("$.status", is(400)))
 			.andExpect(jsonPath("$.message", is("Request payload contains an unsupported value.")))
 			.andExpect(jsonPath("$.details[0]", containsString("merchantCategory")));
+	}
+
+	@Test
+	void shouldReturnBadRequestForEventTimestampWithoutTimezoneOffset() throws Exception {
+		mockMvc.perform(post("/api/fraud-evaluations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "transactionId": "txn-post-invalid-timestamp-001",
+					  "accountId": "account-post-invalid-timestamp-001",
+					  "customerId": "customer-post-invalid-timestamp-001",
+					  "amount": 500.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-123",
+					  "merchantCategory": "RETAIL",
+					  "transactionType": "PURCHASE",
+					  "channel": "ONLINE",
+					  "eventTimestamp": "2026-05-12T10:00:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "post-integration-test-invalid-timestamp"
+					}
+					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status", is(400)))
+			.andExpect(jsonPath("$.message", is("Request payload could not be parsed.")))
+			.andExpect(jsonPath("$.details", hasItem(containsString("eventTimestamp must be an ISO-8601 datetime with timezone offset"))));
+	}
+
+	@Test
+	void shouldAcceptPosAliasForCardPresentChannel() throws Exception {
+		mockMvc.perform(post("/api/fraud-evaluations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "transactionId": "txn-post-pos-alias-001",
+					  "accountId": "account-post-pos-alias-001",
+					  "customerId": "customer-post-pos-alias-001",
+					  "amount": 1200.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-123",
+					  "merchantCategory": "RETAIL",
+					  "transactionType": "PURCHASE",
+					  "channel": "POS",
+					  "eventTimestamp": "2026-05-12T10:00:00+02:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "post-integration-test-pos-alias"
+					}
+					"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.transactionId", is("txn-post-pos-alias-001")));
+
+		assertThatStoredEvaluationCountIs(1);
+	}
+
+	@Test
+	void shouldAcceptEcomAliasForOnlineChannel() throws Exception {
+		mockMvc.perform(post("/api/fraud-evaluations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "transactionId": "txn-post-ecom-alias-001",
+					  "accountId": "account-post-ecom-alias-001",
+					  "customerId": "customer-post-ecom-alias-001",
+					  "amount": 1200.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-123",
+					  "merchantCategory": "RETAIL",
+					  "transactionType": "PURCHASE",
+					  "channel": "ECOM",
+					  "eventTimestamp": "2026-05-12T10:00:00+02:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "post-integration-test-ecom-alias"
+					}
+					"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.transactionId", is("txn-post-ecom-alias-001")));
+
+		assertThatStoredEvaluationCountIs(1);
+	}
+
+	@Test
+	void shouldAcceptTransactionTypeAndMerchantAliases() throws Exception {
+		mockMvc.perform(post("/api/fraud-evaluations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "transactionId": "txn-post-type-merchant-alias-001",
+					  "accountId": "account-post-type-merchant-alias-001",
+					  "customerId": "customer-post-type-merchant-alias-001",
+					  "amount": 1200.00,
+					  "currency": "ZAR",
+					  "merchantId": "merchant-123",
+					  "merchantCategory": "moneytransfer",
+					  "transactionType": "cash-withdrawal",
+					  "channel": "ONLINE",
+					  "eventTimestamp": "2026-05-12T10:00:00+02:00",
+					  "location": {
+					    "countryCode": "ZA",
+					    "city": "Cape Town"
+					  },
+					  "reference": "post-integration-test-type-merchant-alias"
+					}
+					"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.transactionId", is("txn-post-type-merchant-alias-001")));
+
+		assertThatStoredEvaluationCountIs(1);
 	}
 
 	@Test
