@@ -7,6 +7,7 @@ SECURE_USER="${SECURE_USER:-secure-user}"
 SECURE_PASSWORD="${SECURE_PASSWORD:-change-me-secure}"
 EXPECTED_GOVERNANCE_READ_STATUS="${EXPECTED_GOVERNANCE_READ_STATUS:-403}"
 EXPECTED_GOVERNANCE_MUTATION_STATUS="${EXPECTED_GOVERNANCE_MUTATION_STATUS:-403}"
+EXPECTED_SECURE_METRICS_STATUS="${EXPECTED_SECURE_METRICS_STATUS:-404}"
 
 PREFIX="phase6-local-$(date +%Y%m%d%H%M%S)-${RANDOM}"
 TXN_HIGH="${PREFIX}-high"
@@ -43,11 +44,20 @@ log "Running local Maven verification subset..."
 
 log "Running local curl matrix against ${BASE_URL}..."
 
+preflight_status=$(curl -sS -o /tmp/phase6_local_preflight_response.json -w "%{http_code}" "${BASE_URL}/actuator/info")
+if [[ "${preflight_status}" != "401" ]]; then
+  log "FAILED: local preflight expected unauthenticated /actuator/info to return 401 in secure profile, got ${preflight_status}."
+  log "Ensure the app is running with SPRING_PROFILES_ACTIVE=secure before running this script."
+  cat /tmp/phase6_local_preflight_response.json
+  exit 1
+fi
+log "OK: local preflight confirms secure profile auth boundary on /actuator/info -> ${preflight_status}"
+
 expect_status "secure actuator info requires auth and succeeds with valid basic credentials" "200" \
   -u "${SECURE_USER}:${SECURE_PASSWORD}" \
   "${BASE_URL}/actuator/info"
 
-expect_status "secure actuator metrics is intentionally not exposed" "404" \
+expect_status "secure actuator metrics exposure matches configured contract" "${EXPECTED_SECURE_METRICS_STATUS}" \
   -u "${SECURE_USER}:${SECURE_PASSWORD}" \
   "${BASE_URL}/actuator/metrics"
 

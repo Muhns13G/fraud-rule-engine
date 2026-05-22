@@ -25,6 +25,7 @@ Expected:
 - `/actuator/health`: `200`
 - `/actuator/info`: `200`
 - `/actuator/metrics`: `404` (not exposed in secure profile default contract)
+  - if you explicitly expose metrics in secure mode, expect `200` instead.
 
 ## Tech Stack
 
@@ -271,6 +272,7 @@ Expected response notes for `secure` hosted mode:
 - `/actuator/health`: `200`
 - `/actuator/info`: `200`
 - `/actuator/metrics`: `404` (not exposed in secure profile default contract)
+  - if secure metrics are intentionally exposed in your deployment, expect `200`.
 
 Reviewer access template (for submission message):
 
@@ -282,7 +284,7 @@ Password: CapitecReview2026!
 Notes:
 - /actuator/health requires authentication in secure profile.
 - /actuator/info requires authentication in secure profile.
-- /actuator/metrics is expected to return 404 in secure profile.
+- /actuator/metrics is expected to return 404 in secure profile unless explicitly exposed.
 ```
 
 `production` profile remains implemented and available for environments that provide hardened JWT/OIDC configuration (`issuer-uri`, `jwk-set-uri`, and audience).
@@ -374,14 +376,15 @@ CI baseline:
   - local-only: `./scripts/run-phase6-reviewer-validation-local.sh`
   - hosted-only: `SECURE_USER=<reviewer-user> SECURE_PASSWORD=<reviewer-password> ./scripts/run-phase6-reviewer-validation-hosted.sh`
   - combined runner: `./scripts/run-phase6-reviewer-validation.sh`
-  - role-matrix override knobs (for environments where reviewer creds include ops-read):
-    - `EXPECTED_GOVERNANCE_READ_STATUS` (default `403`)
-    - `EXPECTED_GOVERNANCE_MUTATION_STATUS` (default `403`)
+- role-matrix override knobs (for environments where reviewer creds include ops-read):
+  - `EXPECTED_GOVERNANCE_READ_STATUS` (default `403`)
+  - `EXPECTED_GOVERNANCE_MUTATION_STATUS` (default `403`)
+  - `EXPECTED_SECURE_METRICS_STATUS` (default `404`; set to `200` if secure metrics are intentionally exposed)
   - hosted validation uses deterministic `phase6-hosted-*` transaction IDs and covers:
     - auth matrix (unauth / wrong creds / valid creds)
     - evaluation creation + retrieval filters
     - governance read/mutation authorization expectations
-    - secure actuator expectations (`/actuator/info=200`, `/actuator/metrics=404`)
+    - secure actuator expectations (`/actuator/info=200`, `/actuator/metrics` matches `EXPECTED_SECURE_METRICS_STATUS`)
 
 Phase status:
 - Phase 4 (Security and Operations) is now closed through Sprint `4.4`, including profile policy hardening, resilience validation, and cross-sprint regression gating.

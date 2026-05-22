@@ -7,6 +7,7 @@ SECURE_USER="${SECURE_USER:-}"
 SECURE_PASSWORD="${SECURE_PASSWORD:-}"
 EXPECTED_GOVERNANCE_READ_STATUS="${EXPECTED_GOVERNANCE_READ_STATUS:-403}"
 EXPECTED_GOVERNANCE_MUTATION_STATUS="${EXPECTED_GOVERNANCE_MUTATION_STATUS:-403}"
+EXPECTED_SECURE_METRICS_STATUS="${EXPECTED_SECURE_METRICS_STATUS:-404}"
 
 if [[ -z "${SECURE_USER}" || -z "${SECURE_PASSWORD}" ]]; then
   echo "SECURE_USER and SECURE_PASSWORD are required for hosted validation."
@@ -47,7 +48,7 @@ expect_status "actuator info returns redacted secure diagnostics" "200" \
   -u "${SECURE_USER}:${SECURE_PASSWORD}" \
   "${BASE_URL}/actuator/info"
 
-expect_status "actuator metrics remains hidden in secure hosted profile" "404" \
+expect_status "actuator metrics exposure matches deployed secure contract" "${EXPECTED_SECURE_METRICS_STATUS}" \
   -u "${SECURE_USER}:${SECURE_PASSWORD}" \
   "${BASE_URL}/actuator/metrics"
 
