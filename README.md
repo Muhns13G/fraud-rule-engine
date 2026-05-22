@@ -15,6 +15,7 @@ Live demo (hosted `secure` profile):
 Run:
 
 ```bash
+curl https://fraud.oitw.site/
 curl -u reviewer:CapitecReview2026! https://fraud.oitw.site/actuator/health
 curl -u reviewer:CapitecReview2026! https://fraud.oitw.site/actuator/info
 curl -u reviewer:CapitecReview2026! https://fraud.oitw.site/actuator/metrics
@@ -26,6 +27,7 @@ Expected:
 - `/actuator/info`: `200`
 - `/actuator/metrics`: `404` (not exposed in secure profile default contract)
   - if you explicitly expose metrics in secure mode, expect `200` instead.
+- `/`: `200` (API landing metadata)
 
 ## Tech Stack
 
@@ -431,7 +433,7 @@ Recommended run order:
 
 Hosted reviewer auth:
 
-- Use basic auth `reviewer:CapitecReview2026!` for reviewer-hosted actuator checks.
+- Use basic auth `reviewer:CapitecReview2026!` for all reviewer-hosted checks (Actuator and Fraud Evaluations).
 
 Timestamp reminders:
 

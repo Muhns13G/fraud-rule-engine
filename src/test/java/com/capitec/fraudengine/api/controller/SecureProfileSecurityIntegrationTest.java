@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import java.util.UUID;
 
@@ -38,6 +39,13 @@ class SecureProfileSecurityIntegrationTest {
 	void shouldRejectApiRequestWithoutAuthentication() throws Exception {
 		mockMvc.perform(get("/api/fraud-evaluations"))
 			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void shouldExposeRootLandingWithoutAuthenticationInSecureProfile() throws Exception {
+		mockMvc.perform(get("/"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.service").value("fraud-rule-engine"));
 	}
 
 	@Test

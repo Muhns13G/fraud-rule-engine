@@ -46,8 +46,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Health responds 200', function () {",
-                  "  pm.response.to.have.status(200);",
+                  "const expectedHealthStatus = Number(pm.environment.get('expected_health_status') || '200');",
+                  "pm.test(`Health responds ${expectedHealthStatus}`, function () {",
+                  "  pm.response.to.have.status(expectedHealthStatus);",
                   "});",
                   "pm.test('Health status is UP', function () {",
                   "  const body = pm.response.json();",
@@ -80,8 +81,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Info responds 200', function () {",
-                  "  pm.response.to.have.status(200);",
+                  "const expectedInfoStatus = Number(pm.environment.get('expected_info_status') || '200');",
+                  "pm.test(`Info responds ${expectedInfoStatus}`, function () {",
+                  "  pm.response.to.have.status(expectedInfoStatus);",
                   "});"
                 ]
               }
@@ -110,8 +112,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Metrics responds 200', function () {",
-                  "  pm.response.to.have.status(200);",
+                  "const expectedMetricsStatus = Number(pm.environment.get('expected_metrics_status') || '404');",
+                  "pm.test(`Metrics responds ${expectedMetricsStatus}`, function () {",
+                  "  pm.response.to.have.status(expectedMetricsStatus);",
                   "});"
                 ]
               }
@@ -127,7 +130,7 @@
           "name": "Create High-Risk Evaluation (Expect BLOCK)",
           "request": {
             "auth": {
-              "type": "noauth"
+              "type": "inherit"
             },
             "method": "POST",
             "header": [
@@ -175,7 +178,7 @@
           "name": "Create Low-Risk Evaluation (Expect ALLOW, POS alias)",
           "request": {
             "auth": {
-              "type": "noauth"
+              "type": "inherit"
             },
             "method": "POST",
             "header": [
@@ -223,7 +226,7 @@
           "name": "Create Invalid Timestamp (Expect 400)",
           "request": {
             "auth": {
-              "type": "noauth"
+              "type": "inherit"
             },
             "method": "POST",
             "header": [
@@ -271,7 +274,7 @@
           "name": "Get Evaluation By Id",
           "request": {
             "auth": {
-              "type": "noauth"
+              "type": "inherit"
             },
             "method": "GET",
             "header": [],
@@ -309,7 +312,7 @@
           "name": "List Evaluations (Encoded Time Filters)",
           "request": {
             "auth": {
-              "type": "noauth"
+              "type": "inherit"
             },
             "method": "GET",
             "header": [],
@@ -360,5 +363,22 @@
       ]
     }
   ],
-  "event": []
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const user = pm.environment.get('reviewer_user');",
+          "const pass = pm.environment.get('reviewer_password');",
+          "if (!user || !pass) {",
+          "  console.warn('reviewer_user/reviewer_password is missing in environment');",
+          "} else {",
+          "  const token = btoa(`${user}:${pass}`);",
+          "  pm.request.headers.upsert({ key: 'Authorization', value: `Basic ${token}` });",
+          "}"
+        ]
+      }
+    }
+  ]
 }
