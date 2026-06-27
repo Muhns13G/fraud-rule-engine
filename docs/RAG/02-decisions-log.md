@@ -1,0 +1,167 @@
+# Decisions Log
+
+## Confirmed Decisions
+- Build tool stays Maven.
+- Runtime baseline stays Spring Boot `4.0.6` with Java `25`.
+- PostgreSQL is the primary persistence store for local development and tests.
+- The top-level API outcome model is `ALLOW`, `REVIEW`, `BLOCK`.
+- The evaluation layer uses a simple internal numeric score in addition to the outward business decision.
+- The first rule set is code-defined and deterministic.
+- The baseline rules are:
+  - high amount
+  - velocity
+  - risky merchant category
+  - unusual time
+- Starter thresholds are:
+  - amount review at `>= 10000.00 ZAR`
+  - amount block at `>= 25000.00 ZAR`
+  - velocity at `>= 3` transactions in `5 minutes` for the same `accountId`
+  - unusual time between `00:00` and `04:00`
+  - risky merchant categories start with `GAMBLING`, `CRYPTO`, `MONEY_TRANSFER`
+- `location anomaly` is deferred unless the first vertical slice is already stable.
+- Local development will not implement real auth for Phase 1; this choice must be stated clearly in the README.
+- The current review retrieval surface supports:
+  - `decision`
+  - `accountId`
+  - `customerId`
+  - `transactionId`
+  - time range
+  - explicit summary sorting with `NEWEST_FIRST` and `OLDEST_FIRST`
+- Security strategy baseline:
+  - `HTTP Basic` as the next-step authentication mechanism
+  - profile split: `default` open and `secure` authenticated
+  - secured-mode protection target: API + Swagger/OpenAPI + exposed actuator endpoints
+  - env-backed secure-profile credentials with local defaults
+- OAuth2/JWT and external identity provider integration remain intentionally deferred.
+- Rule-governance baseline:
+  - executable rule logic remains `CODE_DEFINED`
+  - governance identity is modeled as `ruleCode` + `version`
+  - lifecycle status values are `DRAFT`, `ACTIVE`, `DEPRECATED`, `RETIRED`
+  - activation values are `INACTIVE`, `ACTIVE`
+  - rule metadata modeling is domain-first and persistence-agnostic in this step
+- Persist rule metadata only, not executable logic, by:
+  - introducing a dedicated `fraud_rule_governance_metadata` store
+  - bootstrapping one metadata row per code-defined rule at startup
+  - keeping runtime rule evaluation code-defined and deterministic
+- Expose admin read visibility using:
+  - `GET /api/admin/rules` (defaults to active-only view)
+  - `GET /api/admin/rules/{ruleCode}/versions/{version}` for identity-level inspection
+  - threshold-read endpoint intentionally deferred to keep this increment governance-focused
+- Governance validation boundaries:
+  - `ACTIVE` lifecycle requires `ACTIVE` activation
+  - `DRAFT` and `RETIRED` lifecycle require `INACTIVE` activation
+  - `DEPRECATED` can remain `ACTIVE` or become `INACTIVE` during transition
+  - current runtime execution boundary remains `CODE_DEFINED` only
+  - invalid lifecycle/activation combinations are rejected via application policy and DB constraints
+- Governed mutation scope stays metadata-only:
+  - lifecycle/activation transitions and version registration are allowed
+  - executable fraud rule logic remains code-defined and non-mutable
+- Retrieval behavior includes:
+  - paged list responses (`page`, `size`, `totalElements`, `totalPages`)
+  - one-sided time filtering (`from`-only and `to`-only)
+  - additional low-risk filters: `merchantCategory`, `channel`
+- Retrieval sorting is explicit with:
+  - `NEWEST_FIRST`
+  - `OLDEST_FIRST`
+- Profile-based security hardening:
+  - requiring admin role for governance mutation endpoints in `secure` profile
+  - keeping `default` profile intentionally open and now explicitly test-verified
+  - introducing configurable secure identity-provider strategy (`IN_MEMORY` default, optional `JDBC`)
+  - supporting pre-encoded secure credentials for non-local secret workflows
+  - making Swagger/OpenAPI and actuator exposure explicitly profile-driven
+- Observability hardening:
+  - adding contract tests for metrics and request-correlation behavior
+  - expanding metrics beyond evaluation into retrieval, governance mutation, and API error paths
+  - adding lifecycle/version governance observability (audit events + dedicated counters)
+- Fraud-rule expansion decision:
+  - implement `LOCATION_ANOMALY` as a deterministic, explainable heuristic
+  - compare current location to the most recent comparable prior transaction
+  - trigger review on country change, and optionally city change within same country
+  - externalize location-anomaly behavior through validated rule properties
+- Reliability and delivery decisions:
+  - add a baseline GitHub Actions CI gate for compile, test, and package checks
+  - resolve Mockito/JDK 25 dynamic-agent warning path via explicit Surefire Java agent configuration
+  - treat governance regression as a first-class closure gate: mutation flows + secure-profile authorization + retrieval consistency after mutation
+- Access-policy contract:
+  - lock role model to `API_CLIENT`, `OPS_READER`, `GOVERNANCE_ADMIN`, optional `PLATFORM_ADMIN`
+  - lock secure-profile access matrix by surface (evaluation API, governance read/mutation, actuator, Swagger/OpenAPI)
+  - encode role contract via secure-profile properties without changing active authorization matchers yet
+- Access-policy enforcement and verification:
+  - enforce secure-profile authorization by route group and HTTP method (governance read vs mutation, actuator, evaluation API, docs routes)
+  - support role overlap safely by de-duplicating configured role sets before `hasAnyRole(...)` checks
+  - assert full role matrix with dedicated integration coverage for:
+    - `API_CLIENT` baseline access and governance restrictions
+    - `OPS_READER` governance/actuator read access with mutation denial
+    - `GOVERNANCE_ADMIN` mutation + broader secure-surface access
+    - `PLATFORM_ADMIN` superset secure-surface access
+- Sprint 4.1.5 deferred-identity decision:
+  - continue with HTTP Basic + profile-aware role controls for this phase
+  - explicitly defer enterprise IAM/JWT/OAuth2 integration to a later stage to avoid scope inflation and preserve reproducibility
+- Secure identity and secret hardening:
+  - lock explicit secure in-memory secret-source modes: `ENV`, `PRE_ENCODED`, and `EXTERNAL_MANAGER` integration seam
+  - enforce fail-fast startup validation for incompatible secret-source combinations
+  - harden JDBC identity mode with validated query contract and safe default queries aligned with Spring Security tables
+  - add credential-rotation readiness hook for in-memory mode using a controlled dual-credential overlap window
+  - keep implementation vendor-neutral; document enterprise secret-manager/IAM integrations as deferred beyond current scope
+- Operational observability policy:
+  - lock profile-specific actuator/docs exposure contract:
+    - `default`: actuator `health,info,metrics`, Swagger/OpenAPI enabled
+    - `secure`: actuator `health,info` (authenticated), Swagger/OpenAPI disabled by default
+    - `production`: actuator `health` only, health details hidden, Swagger/OpenAPI disabled
+  - strengthen correlation boundary:
+    - accept only UUID-shaped `X-Request-Id` values within configured length boundary
+    - generate and propagate safe fallback IDs when invalid/missing
+  - add explicit security denial diagnostics:
+    - structured `security_authn_denied` and `security_authz_denied` events
+    - dedicated counters `fraud.security.authn.denied.total` and `fraud.security.authz.denied.total`
+  - formalize an operational runbook baseline in README/RAG for profile access expectations and incident-triage signal flow
+- Operational hardening decisions:
+  - codify environment templates as first-class operational artifacts for `local`, `secure`, and `production` modes
+  - enforce secure-profile configuration guardrails as fail-fast startup contracts rather than permissive runtime fallbacks
+  - treat security and operations regression as a dedicated gate, not ad-hoc targeted runs
+  - reconcile debt status only with concrete code/test evidence and carry forward unresolved items explicitly
+- Hardened identity strategy:
+  - lock non-local hardened identity strategy to token-based auth (`JWT/OIDC` contract)
+  - keep `default` open and `secure` basic-auth modes unchanged for compatibility during transition
+  - introduce `hardened` profile configuration contract keys first (issuer/jwk/audience/claim mapping/clock skew), with enforcement deferred to `5.1.2`
+- Hardened enforcement:
+  - enforce JWT resource-server authentication in `hardened` and `production` profiles
+  - require hardened `jwk-set-uri` at startup and fail fast when missing
+  - map JWT claims to application roles for governance mutation, governance reads, actuator routes, docs routes, and API surface authorization
+- Safety and usability decisions:
+  - keep hosted validation guidance centered on `secure` profile when external IdP configuration is not available
+  - preserve default-profile local-only guardrail behavior and explicit warning posture
+  - document profile migration path (`default` -> `secure` -> `hardened`/`production`) and add matrix verification commands as first-class handoff guidance
+- Secret and rotation operationalization:
+  - keep secure secret-manager integration provider-neutral while implementing a concrete env-backed external adapter
+  - formalize rotation as explicit lifecycle phases (`PREPARE`, `OVERLAP`, `CUTOVER`, `RETIRE`) with startup fail-fast validation
+  - preserve legacy compatibility (`rotation-enabled=true` without explicit phase) only as a temporary fallback with warning
+  - expose secure credential health via redacted `/actuator/info` diagnostics and aligned startup logs
+  - formalize secure bootstrap/rotation/rollback workflow in a dedicated operations runbook
+- Governance workflow contract:
+  - formalize promotion/deprecation workflow semantics as an explicit lifecycle contract before introducing new workflow APIs
+  - keep lifecycle transitions aligned to enforced policy: `DRAFT -> ACTIVE/RETIRED`, `ACTIVE -> DEPRECATED/RETIRED`, `DEPRECATED -> ACTIVE/RETIRED`, `RETIRED` terminal
+  - keep lifecycle/activation invariants explicit (`ACTIVE` requires activation `ACTIVE`; `DRAFT`/`RETIRED` require activation `INACTIVE`)
+  - define semantic workflow actions (`PROMOTE`, `DEPRECATE`, `REACTIVATE`, `RETIRE`) as contract-level mappings for upcoming implementation work
+- Governance workflow hardening:
+  - add explicit workflow action mutation surface (`/actions`) while keeping governed execution source constrained to `CODE_DEFINED`
+  - persist durable governance lifecycle history with actor/request-id/timestamp evidence for every workflow action
+  - expose paged governance audit retrieval surfaces for versions and lifecycle history to avoid unbounded admin responses
+  - enforce least-privilege governance-read authorization for version/history retrieval (`OPS_READER` or stronger in secure profile)
+  - treat workflow transition validity, history integrity, and authorization regression as closure-gate tests for sprint completion
+- Retrieval and quality-gate hardening:
+  - close the investigation lookup gap with rule-hit retrieval filters (`ruleHit`, `ruleHitMatch`) while preserving existing retrieval compatibility
+  - harden retrieval query behavior with explicit indexing and bounded specification-based filtering
+  - expand hardening gates with repo hygiene and security/ops regression paths as first-class CI checks
+  - add repeatable p95 latency smoke thresholds for evaluation/retrieval and keep velocity semantics strictly prior-event only
+  - reduce integration-test drift by centralizing shared secure-profile test credentials in one fixture
+- Hosted validation hardening:
+  - keep `secure` as the canonical hosted validation mode when external IdP is unavailable
+  - enforce hardened JWT trust boundaries with fail-fast `issuer-uri`, `jwk-set-uri`, and `audience` requirements
+  - add explicit issuer/audience validator coverage and negative claim-path regression checks
+  - standardize validation evidence on `curl + Maven` with local and hosted scriptable packs
+  - keep `TD-021` and `TD-027` as partially addressed unless live external IdP rollout is implemented and verified end-to-end
+
+## Still Flexible
+- Exact enum values and naming for transaction type, channel, and merchant category
+- Exact response projection used by the list endpoint versus single-item retrieval

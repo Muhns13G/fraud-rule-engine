@@ -1,0 +1,199 @@
+# Project Blueprint
+
+## Purpose
+Build a Spring Boot service that processes categorized transaction events, evaluates deterministic fraud rules, stores the resulting decision trail, and exposes retrieval and governance APIs for review and operations.
+
+## Product Boundary
+- Focus on a strong, production-style backend slice rather than a broad platform.
+- Keep non-code delivery artifacts first-class:
+  - runnable `Dockerfile`
+  - practical `README` with build, run, and test instructions
+  - clear architecture and operational documentation
+
+## Verified Current State
+- The repo is a single-module Spring Boot `4.0.6` application on Java `25`.
+- The runtime stack includes:
+  - Spring Web MVC
+  - Spring Data JPA
+  - Spring Validation
+  - Spring Security
+  - Spring Actuator
+  - SpringDoc OpenAPI
+  - PostgreSQL runtime driver
+- Local development and tests both assume Docker-backed Postgres:
+  - `compose.yaml` provides `postgres`
+  - tests use Testcontainers Postgres through `TestcontainersConfiguration`
+- The current vertical slice is implemented:
+  - domain model, rule set, and decision policy exist
+  - persistence uses Flyway-managed PostgreSQL tables with evaluation-header audit timestamps
+  - controllers, services, repositories, and mappers are in place
+  - `Dockerfile`, `README`, env templates, and validation assets exist
+
+## Target System
+- Accept categorized transaction events over HTTP.
+- Evaluate a deterministic set of fraud rules against each transaction.
+- Persist the inbound event, rule hits, aggregate decision, and explanation trail in PostgreSQL.
+- Expose retrieval APIs for individual fraud evaluations and filtered review queries.
+- Be structured so the initial code-defined rules can later evolve into governed rule management.
+
+## Core API Slice
+- `POST /api/fraud-evaluations`
+  - accepts one categorized transaction event
+  - evaluates the active static rule set
+  - persists the decision record and rule hit details
+  - returns the decision plus traceable reasons
+- `GET /api/fraud-evaluations/{evaluationId}`
+  - returns the persisted evaluation, rule hits, and final decision
+- `GET /api/fraud-evaluations`
+  - supports review filters such as `decision`, `accountId`, `customerId`, `transactionId`, and time range
+  - supports explicit summary sorting for stable list ordering
+
+## Request Shape
+- Model the first input as a categorized card or account transaction event, not a generic catch-all envelope.
+- Request fields:
+  - `transactionId`: required string
+  - `accountId`: required string
+  - `customerId`: required string
+  - `amount`: required decimal
+  - `currency`: required string, ISO-style uppercase code such as `ZAR`
+  - `merchantId`: required string
+  - `merchantCategory`: required string or enum-backed string
+  - `transactionType`: required string or enum-backed string
+  - `channel`: required string or enum-backed string
+  - `eventTimestamp`: required offset datetime
+  - `location`: optional structured object with:
+    - `countryCode`
+    - `city`
+  - `reference`: optional string
+- Keep the payload intentionally compact. The goal is enough signal for realistic rule evaluation, not a complete banking event taxonomy.
+
+## Response Shape
+- Evaluation response returns:
+  - `evaluationId`
+  - `transactionId`
+  - `decision`
+  - `decisionScore`
+  - `evaluatedAt`
+  - `ruleResults`
+  - `traceSummary`
+- Each `ruleResult` should return:
+  - `ruleCode`
+  - `ruleName`
+  - `triggered`
+  - `severity`
+  - `scoreContribution`
+  - `reason`
+- The list endpoint can use a lighter summary projection, but single-item retrieval should include the full rule-hit trail.
+
+## Proposed Package Shape
+- `api`: request/response contracts, controllers, exception mapping
+- `application`: use cases such as evaluate transaction and retrieve evaluation history
+- `domain`: transaction event model, rule definitions, evaluation result, risk signals, decision policies
+- `infrastructure.persistence`: JPA entities, repositories, database adapters
+- `infrastructure.security`: security configuration and auth integration
+- `infrastructure.observability`: metrics, health, audit, structured logging
+
+## Core Domain Concepts To Introduce
+- `TransactionEvent`: the normalized categorized transaction payload
+- `FraudDecision`: `ALLOW`, `REVIEW`, or `BLOCK`
+- `FraudRule`: a rule definition with business intent, status, and version
+- `RuleEvaluationResult`: hit or miss outcome plus evidence and score contribution
+- `FraudEvaluation`: the persisted outcome for one transaction event
+- `DecisionTrace`: machine-readable explanation of why the final decision was produced
+
+## Rule Set
+- Start with code-defined rules, not database-authored rules.
+- The current release implements explicit rules that are easy to explain and test:
+  - high-amount threshold rule
+  - rapid-repeat transaction velocity rule for the same account or customer
+  - risky merchant category rule
+  - unusual time rule
+- `location anomaly` can remain a controlled extension when a clearly explainable heuristic is available.
+- Starter thresholds:
+  - high amount:
+    - trigger `REVIEW` signal at `>= 10000.00 ZAR`
+    - trigger `BLOCK` signal at `>= 25000.00 ZAR`
+  - velocity:
+    - trigger when `>= 3` transactions occur for the same `accountId` within `5 minutes`
+  - risky merchant category:
+    - start with a small flagged set such as `GAMBLING`, `CRYPTO`, `MONEY_TRANSFER`
+  - unusual time:
+    - trigger when the local transaction time falls between `00:00` and `04:00`
+- Each rule should contribute:
+  - a stable rule code
+  - a human-readable reason
+  - a severity or score contribution
+  - supporting evidence fields needed for audit and debugging
+
+## Decision Policy
+- Use a tiered outcome model: `ALLOW`, `REVIEW`, `BLOCK`.
+- Prefer a transparent policy over clever scoring:
+  - `BLOCK` for clearly unacceptable conditions
+  - `REVIEW` for suspicious but non-terminal combinations
+  - `ALLOW` when no material risk indicators are hit
+- Use both:
+  - an outward business decision of `ALLOW`, `REVIEW`, or `BLOCK`
+  - a simple internal numeric score for aggregation and traceability
+- Suggested starting score model:
+  - `REVIEW`-level rule hit: `40` points
+  - `BLOCK`-level rule hit: `100` points
+- Suggested decision thresholds:
+  - `ALLOW`: no triggered rules
+  - `REVIEW`: total score from `1` to `99`
+  - `BLOCK`: any blocking rule hit or total score `>= 100`
+
+## Persistence Model
+- Persist the transaction event separately from the evaluation result only if that separation makes querying clearer; a direct evaluation aggregate is acceptable for the current scope.
+- Minimum persisted records:
+  - fraud evaluation header
+  - normalized transaction fields used for decisioning
+  - final decision and score
+  - per-rule hit details
+  - audit timestamps
+- Design the schema so one evaluation can have many rule results.
+
+## Suggested Execution Flow
+1. Validate and normalize inbound request payloads.
+2. Load recent transaction context needed for velocity checks and other history-based heuristics.
+3. Evaluate rules in a deterministic order.
+4. Aggregate rule results into a final fraud decision.
+5. Persist the request, rule hits, and final decision for auditability.
+6. Return the decision plus a concise reason payload to the caller.
+
+## Cross-Cutting Decisions Worth Preserving
+- Keep the rule engine deterministic and explainable; avoid hidden heuristics in early versions.
+- Separate domain rule evaluation from HTTP and JPA concerns so rules stay testable without Spring context.
+- Treat Swagger/OpenAPI as a contract aid, not the source of truth; DTOs and tests should define behavior.
+- Use Flyway before adding real persistence logic so schema history is explicit from the start.
+- Stay on Maven for this repo; it keeps the build path explicit and conservative.
+- Default security behavior must be replaced with an intentional local and test setup before the API is presented as complete.
+- Prefer no real auth in local development; document that choice explicitly and describe likely production hardening paths in the README.
+- Pin image versions before release; `postgres:latest` is acceptable scaffolding, not a final production-grade choice.
+
+## Query Scope
+- Retrieval filters are intentionally narrow:
+  - `decision`
+  - `accountId`
+  - `customerId`
+  - `transactionId`
+  - time range
+- List retrieval also supports deliberate summary sorting rather than ad hoc ordering.
+- Defer additional filters such as `merchantCategory`, `channel`, or rule-hit lookups until the core evaluation slice is stable.
+
+## Immediate Gaps
+- Rule governance has only a foundational read-first slice; runtime mutation and full lifecycle operations are still intentionally missing.
+- Authentication exists as a profile-aware baseline (`default` open, `secure` HTTP Basic), but authorization depth is still intentionally lightweight.
+- Observability is intentionally lightweight (structured logs, metrics, correlation), but not yet production-operationally deep.
+- No CI pipeline or deployment automation exists yet.
+- Additional retrieval filters and deferred heuristics can stay out of scope until the core slice remains stable.
+
+## Security Strategy Baseline
+- `HTTP Basic` is the smallest credible improvement over an intentionally open local posture.
+- Security behavior is profile-split by design:
+  - `default` remains open for local validation and developer ergonomics.
+  - `secure` is the authenticated mode for demonstration of deliberate access control.
+- In secured mode, the intended protected surface is API + Swagger/OpenAPI + exposed actuator endpoints.
+- Credentials are configured via env-backed properties with local defaults to keep setup practical while avoiding hardcoded production secrets.
+- Deliberately deferred:
+  - OAuth2/JWT and external identity providers
+  - enterprise-grade secret management and rotation

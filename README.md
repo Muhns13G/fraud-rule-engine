@@ -176,7 +176,7 @@ For PostgreSQL `18+`, the Compose volume is mounted at `/var/lib/postgresql` rat
 
 Reference templates are available under:
 
-- `docs/operations/env/local-reviewer.env.template`
+- `docs/operations/env/local.env.template`
 - `docs/operations/env/secure.env.template`
 - `docs/operations/env/production.env.template`
 - `docs/operations/runbooks/secure-credential-rotation-runbook.md`
@@ -322,7 +322,7 @@ The `Dockerfile` is multi-stage and uses pinned Eclipse Temurin Java 25 images f
 
 Import these files from `docs/operations/postman`:
 
-- `fraud-rule-engine-reviewer.postman_collection.json`
+- `fraud-rule-engine-validation.postman_collection.json`
 - `fraud-rule-engine-local.postman_environment.json`
 
 Recommended run order:

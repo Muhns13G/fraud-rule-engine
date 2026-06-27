@@ -1,0 +1,87 @@
+# Architecture: Current Vs Target
+
+## Current State
+- Single-module Spring Boot app
+- Core API, application, domain, persistence, security, and config layers are implemented
+- Flyway migration exists for the initial PostgreSQL schema
+- Persisted evaluation headers now carry row-level audit timestamps in addition to business evaluation timestamps
+- Testcontainers-backed integration tests and focused unit tests exist
+- Lightweight observability conventions now exist:
+  - structured evaluation and retrieval logs
+  - request correlation via `X-Request-Id`
+  - evaluation, retrieval, governance, and API error metrics through Micrometer
+  - explicit security-denial diagnostics and counters for `401`/`403` outcomes
+  - limited actuator exposure for local inspection
+  - governance mutation audit events with request-id and actor context
+- Security is now profile-aware:
+  - `default` profile remains permissive for local validation usability
+  - `secure` profile enforces HTTP Basic with env-backed credentials
+  - `hardened` and `production` profiles enforce JWT resource-server authentication
+  - secure identity provider is configurable (`IN_MEMORY` or `JDBC`)
+  - secure in-memory credentials now support explicit secret-source modes and rotation overlap hooks
+  - secure secret-source implementation now includes a concrete env-backed external adapter path
+  - secure credential rotation is now phase-driven (`PREPARE`, `OVERLAP`, `CUTOVER`, `RETIRE`) with fail-fast misconfiguration validation
+  - secure credential/rotation posture is now exposed through redacted actuator info diagnostics for authorized secure roles
+  - secure JDBC identity mode now applies validated query contracts with safe defaults
+  - governance mutation endpoints require governance-admin scope in `secure` profile
+  - governance read/ops diagnostics routes now follow an explicit least-privilege role matrix
+  - Swagger/OpenAPI and actuator exposure are explicitly profile-driven
+  - production profile now enforces health-only actuator exposure with hidden health details and no docs surface
+  - hardened token contract is configuration-backed through issuer/jwk/audience/claim properties
+  - hardened token decoder validation now enforces issuer and audience trust boundaries
+  - secured endpoints include API, Swagger/OpenAPI, and actuator routes
+- Delivery and verification architecture now includes:
+  - GitHub Actions CI baseline for compile, test, and package gates
+  - dedicated security and operations regression gate (`scripts/run-security-ops-regression.sh`) wired into CI
+  - repository hygiene gate (`scripts/run-repo-hygiene-checks.sh`) with `.DS_Store`/workspace-clean assertions
+  - performance/reliability smoke gate (`scripts/run-performance-reliability-smoke.sh`) with p95 threshold checks
+  - validation pack:
+    - `scripts/run-local-validation.sh`
+    - `scripts/run-hosted-validation.sh`
+    - `scripts/run-validation-suite.sh`
+  - governance regression tests that assert end-to-end state mutation, role-aware authorization behavior, and post-mutation retrieval consistency
+  - explicit test-runtime alignment for Mockito on JDK 25 via Surefire Java agent configuration
+- Operational resilience architecture includes:
+  - fail-fast secure-profile guardrails for identity, secret-source, role contract, and actuator exposure configuration
+  - dedicated secure credential rotation runbook now defines bootstrap, rotation, and rollback procedures
+  - resilience-focused integration checks for datasource failure behavior and secure-profile misconfiguration paths
+- Rule governance groundwork now exists:
+  - persisted metadata identity (`ruleCode + version`)
+  - admin read and constrained mutation endpoints for governed rule metadata
+  - paged governance audit reads for versions and lifecycle history
+  - deterministic lifecycle/activation boundary validation with DB constraints
+  - lifecycle/version mutation observability with structured audit logs and dedicated metrics
+- Retrieval layer is now review-oriented and scalable:
+  - paged list responses for `GET /api/fraud-evaluations`
+  - one-sided time filtering (`from`-only / `to`-only) and bounded ranges
+  - additional low-risk filters (`merchantCategory`, `channel`)
+  - rule-hit lookup filters (`ruleHit`, `ruleHitMatch`) for investigation workflows
+- Velocity temporal correctness is now explicit:
+  - future-dated events are excluded from velocity-window counting
+- Fraud capability now includes deterministic location anomaly evaluation with explainable evidence in rule results.
+
+## Target Phase 1 Shape
+- `api`
+  - controllers
+  - DTOs
+  - exception handling
+- `application`
+  - fraud evaluation use case
+  - retrieval use case
+- `domain`
+  - transaction event model
+  - fraud evaluation model
+  - fraud rule contract and implementations
+  - decision policy
+- `infrastructure.persistence`
+  - JPA entities
+  - Spring Data repositories
+  - Flyway migrations
+- `infrastructure.security`
+  - profile-aware security config (`default` open + `secure` authenticated)
+
+## Architectural Priorities
+- Keep rule logic framework-light and testable without Spring context.
+- Keep persistence concerns out of the core rule logic.
+- Optimize for explainability over sophistication.
+- Prefer one strong vertical slice over broad partial features.
