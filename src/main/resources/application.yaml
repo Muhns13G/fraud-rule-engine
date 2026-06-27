@@ -1,3 +1,159 @@
 spring:
   application:
     name: fraud-rule-engine
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    open-in-view: false
+
+server:
+  # Best practice for Railway / PaaS
+  port: ${PORT:8080}
+
+app:
+  fraud-rules:
+    high-amount:
+      review-threshold: ${FRAUD_RULE_HIGH_AMOUNT_REVIEW_THRESHOLD:10000.00}
+      block-threshold: ${FRAUD_RULE_HIGH_AMOUNT_BLOCK_THRESHOLD:25000.00}
+    velocity:
+      threshold-count: ${FRAUD_RULE_VELOCITY_THRESHOLD_COUNT:3}
+      window-minutes: ${FRAUD_RULE_VELOCITY_WINDOW_MINUTES:5}
+    risky-merchant-category:
+      flagged-categories: ${FRAUD_RULE_RISKY_MERCHANT_CATEGORIES:GAMBLING,CRYPTO,MONEY_TRANSFER}
+    unusual-time:
+      start: ${FRAUD_RULE_UNUSUAL_TIME_START:00:00}
+      end: ${FRAUD_RULE_UNUSUAL_TIME_END:04:00}
+    location-anomaly:
+      score-contribution: ${FRAUD_RULE_LOCATION_ANOMALY_SCORE_CONTRIBUTION:40}
+      compare-city-when-country-matches: ${FRAUD_RULE_LOCATION_ANOMALY_COMPARE_CITY_WHEN_COUNTRY_MATCHES:true}
+  security:
+    # Hardened profile contract (Phase 5.1.1):
+    # this is a config-only contract in 5.1.1; enforcement starts in 5.1.2.
+    hardened-profile:
+      auth-mechanism: ${FRAUD_ENGINE_HARDENED_AUTH_MECHANISM:JWT_OIDC}
+      issuer-uri: ${FRAUD_ENGINE_HARDENED_ISSUER_URI:}
+      jwk-set-uri: ${FRAUD_ENGINE_HARDENED_JWK_SET_URI:}
+      audience: ${FRAUD_ENGINE_HARDENED_AUDIENCE:}
+      principal-claim: ${FRAUD_ENGINE_HARDENED_PRINCIPAL_CLAIM:sub}
+      roles-claim: ${FRAUD_ENGINE_HARDENED_ROLES_CLAIM:roles}
+      clock-skew-seconds: ${FRAUD_ENGINE_HARDENED_CLOCK_SKEW_SECONDS:60}
+    secure-profile:
+      # Identity provider:
+      # - IN_MEMORY: single env-backed user for local secure mode
+      # - JDBC: externalized/persistent-friendly identity source via database-backed users
+      #   expected defaults align with Spring Security schema:
+      #   users(username, password, enabled) and authorities(username, authority)
+      identity-provider: ${FRAUD_ENGINE_SECURE_IDENTITY_PROVIDER:IN_MEMORY}
+      # Secret source strategy when identity-provider=IN_MEMORY:
+      # - ENV: raw password via env var (local default)
+      # - PRE_ENCODED: pre-encoded password from env/secret mount
+      # - EXTERNAL_MANAGER: resolve credentials via SecureProfileSecretSupplier integration seam
+      secret-source: ${FRAUD_ENGINE_SECURE_SECRET_SOURCE:ENV}
+      username: ${FRAUD_ENGINE_SECURE_USER:secure-user}
+      password: ${FRAUD_ENGINE_SECURE_PASSWORD:change-me-secure}
+      # Optional pre-encoded (for example BCrypt) password for non-local secret sources.
+      # When provided, this takes precedence over raw password.
+      password-encoded: ${FRAUD_ENGINE_SECURE_PASSWORD_ENCODED:}
+      # Optional external secret reference for EXTERNAL_MANAGER strategy.
+      external-secret-ref: ${FRAUD_ENGINE_SECURE_EXTERNAL_SECRET_REF:}
+      # Optional concrete external-manager adapter selection.
+      # - ENV: resolve external-secret-ref env:VAR / env://VAR payload through EnvExternalManagerSecretSupplier
+      external-manager-adapter: ${FRAUD_ENGINE_SECURE_EXTERNAL_MANAGER_ADAPTER:}
+      # Rotation readiness hook (IN_MEMORY mode):
+      # enable an overlap window with a secondary credential identity so callers can migrate safely.
+      rotation-enabled: ${FRAUD_ENGINE_SECURE_ROTATION_ENABLED:false}
+      # Explicit rotation lifecycle contract:
+      # PREPARE -> OVERLAP -> CUTOVER -> RETIRE
+      # If omitted and rotation-enabled=true, legacy behavior defaults to OVERLAP with a warning.
+      rotation-phase: ${FRAUD_ENGINE_SECURE_ROTATION_PHASE:}
+      rotation-username: ${FRAUD_ENGINE_SECURE_ROTATION_USER:}
+      rotation-password: ${FRAUD_ENGINE_SECURE_ROTATION_PASSWORD:}
+      rotation-password-encoded: ${FRAUD_ENGINE_SECURE_ROTATION_PASSWORD_ENCODED:}
+      # Baseline authenticated API role.
+      role: ${FRAUD_ENGINE_SECURE_ROLE:API_CLIENT}
+      # Read-only operations role (governance reads + actuator surface).
+      ops-reader-role: ${FRAUD_ENGINE_SECURE_OPS_READER_ROLE:OPS_READER}
+      # Governance mutation role.
+      admin-role: ${FRAUD_ENGINE_SECURE_ADMIN_ROLE:GOVERNANCE_ADMIN}
+      # Optional future super-role for platform-level operations.
+      platform-admin-role: ${FRAUD_ENGINE_SECURE_PLATFORM_ADMIN_ROLE:PLATFORM_ADMIN}
+      # Optional custom JDBC queries when identity-provider=JDBC.
+      # Validation rules:
+      # - must be SELECT statements
+      # - must include username parameter placeholder '?'
+      # - users query must select password + enabled
+      # - authorities query must select authority
+      # If omitted, safe defaults are used.
+      users-by-username-query: ${FRAUD_ENGINE_SECURE_USERS_BY_USERNAME_QUERY:}
+      authorities-by-username-query: ${FRAUD_ENGINE_SECURE_AUTHORITIES_BY_USERNAME_QUERY:}
+
+management:
+  # Actuator exposure contract by profile:
+  # - default: local diagnostics (health, info, metrics) with details visible
+  # - secure: authenticated diagnostics (health, info) with details only for ops/admin roles
+  # - production: minimal diagnostics (health only) with no details
+  endpoints:
+    web:
+      exposure:
+        include: ${FRAUD_ENGINE_DEFAULT_ACTUATOR_EXPOSURE:health,info,metrics}
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: ${FRAUD_ENGINE_DEFAULT_API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${FRAUD_ENGINE_DEFAULT_SWAGGER_UI_ENABLED:true}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: secure
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${FRAUD_ENGINE_SECURE_ACTUATOR_EXPOSURE:health,info}
+  endpoint:
+    health:
+      show-details: when_authorized
+      roles: ${FRAUD_ENGINE_SECURE_OPS_READER_ROLE:OPS_READER}
+
+springdoc:
+  api-docs:
+    enabled: ${FRAUD_ENGINE_SECURE_API_DOCS_ENABLED:false}
+  swagger-ui:
+    enabled: ${FRAUD_ENGINE_SECURE_SWAGGER_UI_ENABLED:false}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%X{requestId:-no-request-id}] --- [%15.15t] %logger{36} : %msg%n"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${FRAUD_ENGINE_PRODUCTION_ACTUATOR_EXPOSURE:health}
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
