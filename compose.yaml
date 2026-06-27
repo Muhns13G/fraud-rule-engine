@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:18.3'
+    environment:
+      - 'POSTGRES_DB=fraud_rule_engine'
+      - 'POSTGRES_PASSWORD=secret'
+      - 'POSTGRES_USER=fraud_engine'
+    ports:
+      - '5432:5432'
